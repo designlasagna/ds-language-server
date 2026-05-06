@@ -4,9 +4,6 @@
 
 **Any design system can use it.** Point to your manifests, get completions + deprecation warnings in your editor.
 
-- 🌐 [ds.foundation](https://ds.foundation)
-- 📦 [`@ds-foundation/schemas`](https://www.npmjs.com/package/@ds-foundation/schemas)
-
 ---
 
 ## What it does
@@ -142,22 +139,27 @@ Add `$schema` to your manifests for IDE validation:
 }
 ```
 
-Or install the npm package for offline/CI use:
-```bash
-npm install @ds-foundation/schemas
-```
-
 ---
 
 ## Editor support
 
-### Zed
-
-See [`editors/zed/SETUP.md`](editors/zed/SETUP.md) for installation instructions.
-
 ### VS Code
 
-Coming soon.
+See [`editors/vscode/SETUP.md`](editors/vscode/SETUP.md) for installation.
+
+```bash
+cd editors/vscode
+npm install
+npm run bundle-server
+npx vsce package --allow-missing-repository
+code --install-extension ds-language-server-0.1.0.vsix
+```
+
+### Zed
+
+See [`editors/zed/SETUP.md`](editors/zed/SETUP.md) for installation.
+
+Requires the Zed extension (registers the LSP for file types) + the server built locally.
 
 ---
 
@@ -165,8 +167,8 @@ Coming soon.
 
 ```bash
 npm install
-npm run build
-npm test
+npm run build    # tsc → dist/
+npm test         # vitest (46 tests)
 ```
 
 ### Run the server
@@ -175,10 +177,12 @@ npm test
 node dist/server.js --stdio
 ```
 
-### Watch mode
+### Build VS Code extension
 
 ```bash
-npm run watch
+cd editors/vscode
+npm install
+npm run bundle-server   # esbuild → server/server.js (single 199KB bundle)
 ```
 
 ---
@@ -199,15 +203,18 @@ src/
     ├── diagnostics.ts     # textDocument/publishDiagnostics
     └── code-actions.ts    # textDocument/codeAction
 
+editors/
+├── vscode/                # VS Code extension (plain JS + bundled server)
+│   ├── extension.js
+│   └── server/server.js   # esbuild bundle of src/server.ts
+└── zed/                   # Zed extension (Rust → WASM)
+
 packages/
-└── schemas/               # @ds-foundation/schemas (JSON Schema files)
+└── schemas/               # JSON Schema files for manifest validation
     └── v1/
         ├── tokens.json
         ├── utilities.json
         └── cem-extensions.json
-
-editors/
-└── zed/                   # Zed extension (Rust → WASM)
 ```
 
 ---
