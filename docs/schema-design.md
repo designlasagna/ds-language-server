@@ -205,7 +205,7 @@ The build pipeline merges this with parsed description data.
 
 ```json
 {
-  "$schema": "https://lfds.dev/schemas/parsed-tokens.schema.json",
+  "$schema": "https://ds.magnus.dev/schemas/v1/tokens.json",
   "schemaVersion": "0.3.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "tokens": [
@@ -284,7 +284,7 @@ Minimal schema — just `name` and `description`. No deprecation, no values, no 
 
 ```json
 {
-  "$schema": "https://lfds.dev/schemas/utilities.schema.json",
+  "$schema": "https://ds.magnus.dev/schemas/v1/utilities.json",
   "schemaVersion": "1.0.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "categories": [
@@ -449,44 +449,36 @@ The LSP normalizes both patterns internally into the same `DeprecationInfo` type
 
 ## 5. Schema Hosting
 
-### Requirements
-- Schemas must be accessible at a stable URL for `$schema` validation
-- Used by: IDEs (JSON schema validation), CI (manifest validation), documentation
-- Must work behind corporate proxies (Zscaler)
+### Decision: `ds.magnus.dev`
 
-### Options
+Schemas are hosted at `https://ds.magnus.dev/schemas/` — a subdomain of `magnus.dev`.
 
-| Option | URL | Pros | Cons |
-|--------|-----|------|------|
-| **A. lfds.dev** | `https://lfds.dev/schemas/...` | Branded, clear ownership | Need to set up hosting |
-| **B. npm package** | `node_modules/@lfds/schemas/...` | No hosting needed, versioned | Not a URL, needs tooling |
-| **C. GitHub raw** | `https://raw.githubusercontent.com/.../schemas/...` | Free, easy | May be blocked by Zscaler, not stable |
-| **D. Schema Store** | `https://json.schemastore.org/...` | Standard place | Review process, not LFDS-controlled |
-| **E. Nexus/internal** | `https://nexusrm.lfnet.se/.../schemas/...` | Already accessible internally | Not public |
+**URL structure:**
+```
+https://ds.magnus.dev/schemas/v1/tokens.json
+https://ds.magnus.dev/schemas/v1/utilities.json
+https://ds.magnus.dev/schemas/v1/cem-extensions.json
+```
 
-### Recommendation: A + B (hybrid)
+**Why this works:**
+- Domain already owned and controlled
+- Can redirect to a dedicated domain later if the project grows
+- Static JSON hosting (GitHub Pages, Cloudflare Pages, or similar)
+- Versioned path (`/v1/`) allows breaking changes without breaking existing manifests
 
-1. **Publish schemas in an npm package**: `@lfds/manifest-schemas`
+### Distribution layers
+
+1. **URL** (`$schema` field): `https://ds.magnus.dev/schemas/v1/tokens.json`
+   - Enables IDE JSON validation when opening manifest files
+   - Accessible publicly
+
+2. **npm package** (optional): `ds-manifest-schemas`
    - Versioned alongside the manifests
-   - Contains `.schema.json` files
-   - Available offline via node_modules
-   - CI can validate: `ajv validate -s node_modules/@lfds/manifest-schemas/tokens.schema.json -d dist/tokens.json`
+   - Available offline via `node_modules`
+   - CI validation: `ajv validate -s node_modules/ds-manifest-schemas/v1/tokens.json -d dist/tokens.json`
 
-2. **Host at `lfds.dev/schemas/`** for the `$schema` URL
-   - Static JSON files served from docs site
-   - Enables IDE validation when opening raw JSON
-   - Versioned: `https://lfds.dev/schemas/v1/tokens.schema.json`
-
-3. **Fallback**: Include schemas inline in the DS Language Server
-   - The LSP bundles the schemas for validation
-   - Works even if the URL is unreachable
-
-### URL structure
-```
-https://lfds.dev/schemas/v1/tokens.schema.json
-https://lfds.dev/schemas/v1/utilities.schema.json
-https://lfds.dev/schemas/cem-extensions.schema.json  (overlay for CEM)
-```
+3. **Bundled in LSP**: The language server ships with a copy
+   - Works even if the URL is unreachable (corporate proxies, offline)
 
 ---
 
@@ -851,6 +843,6 @@ Same Figma-like pattern — deprecation in the description text:
 | Utility schema | New `utilities` v1.0.0 with `deprecated`, `properties`, `tokens` |
 | Deprecation shape | `{ message, removal?, replacement? }` — unified across all three |
 | Source authoring | JSDoc tags (components), `$extensions` (tokens), CSS comments (utilities) |
-| Schema hosting | npm package + `lfds.dev/schemas/` URL |
+| Schema hosting | `ds.magnus.dev/schemas/v1/` + npm package + bundled in LSP |
 | Discovery | `package.json` fields (`customElements` + `designSystem.*`) |
 | Generic reuse | Schemas are design-system-agnostic, namespace via `$schema` URL |
