@@ -64,7 +64,7 @@ function getTagCompletions(prefix: string, store: DSStore): CompletionItem[] {
       },
       insertText: buildTagSnippet(component),
       insertTextFormat: InsertTextFormat.Snippet,
-      sortText: deprecated ? `z${component.tagName}` : `a${component.tagName}`,
+      sortText: deprecated ? `~${component.tagName}` : `!${component.tagName}`,
     };
 
     if (deprecated) {
@@ -148,7 +148,7 @@ function getAttributeCompletions(
           ? attr.htmlName
           : `${attr.htmlName}="$1"`,
         insertTextFormat: InsertTextFormat.Snippet,
-        sortText: deprecated ? `z${attr.htmlName}` : `a${attr.htmlName}`,
+        sortText: deprecated ? `~${attr.htmlName}` : `!${attr.htmlName}`,
       };
 
       if (deprecated) {
@@ -178,7 +178,7 @@ function getAttributeCompletions(
           },
           insertText: `slot="$1"`,
           insertTextFormat: InsertTextFormat.Snippet,
-          sortText: 'aslot',
+          sortText: '!slot',
         });
       }
     }
@@ -244,7 +244,7 @@ function getAttributeValueCompletions(
       label: value,
       kind: CompletionItemKind.EnumMember,
       detail: isDefault ? '(default)' : undefined,
-      sortText: deprecatedValue ? `z${value}` : `a${value}`,
+      sortText: deprecatedValue ? `~${value}` : `!${value}`,
     };
 
     if (deprecatedValue) {
@@ -295,7 +295,7 @@ function getSlotValueCompletions(
       documentation: slot.description
         ? { kind: MarkupKind.Markdown, value: slot.description }
         : undefined,
-      sortText: `a${slotName}`,
+      sortText: `!${slotName}`,
     });
   }
 
@@ -322,7 +322,7 @@ function getCssVarCompletions(prefix: string, store: DSStore): CompletionItem[] 
         kind: MarkupKind.Markdown,
         value: buildTokenDoc(token),
       },
-      sortText: deprecated ? `z${token.name}` : `a${token.name}`,
+      sortText: deprecated ? `~${token.name}` : `!${token.name}`,
     };
 
     if (deprecated) {
@@ -382,7 +382,7 @@ function getClassCompletions(prefix: string, store: DSStore): CompletionItem[] {
             value: buildUtilityDoc(utility),
           }
         : undefined,
-      sortText: deprecated ? `z${utility.name}` : `a${utility.name}`,
+      sortText: deprecated ? `~${utility.name}` : `!${utility.name}`,
     };
 
     if (deprecated) {
