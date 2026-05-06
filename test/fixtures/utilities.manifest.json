@@ -1,0 +1,230 @@
+{
+	"categories": [
+		{
+			"name": "Text Style – Display",
+			"prefix": "lf-text-",
+			"classes": [
+				{
+					"name": "lf-text-display-default",
+					"description": "Typography style display default"
+				}
+			]
+		},
+		{
+			"name": "Text Style – Heading",
+			"prefix": "lf-text-",
+			"classes": [
+				{
+					"name": "lf-text-heading-1",
+					"description": "Typography style heading level-1"
+				},
+				{
+					"name": "lf-text-heading-2",
+					"description": "Typography style heading level-2"
+				},
+				{
+					"name": "lf-text-heading-3",
+					"description": "Typography style heading level-3"
+				},
+				{
+					"name": "lf-text-heading-4",
+					"description": "Typography style heading level-4"
+				},
+				{
+					"name": "lf-text-heading-5",
+					"description": "Typography style heading level-5"
+				},
+				{
+					"name": "lf-text-heading-6",
+					"description": "Typography style heading level-6"
+				}
+			]
+		},
+		{
+			"name": "Text Style – Body",
+			"prefix": "lf-text-",
+			"classes": [
+				{
+					"name": "lf-text-body-lg",
+					"description": "Typography style body lg"
+				},
+				{
+					"name": "lf-text-body-default",
+					"description": "Typography style body default"
+				},
+				{
+					"name": "lf-text-body-sm",
+					"description": "Typography style body sm"
+				}
+			]
+		},
+		{
+			"name": "Text Style – Label",
+			"prefix": "lf-text-",
+			"classes": [
+				{
+					"name": "lf-text-label-lg",
+					"description": "Typography style label lg"
+				},
+				{
+					"name": "lf-text-label-default",
+					"description": "Typography style label default"
+				},
+				{
+					"name": "lf-text-label-sm",
+					"description": "Typography style label sm"
+				}
+			]
+		},
+		{
+			"name": "Text Style – Caption",
+			"prefix": "lf-text-",
+			"classes": [
+				{
+					"name": "lf-text-caption-default",
+					"description": "Typography style caption default"
+				}
+			]
+		},
+		{
+			"name": "Text Style – Value",
+			"prefix": "lf-text-",
+			"classes": [
+				{
+					"name": "lf-text-value-2xl",
+					"description": "Typography style value 2xl"
+				},
+				{
+					"name": "lf-text-value-xl",
+					"description": "Typography style value xl"
+				},
+				{
+					"name": "lf-text-value-lg",
+					"description": "Typography style value lg"
+				},
+				{
+					"name": "lf-text-value-md",
+					"description": "Typography style value md"
+				},
+				{
+					"name": "lf-text-value-sm",
+					"description": "Typography style value sm"
+				}
+			]
+		},
+		{
+			"name": "Font Weight",
+			"prefix": "lf-font-",
+			"classes": [
+				{
+					"name": "lf-font-normal"
+				},
+				{
+					"name": "lf-font-medium"
+				},
+				{
+					"name": "lf-font-semibold"
+				},
+				{
+					"name": "lf-font-bold"
+				},
+				{
+					"name": "lf-strong",
+					"description": "Alias for bold font weight"
+				},
+				{
+					"name": "lf-italic",
+					"description": "Italic font style"
+				}
+			]
+		},
+		{
+			"name": "Text Color",
+			"prefix": "lf-text-color-",
+			"classes": [
+				{
+					"name": "lf-text-color-primary",
+					"description": "Default text primary color."
+				},
+				{
+					"name": "lf-text-color-secondary",
+					"description": "Default text secondary color."
+				},
+				{
+					"name": "lf-text-color-brand-primary",
+					"description": "LF branded text - Primary. Use when you want to increase brand identity in you design."
+				},
+				{
+					"name": "lf-text-color-brand-secondary",
+					"description": "LF branded text - Secondary. Use when you want to increase brand identity in you design."
+				},
+				{
+					"name": "lf-text-color-link",
+					"description": "Default link color"
+				},
+				{
+					"name": "lf-text-color-link-hover",
+					"description": "Default link color"
+				},
+				{
+					"name": "lf-text-color-link-pressed",
+					"description": "Default link color in pressed state"
+				},
+				{
+					"name": "lf-text-color-positive",
+					"description": "Text color used to highlight postivie digits."
+				},
+				{
+					"name": "lf-text-color-negative",
+					"description": "Text color used to highlight negative digits."
+				},
+				{
+					"name": "lf-text-color-error",
+					"description": "Text color used to highlight error messages and states."
+				},
+				{
+					"name": "lf-text-color-inverted",
+					"description": "Primary text color inversed. Use on negative backgrounds."
+				},
+				{
+					"name": "lf-text-color-selected",
+					"description": "Text color used to highlight selected states."
+				},
+				{
+					"name": "lf-text-color-disabled",
+					"description": "Text color used on disabled states."
+				},
+				{
+					"name": "lf-text-color-on-button-primary",
+					"description": "Text on primary buttons"
+				},
+				{
+					"name": "lf-text-color-on-button-secondary",
+					"description": "Text on secondary buttons"
+				},
+				{
+					"name": "lf-text-color-on-button-tertiary",
+					"description": "Text on tertiary buttons"
+				},
+				{
+					"name": "lf-text-color-on-button-quaternary",
+					"description": "Text on quarternary buttons"
+				}
+			]
+		},
+		{
+			"name": "Base",
+			"prefix": "lf-",
+			"classes": [
+				{
+					"name": "lf-sr-only",
+					"description": "Visually hide an element while keeping it accessible to screen readers."
+				},
+				{
+					"name": "lf-text-nowrap",
+					"description": "Prevent text from wrapping."
+				}
+			]
+		}
+	]
+}

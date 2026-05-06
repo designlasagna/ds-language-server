@@ -1,0 +1,648 @@
+{
+  "schemaVersion": "1.0.0",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "LfdsShortcut",
+          "slots": [
+            {
+              "description": "Text label",
+              "name": "default"
+            },
+            {
+              "description": "Text description",
+              "name": "description"
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "label",
+              "type": "string",
+              "attribute": "label"
+            },
+            {
+              "kind": "field",
+              "name": "description",
+              "type": "string",
+              "attribute": "description"
+            },
+            {
+              "kind": "field",
+              "name": "layout",
+              "type": "string",
+              "default": "horizontal",
+              "attribute": "layout",
+              "enum": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "type",
+              "type": "string",
+              "attribute": "type",
+              "enum": [
+                "button",
+                "menu",
+                "reset",
+                "submit"
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "target",
+              "type": "string",
+              "attribute": "target",
+              "enum": [
+                "_blank",
+                "_self"
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "download",
+              "type": [
+                "string",
+                "boolean"
+              ],
+              "attribute": "download"
+            },
+            {
+              "kind": "field",
+              "name": "href",
+              "type": "string",
+              "attribute": "href"
+            },
+            {
+              "kind": "field",
+              "name": "rel",
+              "type": "string",
+              "attribute": "rel"
+            },
+            {
+              "kind": "field",
+              "name": "name",
+              "type": "string",
+              "attribute": "name"
+            },
+            {
+              "kind": "field",
+              "name": "value",
+              "type": [
+                "string",
+                "number"
+              ],
+              "attribute": "value"
+            },
+            {
+              "kind": "field",
+              "name": "iconId",
+              "type": "string",
+              "attribute": "icon-id"
+            },
+            {
+              "kind": "field",
+              "name": "validationMessage",
+              "type": "string",
+              "attribute": "validation-message"
+            },
+            {
+              "kind": "field",
+              "name": "ariaLabelledby",
+              "type": "string",
+              "attribute": "aria-labelledby"
+            },
+            {
+              "kind": "field",
+              "name": "ariaControls",
+              "type": "string",
+              "attribute": "aria-controls"
+            },
+            {
+              "kind": "field",
+              "name": "ariaExpanded",
+              "type": "string",
+              "attribute": "aria-expanded"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "label",
+              "type": "string",
+              "fieldName": "label",
+              "attribute": "label"
+            },
+            {
+              "name": "description",
+              "type": "string",
+              "fieldName": "description",
+              "attribute": "description"
+            },
+            {
+              "name": "layout",
+              "type": "string",
+              "default": "horizontal",
+              "fieldName": "layout",
+              "attribute": "layout",
+              "enum": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "fieldName": "type",
+              "attribute": "type",
+              "enum": [
+                "button",
+                "menu",
+                "reset",
+                "submit"
+              ]
+            },
+            {
+              "name": "target",
+              "type": "string",
+              "fieldName": "target",
+              "attribute": "target",
+              "enum": [
+                "_blank",
+                "_self"
+              ]
+            },
+            {
+              "name": "download",
+              "type": [
+                "string",
+                "boolean"
+              ],
+              "fieldName": "download",
+              "attribute": "download"
+            },
+            {
+              "name": "href",
+              "type": "string",
+              "fieldName": "href",
+              "attribute": "href"
+            },
+            {
+              "name": "rel",
+              "type": "string",
+              "fieldName": "rel",
+              "attribute": "rel"
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "fieldName": "name",
+              "attribute": "name"
+            },
+            {
+              "name": "value",
+              "type": [
+                "string",
+                "number"
+              ],
+              "fieldName": "value",
+              "attribute": "value"
+            },
+            {
+              "name": "icon-id",
+              "type": "string",
+              "fieldName": "iconId",
+              "attribute": "icon-id"
+            },
+            {
+              "name": "validation-message",
+              "type": "string",
+              "fieldName": "validationMessage",
+              "attribute": "validation-message"
+            },
+            {
+              "name": "aria-labelledby",
+              "type": "string",
+              "fieldName": "ariaLabelledby",
+              "attribute": "aria-labelledby"
+            },
+            {
+              "name": "aria-controls",
+              "type": "string",
+              "fieldName": "ariaControls",
+              "attribute": "aria-controls"
+            },
+            {
+              "name": "aria-expanded",
+              "type": "string",
+              "fieldName": "ariaExpanded",
+              "attribute": "aria-expanded"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "compose",
+              "module": "/src/components/button/shortcut/lfds-shortcut.ts"
+            }
+          ],
+          "superclass": {
+            "name": "LfuiElement",
+            "module": "/src/components/button/shortcut/lfds-shortcut.ts"
+          },
+          "tagName": "lfds-shortcut",
+          "customElement": true,
+          "status": {
+            "name": "draft",
+            "description": ""
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "default",
+          "declaration": {
+            "name": "LfdsShortcut",
+            "module": "src/components/button/shortcut/lfds-shortcut.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "LfdsButton",
+          "slots": [
+            {
+              "description": "Button label",
+              "name": "default"
+            },
+            {
+              "description": "Before the label. Useful for icons.",
+              "name": "start"
+            },
+            {
+              "description": "After the label. Useful for icons.",
+              "name": "end"
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "variant",
+              "type": "string",
+              "default": "primary",
+              "deprecated": "The `tertiary` variant is removed. Use `secondary` instead.",
+              "removal": "2026-07-30",
+              "attribute": "variant",
+              "enum": [
+                "primary",
+                "secondary",
+                "tertiary"
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "size",
+              "type": "string",
+              "default": "small",
+              "deprecated": "The `medium` size is removed. Use `small` instead.",
+              "removal": "2026-07-30",
+              "attribute": "size",
+              "enum": [
+                "large",
+                "medium",
+                "small"
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "type",
+              "type": "string",
+              "attribute": "type",
+              "enum": [
+                "button",
+                "menu",
+                "reset",
+                "submit"
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "target",
+              "type": "string",
+              "attribute": "target",
+              "enum": [
+                "_blank",
+                "_self"
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "download",
+              "type": [
+                "string",
+                "boolean"
+              ],
+              "attribute": "download"
+            },
+            {
+              "kind": "field",
+              "name": "href",
+              "type": "string",
+              "attribute": "href"
+            },
+            {
+              "kind": "field",
+              "name": "rel",
+              "type": "string",
+              "attribute": "rel"
+            },
+            {
+              "kind": "field",
+              "name": "name",
+              "type": "string",
+              "attribute": "name"
+            },
+            {
+              "kind": "field",
+              "name": "label",
+              "type": "string",
+              "deprecated": "Use `default` slot instead",
+              "removal": "2026-07-30",
+              "attribute": "label"
+            },
+            {
+              "kind": "field",
+              "name": "value",
+              "type": [
+                "string",
+                "number"
+              ],
+              "attribute": "value"
+            },
+            {
+              "kind": "field",
+              "name": "disabled",
+              "type": "boolean",
+              "default": false,
+              "attribute": "disabled"
+            },
+            {
+              "kind": "field",
+              "name": "helpText",
+              "type": "string",
+              "attribute": "help-text"
+            },
+            {
+              "kind": "field",
+              "name": "validationMessage",
+              "type": "string",
+              "attribute": "validation-message"
+            },
+            {
+              "kind": "field",
+              "name": "srLabelledby",
+              "type": "string",
+              "attribute": "sr-labelledby"
+            },
+            {
+              "kind": "field",
+              "name": "srLabel",
+              "type": "string",
+              "attribute": "sr-label"
+            },
+            {
+              "kind": "field",
+              "name": "srDescribedby",
+              "type": "string",
+              "attribute": "sr-describedby"
+            },
+            {
+              "kind": "field",
+              "name": "srControls",
+              "type": "string",
+              "attribute": "sr-controls"
+            },
+            {
+              "kind": "field",
+              "name": "srExpanded",
+              "type": "string",
+              "attribute": "sr-expanded"
+            },
+            {
+              "kind": "field",
+              "name": "srPressed",
+              "type": "string",
+              "attribute": "sr-pressed"
+            },
+            {
+              "kind": "field",
+              "name": "srCurrent",
+              "type": "string",
+              "attribute": "sr-current"
+            },
+            {
+              "kind": "method",
+              "name": "#preventDisabledClick",
+              "privacy": "private",
+              "type": "object",
+              "additionalProperties": false
+            }
+          ],
+          "attributes": [
+            {
+              "name": "variant",
+              "type": "string",
+              "default": "primary",
+              "deprecated": "The `tertiary` variant is removed. Use `secondary` instead.",
+              "removal": "2026-07-30",
+              "fieldName": "variant",
+              "attribute": "variant",
+              "enum": [
+                "primary",
+                "secondary",
+                "tertiary"
+              ]
+            },
+            {
+              "name": "size",
+              "type": "string",
+              "default": "small",
+              "deprecated": "The `medium` size is removed. Use `small` instead.",
+              "removal": "2026-07-30",
+              "fieldName": "size",
+              "attribute": "size",
+              "enum": [
+                "large",
+                "medium",
+                "small"
+              ]
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "fieldName": "type",
+              "attribute": "type",
+              "enum": [
+                "button",
+                "menu",
+                "reset",
+                "submit"
+              ]
+            },
+            {
+              "name": "target",
+              "type": "string",
+              "fieldName": "target",
+              "attribute": "target",
+              "enum": [
+                "_blank",
+                "_self"
+              ]
+            },
+            {
+              "name": "download",
+              "type": [
+                "string",
+                "boolean"
+              ],
+              "fieldName": "download",
+              "attribute": "download"
+            },
+            {
+              "name": "href",
+              "type": "string",
+              "fieldName": "href",
+              "attribute": "href"
+            },
+            {
+              "name": "rel",
+              "type": "string",
+              "fieldName": "rel",
+              "attribute": "rel"
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "fieldName": "name",
+              "attribute": "name"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "deprecated": "Use `default` slot instead",
+              "removal": "2026-07-30",
+              "fieldName": "label",
+              "attribute": "label"
+            },
+            {
+              "name": "value",
+              "type": [
+                "string",
+                "number"
+              ],
+              "fieldName": "value",
+              "attribute": "value"
+            },
+            {
+              "name": "disabled",
+              "type": "boolean",
+              "default": false,
+              "fieldName": "disabled",
+              "attribute": "disabled"
+            },
+            {
+              "name": "help-text",
+              "type": "string",
+              "fieldName": "helpText",
+              "attribute": "help-text"
+            },
+            {
+              "name": "validation-message",
+              "type": "string",
+              "fieldName": "validationMessage",
+              "attribute": "validation-message"
+            },
+            {
+              "name": "sr-labelledby",
+              "type": "string",
+              "fieldName": "srLabelledby",
+              "attribute": "sr-labelledby"
+            },
+            {
+              "name": "sr-label",
+              "type": "string",
+              "fieldName": "srLabel",
+              "attribute": "sr-label"
+            },
+            {
+              "name": "sr-describedby",
+              "type": "string",
+              "fieldName": "srDescribedby",
+              "attribute": "sr-describedby"
+            },
+            {
+              "name": "sr-controls",
+              "type": "string",
+              "fieldName": "srControls",
+              "attribute": "sr-controls"
+            },
+            {
+              "name": "sr-expanded",
+              "type": "string",
+              "fieldName": "srExpanded",
+              "attribute": "sr-expanded"
+            },
+            {
+              "name": "sr-pressed",
+              "type": "string",
+              "fieldName": "srPressed",
+              "attribute": "sr-pressed"
+            },
+            {
+              "name": "sr-current",
+              "type": "string",
+              "fieldName": "srCurrent",
+              "attribute": "sr-current"
+            }
+          ],
+          "mixins": [
+            {
+              "name": "compose",
+              "module": "/src/components/button/button/lfds-button.ts"
+            }
+          ],
+          "superclass": {
+            "name": "LfuiElement",
+            "module": "/src/components/button/button/lfds-button.ts"
+          },
+          "tagName": "lfds-button",
+          "customElement": true,
+          "status": {
+            "name": "ready",
+            "description": ""
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "default",
+          "declaration": {
+            "name": "LfdsButton",
+            "module": "src/components/button/button/lfds-button.ts"
+          }
+        }
+      ]
+    }
+  ]
+}
