@@ -19,6 +19,25 @@ This document defines what each schema needs, how deprecation is expressed at au
 
 ---
 
+## Key Architectural Insight
+
+```
+Raw source (Figma export / JSDoc / CSS comments)
+        ↓
+  Build pipeline (design-system-specific)
+        ↓
+  Parsed manifest (standardized schema)  ←── LSP reads THIS
+```
+
+The LSP only reads **parsed manifests** that conform to a known schema. It doesn't read raw DTCG, doesn't parse JSDoc, doesn't understand Figma. The build pipeline is the design system's responsibility — it can read deprecation from wherever (description text, extensions, comments) and emit a standard `deprecated` object.
+
+This means:
+- The manifest schema is the API contract — any DS that produces conforming manifests works
+- Extension namespaces (W3C DTCG `$extensions`) are a build-pipeline concern, not an LSP concern
+- The LSP is truly generic
+
+---
+
 ## 1. Components — Custom Elements Manifest (CEM)
 
 ### Standard: Already defined
@@ -31,26 +50,59 @@ CEM is an established spec: https://github.com/webcomponents/custom-elements-man
 
 ### How deprecation is authored (source)
 
+**Attribute-level deprecation** (the whole attribute is deprecated):
 ```ts
 /**
- * @deprecated The `tertiary` variant is removed. Use `secondary` instead.
+ * @deprecated Use `default` slot instead
+ * @removal 2026-07-30
+ */
+@property() label: string
+```
+
+**Value-level deprecation** (only specific values are deprecated):
+```ts
+/**
+ * @deprecatedValue tertiary - Use `secondary` instead.
+ * @deprecatedValue medium - Use `small` instead.
  * @removal 2026-07-30
  */
 @property() variant: 'primary' | 'secondary' | 'tertiary' = 'primary'
 ```
 
+The `@deprecatedValue` tag targets individual enum values without marking the attribute itself as deprecated. The `@removal` applies to all deprecated values (or can be per-value with `@removalValue tertiary 2026-07-30`).
+
 ### How it appears in the manifest (CEM output)
 
+**Attribute-level:**
+```json
+{
+  "name": "label",
+  "type": "string",
+  "deprecated": "Use `default` slot instead",
+  "removal": "2026-07-30",
+  "replacement": "default slot"
+}
+```
+
+**Value-level:**
 ```json
 {
   "name": "variant",
   "type": "string",
   "default": "primary",
-  "deprecated": "The `tertiary` variant is removed. Use `secondary` instead.",
-  "removal": "2026-07-30",
-  "enum": ["primary", "secondary", "tertiary"]
+  "enum": ["primary", "secondary", "tertiary"],
+  "deprecatedValues": [
+    {
+      "value": "tertiary",
+      "message": "Use `secondary` instead.",
+      "removal": "2026-07-30",
+      "replacement": "secondary"
+    }
+  ]
 }
 ```
+
+Note: the attribute itself is **not** marked `deprecated` — only specific values have deprecation info. This is critical for correct LSP behavior (don't flag the attribute, only flag the value when used).
 
 ### What the LSP needs from CEM
 | Field | Purpose |
@@ -62,6 +114,8 @@ CEM is an established spec: https://github.com/webcomponents/custom-elements-man
 | `attributes[].enum` | Value completions |
 | `attributes[].deprecated` | Mark deprecated in completions + diagnostics |
 | `attributes[].removal` | Time-aware severity escalation |
+| `attributes[].replacement` | Code action (auto-fix) |
+| `attributes[].deprecatedValues[]` | **Value-level** deprecation (only flag specific values) |
 | `members[].deprecated` | Same (mirrors attributes) |
 | `members[].removal` | Same |
 | `slots[].name` | Slot value completions |
@@ -87,10 +141,12 @@ CEM is an established spec: https://github.com/webcomponents/custom-elements-man
 ### Schema decision: Keep CEM + extensions
 No need to invent a new schema. CEM is standard. We add:
 - `removal` (string — ISO date or semver)
+- `replacement` (string — what to use instead)
 - `status` (string — "draft" | "ready" | "deprecated")
 - `enum` (string[] — for value enumeration)
+- `deprecatedValues` (array — value-level deprecation without marking the attribute)
 
-These are already in use and backward-compatible (ignored by tools that don't understand them).
+These are already in use (except `deprecatedValues` and `replacement`) and backward-compatible (ignored by tools that don't understand them).
 
 ---
 
@@ -101,46 +157,49 @@ LFDS uses a custom "parsed tokens" format that is purpose-built after resolving 
 
 ### Authoring deprecation in tokens
 
-**Option A: In the raw W3C DTCG source files**
-```json
-{
-  "color": {
-    "bg": {
-      "button-primary-pressed": {
-        "$type": "color",
-        "$value": "{color.blue.700}",
-        "$description": "Primary button pressed background.",
-        "$extensions": {
-          "com.lfds.deprecated": {
-            "message": "Use `--lfds-color-interactive-primary-pressed` instead.",
-            "removal": "2026-07-30",
-            "replacement": "color.interactive.primary-pressed"
-          }
-        }
-      }
-    }
+**Reality: Tokens come from Figma.** The raw DTCG JSON is exported from Figma's Variables API. You can't add `$extensions` in Figma's UI. The practical approach is marking deprecation in the **description field** in Figma:
+
+```
+[DEPRECATED 2026-07-30: Use color.interactive.primary-pressed instead.] Primary button pressed background.
+```
+
+This is the same pattern already used for slots in the CEM plugin. Figma's Variables UI has a description field — that's where authors mark deprecation.
+
+**How the build pipeline handles it:**
+
+```js
+// In viewer-tokens.js — same regex pattern as CEM slot processing
+const deprecationPattern =
+  /^\[DEPRECATED(?:\s+([vQ\d][\w.\-/]*))?(?::\s*([^\]]+))?\]\s*/i
+
+function extractDeprecation(description) {
+  if (!description) return { deprecated: null, cleanDescription: description }
+  const match = description.match(deprecationPattern)
+  if (!match) return { deprecated: null, cleanDescription: description }
+  return {
+    deprecated: {
+      message: match[2]?.trim() || 'Deprecated.',
+      removal: match[1]?.trim() || undefined,
+    },
+    cleanDescription: description.replace(deprecationPattern, '').trim()
   }
 }
 ```
 
-The `$extensions` field is the official W3C DTCG extensibility mechanism. Using a namespaced key (`com.lfds.deprecated`) is the correct pattern.
+**The `$extensions` approach** is available as a secondary source for hand-authored tokens (not from Figma). Any namespaced key can be used — the build pipeline is DS-specific and knows where to look. The LSP never reads raw DTCG directly.
 
-**Option B: Separate deprecation overlay file**
+**Overlay file** (`deprecated-tokens.json`) is available as an escape hatch for adding `replacement` info that can't fit in a Figma description:
 ```json
 {
   "deprecated": [
     {
       "id": "color.bg.button-primary-pressed",
-      "cssVariable": "--lfds-color-background-button-primary-pressed",
-      "message": "Use `--lfds-color-interactive-primary-pressed` instead.",
-      "removal": "2026-07-30",
       "replacement": "--lfds-color-interactive-primary-pressed"
     }
   ]
 }
 ```
-
-**Recommendation: Option A** — keep deprecation at the source token level. The build pipeline propagates it to the parsed manifest. Option B is useful as an escape hatch (e.g., for tokens imported from Figma where you can't edit the raw JSON).
+The build pipeline merges this with parsed description data.
 
 ### Parsed tokens manifest schema (v0.3.0)
 
@@ -327,23 +386,35 @@ interface Deprecated {
 ```
 
 ### In CEM (components)
-CEM's own `deprecated` field is `string | boolean`. We overlay:
-```json
-{
-  "deprecated": "The `tertiary` variant is removed. Use `secondary` instead.",
-  "removal": "2026-07-30"
-}
-```
-The LSP already parses this: if `deprecated` is a string, it IS the message. `removal` is a sibling field.
+CEM's own `deprecated` field is `string | boolean`. We overlay with sibling fields:
 
-**Proposed evolution**: Add `replacement` as a sibling too:
+**Attribute-level** (whole attribute deprecated):
 ```json
 {
-  "deprecated": "The `tertiary` variant is removed. Use `secondary` instead.",
+  "name": "label",
+  "deprecated": "Use `default` slot instead",
   "removal": "2026-07-30",
-  "replacement": "secondary"
+  "replacement": "default slot"
 }
 ```
+
+**Value-level** (only specific values deprecated — attribute itself is NOT deprecated):
+```json
+{
+  "name": "variant",
+  "enum": ["primary", "secondary", "tertiary"],
+  "deprecatedValues": [
+    {
+      "value": "tertiary",
+      "message": "Use `secondary` instead.",
+      "removal": "2026-07-30",
+      "replacement": "secondary"
+    }
+  ]
+}
+```
+
+The LSP handles both: if `deprecated` is present, the whole attribute is deprecated. If `deprecatedValues` is present, only those specific values trigger warnings.
 
 ### In tokens
 ```json
@@ -458,46 +529,54 @@ export default {
 
 ### Components (TypeScript + JSDoc)
 
+**Attribute-level:**
 ```ts
 /**
  * @deprecated Use `default` slot instead
  * @removal 2026-07-30
+ * @replacement default slot
  */
 @property() label: string
+```
 
+**Value-level (NEW — `@deprecatedValue` tag):**
+```ts
 /**
- * @deprecated The `tertiary` variant is removed. Use `secondary` instead.
+ * @deprecatedValue tertiary - Use `secondary` instead.
+ * @deprecatedValue medium - Use `small` instead.
  * @removal 2026-07-30
  */
 @property() variant: 'primary' | 'secondary' | 'tertiary' = 'primary'
 ```
 
-**Build tool**: `vite-plugin-cem` + custom `analyzePhase` extracts `@removal` tag.
+**Build tool**: `vite-plugin-cem` + custom `analyzePhase`:
+- Extracts `@removal` tag (already done)
+- NEW: Extracts `@deprecatedValue` tags → emits `deprecatedValues[]` array
+- NEW: Extracts `@replacement` tag → emits `replacement` field
+- When `@deprecatedValue` is present, does NOT mark the attribute itself as deprecated
 
-### Tokens (W3C DTCG JSON)
+### Tokens (Figma → description field)
 
+In Figma's Variables UI, mark the description:
+```
+[DEPRECATED 2026-07-30: Use color.interactive.primary-pressed instead.] Primary button pressed background.
+```
+
+Optionally, for hand-authored tokens outside Figma (`$extensions`):
 ```json
 {
-  "color": {
-    "bg": {
-      "button-primary-pressed": {
-        "$type": "color",
-        "$value": "{color.blue.700}",
-        "$description": "Primary button pressed background.",
-        "$extensions": {
-          "com.lfds.deprecated": {
-            "message": "Use `--lfds-color-interactive-primary-pressed` instead.",
-            "removal": "2026-07-30",
-            "replacement": "color.interactive.primary-pressed"
-          }
-        }
-      }
+  "$description": "Primary button pressed background.",
+  "$extensions": {
+    "com.lfds.deprecated": {
+      "message": "Use color.interactive.primary-pressed instead.",
+      "removal": "2026-07-30",
+      "replacement": "color.interactive.primary-pressed"
     }
   }
 }
 ```
 
-**Build tool**: `viewer-tokens.js` must be updated to propagate `$extensions["com.lfds.deprecated"]` to the parsed output.
+**Build tool**: `viewer-tokens.js` parses `[DEPRECATED ...]` from `$description` (primary source) and/or reads from `$extensions` (secondary source). Optionally merges a `deprecated-tokens.json` overlay for `replacement` info.
 
 ### Utilities (CSS comments)
 
@@ -513,7 +592,18 @@ export default {
 }
 ```
 
-**Build tool**: `build-utilities-manifest.mjs` must parse structured JSDoc-like comments from CSS.
+**Build tool**: `build-utilities-manifest.mjs` parses structured JSDoc-like comments preceding `.lf-*` rules.
+
+### Slots, CSS Parts, Events (description field)
+
+Same Figma-like pattern — deprecation in the description text:
+```ts
+/**
+ * @slot icon - [DEPRECATED 2026-09-01: Use `start` slot instead.] Icon slot.
+ */
+```
+
+**Build tool**: CEM plugin's `packageLinkPhase` already handles this pattern.
 
 ---
 
@@ -697,14 +787,16 @@ export default {
 
 | Manifest | Current | Change needed |
 |----------|---------|---------------|
-| CEM | `deprecated: string, removal: string` as siblings | Add `replacement` sibling — **backward compatible** |
+| CEM | `deprecated: string, removal: string` as siblings | Add `replacement` sibling + `deprecatedValues[]` — **backward compatible** |
 | Tokens | `deprecated: true, deprecationMessage: string, removal: string` (flat) | Fold into `deprecated: { message, removal, replacement }` — **breaking, bump schema version** |
 | Utilities | No deprecation support | Add `deprecated` field to classes — **additive** |
 
 ### Token build pipeline changes
-1. Update `viewer-tokens.js` to read `$extensions["com.lfds.deprecated"]` from raw tokens
-2. Emit structured `deprecated` object in parsed output
-3. Bump schema version to `1.0.0`
+1. Update `viewer-tokens.js` to parse `[DEPRECATED ...]` from `$description` field
+2. Optionally: read from `$extensions[*]` as secondary source (for hand-authored tokens)
+3. Optionally: merge `deprecated-tokens.json` overlay for `replacement` info
+4. Emit structured `deprecated` object in parsed output
+5. Bump schema version to `1.0.0`
 
 ### Utility build pipeline changes
 1. Update `build-utilities-manifest.mjs` to parse `@deprecated` / `@removal` / `@replacement` from CSS comments
@@ -714,8 +806,9 @@ export default {
 
 ### CEM pipeline changes
 1. Already handles `@deprecated` and `@removal` in JSDoc
-2. Add `@replacement` tag support to the vite plugin's `analyzePhase`
-3. Emit `replacement` field on attributes/members
+2. Add `@deprecatedValue` tag support → emits `deprecatedValues[]` array
+3. Add `@replacement` tag support → emits `replacement` field
+4. When `@deprecatedValue` is present, do NOT set `deprecated` on the attribute itself
 
 ---
 
