@@ -98,6 +98,8 @@ interface CEMCssProperty {
   description?: string;
   default?: string;
   deprecated?: boolean | string;
+  removal?: string;
+  replacement?: string;
   syntax?: string;
 }
 
@@ -295,6 +297,8 @@ function parseCssProperties(props: CEMCssProperty[]): DSCssProperty[] {
       syntax: p.syntax,
       deprecated: deprecated.isDeprecated,
       deprecationMessage: deprecated.message,
+      removal: p.removal,
+      replacement: p.replacement,
     };
   });
 }
