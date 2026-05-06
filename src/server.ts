@@ -102,7 +102,8 @@ connection.onCompletion((params: CompletionParams) => {
   const offset = document.offsetAt(params.position);
   const context = getCursorContext(document, offset);
 
-  return getCompletions(context, store);
+  const items = getCompletions(context, store);
+  return items;
 });
 
 // ─── Hover ─────────────────────────────────────────────────────────

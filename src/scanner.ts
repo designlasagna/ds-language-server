@@ -50,12 +50,16 @@ export function getCursorContext(
   const before = text.slice(Math.max(0, offset - 500), offset);
 
   // ── CSS var() context ──────────────────────────────────────────
-  // Match: var(--prefix or just --prefix in CSS
-  const varMatch = before.match(/var\(\s*(--[\w-]*)$/);
+  // Match: var(  or  var(-  or  var(--  or  var(--prefix
+  const varMatch = before.match(/var\(\s*(-{0,2}[\w-]*)$/);
   if (varMatch) {
+    // Normalize prefix: always start with -- for token lookup
+    let prefix = varMatch[1];
+    if (prefix === '' || prefix === '-') prefix = '--';
+    else if (!prefix.startsWith('--')) prefix = '--' + prefix;
     return {
       kind: 'css-var',
-      prefix: varMatch[1],
+      prefix,
     };
   }
 
