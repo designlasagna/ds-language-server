@@ -190,15 +190,25 @@ function parseAttributes(
     const deprecatedValueNames = new Set(detectedDeprecatedValues.map((v) => v.value));
     const activeValues = enumValues?.filter((v) => !deprecatedValueNames.has(v));
 
+    // If we detected deprecated VALUES from the deprecation message,
+    // the attribute itself is NOT deprecated — only specific values are.
+    // e.g. `size` is fine, but `size="medium"` is deprecated.
+    const attrIsDeprecated = detectedDeprecatedValues.length > 0
+      ? false
+      : deprecated.isDeprecated;
+    const attrDeprecationMessage = detectedDeprecatedValues.length > 0
+      ? undefined
+      : deprecated.message;
+
     return {
       name: attr.fieldName ?? attr.name,
       htmlName: attr.name,
       type,
       default: defaultVal !== undefined ? String(defaultVal) : undefined,
       description: attr.description ?? member?.description,
-      deprecated: deprecated.isDeprecated,
-      deprecationMessage: deprecated.message,
-      removal,
+      deprecated: attrIsDeprecated,
+      deprecationMessage: attrDeprecationMessage,
+      removal: attrIsDeprecated ? removal : undefined,
       values: activeValues ?? enumValues,
       deprecatedValues: detectedDeprecatedValues.length > 0 ? detectedDeprecatedValues : undefined,
     };

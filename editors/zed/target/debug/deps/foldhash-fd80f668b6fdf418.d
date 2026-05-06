@@ -1,0 +1,10 @@
+/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/debug/deps/foldhash-fd80f668b6fdf418.d: /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs
+
+/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/debug/deps/libfoldhash-fd80f668b6fdf418.rlib: /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs
+
+/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/debug/deps/libfoldhash-fd80f668b6fdf418.rmeta: /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs
+
+/Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs:
+/Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs:
+/Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs:
+/Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs:

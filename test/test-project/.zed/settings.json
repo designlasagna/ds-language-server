@@ -2,7 +2,8 @@
   "lsp": {
     "ds-language-server": {
       "settings": {
-        "serverPath": "/Users/Magnus.Fredlundh/Code/Private/ds-language-server/dist/server.js"
+        "serverPath": "/Users/Magnus.Fredlundh/Code/Private/ds-language-server/dist/server.js",
+        "nodePath": "/Users/Magnus.Fredlundh/.nvm/versions/node/v22.20.0/bin/node"
       }
     }
   }

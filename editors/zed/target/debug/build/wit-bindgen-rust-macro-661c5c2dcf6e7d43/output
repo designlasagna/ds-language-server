@@ -1,0 +1,2 @@
+cargo:rerun-if-changed=build.rs
+cargo:rustc-env=DEBUG_OUTPUT_DIR=/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/debug/build/wit-bindgen-rust-macro-661c5c2dcf6e7d43/out

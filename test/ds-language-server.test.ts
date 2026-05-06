@@ -144,7 +144,17 @@ describe('CEM parser', () => {
   it('extracts removal dates', () => {
     const button = components.find((c) => c.tagName === 'lfds-button')!;
     const variant = button.attributes.find((a) => a.htmlName === 'variant');
-    expect(variant!.removal).toBe('2026-07-30');
+    // variant itself is NOT deprecated — only specific values are
+    expect(variant!.deprecated).toBe(false);
+    expect(variant!.removal).toBeUndefined();
+    // The removal date lives on the deprecated values
+    const tertiary = variant!.deprecatedValues?.find((v) => v.value === 'tertiary');
+    expect(tertiary!.removal).toBe('2026-07-30');
+
+    // The label attribute IS deprecated (the whole attribute, not just a value)
+    const label = button.attributes.find((a) => a.htmlName === 'label');
+    expect(label!.deprecated).toBe(true);
+    expect(label!.removal).toBe('2026-07-30');
   });
 
   it('extracts component status', () => {
