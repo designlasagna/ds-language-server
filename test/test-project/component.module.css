@@ -1,0 +1,16 @@
+.container {
+  /* Token completions + deprecation should work here */
+  background: var(--lfds-color-background-button-primary-pressed);
+  padding: var(--lfds-spacing-lg);
+  border-radius: var(--lfds-border-radius-2xs);
+}
+
+.header {
+  color: var(--lfds-color-text-primary);
+  font-size: var(--lfds-spacing-lg);
+}
+
+.card {
+  border: 1px solid var(--lfds-border-radius-2xs);
+  /* Try typing var(--lfds- here for completions */
+}
