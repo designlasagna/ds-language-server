@@ -6,7 +6,6 @@ import {
   isDeprecated,
   statusEmoji,
   buildDeprecationMessage,
-  formatRemovalDate,
 } from '../lifecycle.js';
 
 /**
@@ -228,22 +227,28 @@ function tryAttrValueHover(text: string, offset: number, store: DSStore): Hover 
   const attr = component.attributes.find(
     (a) => a.htmlName === attrName || a.name === attrName,
   );
-  if (!attr?.deprecatedValues) return null;
+  if (!attr) return null;
 
-  const deprecatedValue = attr.deprecatedValues.find((dv) => dv.value === attrValue);
-  if (!deprecatedValue) return null;
-
+  // Show attribute documentation (the diagnostic already handles deprecation warnings)
   const parts: string[] = [];
-  parts.push(`⚠️ **DEPRECATED VALUE** — \`${attrName}="${attrValue}"\``);
-  parts.push(deprecatedValue.message);
+  parts.push(`### \`${attr.htmlName}="${attrValue}"\`  — \`<${tagName}>\``);
+  if (attr.description) parts.push(attr.description);
+  parts.push(`**Type:** \`${attr.type}\``);
+  if (attr.default !== undefined) parts.push(`**Default:** \`${attr.default}\``);
 
-  if (deprecatedValue.replacement) {
-    parts.push(`**Replacement:** \`${deprecatedValue.replacement}\``);
-  }
-
-  const removalStr = formatRemovalDate(deprecatedValue.removal);
-  if (removalStr) {
-    parts.push(`**Removal:** ${removalStr}`);
+  if (attr.values && attr.values.length > 0) {
+    const allValues = [...(attr.values || [])];
+    const deprecatedNames = new Set(attr.deprecatedValues?.map((dv) => dv.value) ?? []);
+    const formatted = allValues.map((v) => {
+      if (v === attrValue) return `**\`${v}\`** ← current`;
+      return `\`${v}\``;
+    });
+    if (attr.deprecatedValues) {
+      for (const dv of attr.deprecatedValues) {
+        formatted.push(`~~\`${dv.value}\`~~ *(deprecated)*`);
+      }
+    }
+    parts.push(`**Values:** ${formatted.join(', ')}`);
   }
 
   return {
