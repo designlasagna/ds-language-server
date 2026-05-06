@@ -35,6 +35,8 @@ export interface CursorContext {
   tagName?: string;
   /** For attribute-value context: the attribute name */
   attributeName?: string;
+  /** For slot context: the parent custom element tag name */
+  parentTagName?: string;
 }
 
 /**
@@ -88,12 +90,19 @@ export function getCursorContext(
     /<([\w-]+)\s+(?:[\w-]+(?:=(?:"[^"]*"|'[^']*'|\S+))?\s+)*([\w-]+)\s*=\s*["']([\w-]*)$/,
   );
   if (attrValueMatch) {
-    return {
+    const result: CursorContext = {
       kind: 'attribute-value',
       tagName: attrValueMatch[1],
       attributeName: attrValueMatch[2],
       prefix: attrValueMatch[3],
     };
+
+    // For slot="..." we need the parent custom element
+    if (attrValueMatch[2] === 'slot') {
+      result.parentTagName = findParentCustomElement(text, offset);
+    }
+
+    return result;
   }
 
   // ── HTML attribute name context ────────────────────────────────
@@ -106,6 +115,7 @@ export function getCursorContext(
       kind: 'attribute-name',
       tagName: attrNameMatch[1],
       prefix: attrNameMatch[2],
+      parentTagName: findParentCustomElement(text, offset),
     };
   }
 
@@ -236,4 +246,45 @@ export function scanDocument(
   }
 
   return symbols;
+}
+
+/**
+ * Find the nearest parent custom element (tag with a hyphen) that wraps the given offset.
+ * Walks backward through the text tracking open/close tags to find the enclosing element.
+ */
+function findParentCustomElement(text: string, offset: number): string | undefined {
+  const before = text.slice(0, offset);
+
+  // Simple approach: walk backward through tags and track nesting
+  // Find all tags before our position
+  const tagRegex = /<\/?([a-zA-Z][\w-]*)/g;
+  const tags: { name: string; isClose: boolean; index: number }[] = [];
+  let m: RegExpExecArray | null;
+
+  while ((m = tagRegex.exec(before)) !== null) {
+    const isClose = before[m.index + 1] === '/';
+    const name = m[1];
+    // Only care about custom elements (contain hyphen)
+    if (name.includes('-')) {
+      tags.push({ name, isClose, index: m.index });
+    }
+  }
+
+  // Walk backward through the tags, tracking nesting
+  const stack: string[] = [];
+  for (let i = tags.length - 1; i >= 0; i--) {
+    const tag = tags[i];
+    if (tag.isClose) {
+      stack.push(tag.name);
+    } else {
+      if (stack.length > 0 && stack[stack.length - 1] === tag.name) {
+        stack.pop(); // matched a close tag
+      } else {
+        // This is an unclosed open tag — it's our parent
+        return tag.name;
+      }
+    }
+  }
+
+  return undefined;
 }

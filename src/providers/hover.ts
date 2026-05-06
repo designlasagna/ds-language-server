@@ -35,6 +35,10 @@ export function getHover(
   const attrValueHover = tryAttrValueHover(text, offset, store);
   if (attrValueHover) return attrValueHover;
 
+  // ── Try slot attribute value hover ─────────────────────────────
+  const slotHover = trySlotValueHover(text, offset, store);
+  if (slotHover) return slotHover;
+
   // ── Try HTML attribute hover ───────────────────────────────────
   const attrHover = tryAttrHover(text, offset, store);
   if (attrHover) return attrHover;
@@ -254,6 +258,82 @@ function tryAttrValueHover(text: string, offset: number, store: DSStore): Hover 
   return {
     contents: { kind: MarkupKind.Markdown, value: parts.join('\n\n') },
   };
+}
+
+// ─── Slot Value Hover ──────────────────────────────────────────────
+
+function trySlotValueHover(text: string, offset: number, store: DSStore): Hover | null {
+  // Match slot="value"
+  const match = findPatternAroundOffset(text, offset, /slot\s*=\s*"([^"]*)"/g, 0);
+  if (!match) return null;
+
+  const fullMatch = match.value;
+  const slotNameMatch = fullMatch.match(/^slot\s*=\s*"([^"]*)"$/);
+  if (!slotNameMatch) return null;
+
+  const slotName = slotNameMatch[1];
+  const valueStart = match.start + fullMatch.indexOf(`"${slotName}"`) + 1;
+  const valueEnd = valueStart + slotName.length;
+  if (offset < valueStart || offset > valueEnd) return null;
+
+  // Find the parent custom element
+  const parentTag = findParentCustomElement(text, match.start);
+  if (!parentTag) return null;
+
+  const component = store.getComponent(parentTag);
+  if (!component) return null;
+
+  const slot = component.slots.find((s) => s.name === slotName);
+  if (!slot) return null;
+
+  const parts: string[] = [];
+  parts.push(`### slot=\`"${slotName}"\` — \`<${parentTag}>\``);
+  if (slot.description) parts.push(slot.description);
+
+  const otherSlots = component.slots
+    .filter((s) => s.name !== slotName && s.name !== 'default' && s.name !== '')
+    .map((s) => `\`${s.name}\``);
+  if (otherSlots.length > 0) {
+    parts.push(`**Other slots:** ${otherSlots.join(', ')}`);
+  }
+
+  return {
+    contents: { kind: MarkupKind.Markdown, value: parts.join('\n\n') },
+  };
+}
+
+/**
+ * Find the nearest parent custom element (tag with hyphen) enclosing a position.
+ */
+function findParentCustomElement(text: string, offset: number): string | undefined {
+  const before = text.slice(0, offset);
+  const tagRegex = /<\/?([a-zA-Z][\w-]*)/g;
+  const tags: { name: string; isClose: boolean }[] = [];
+  let m: RegExpExecArray | null;
+
+  while ((m = tagRegex.exec(before)) !== null) {
+    const isClose = before[m.index + 1] === '/';
+    const name = m[1];
+    if (name.includes('-')) {
+      tags.push({ name, isClose });
+    }
+  }
+
+  const stack: string[] = [];
+  for (let i = tags.length - 1; i >= 0; i--) {
+    const tag = tags[i];
+    if (tag.isClose) {
+      stack.push(tag.name);
+    } else {
+      if (stack.length > 0 && stack[stack.length - 1] === tag.name) {
+        stack.pop();
+      } else {
+        return tag.name;
+      }
+    }
+  }
+
+  return undefined;
 }
 
 // ─── HTML Attribute Hover ──────────────────────────────────────────

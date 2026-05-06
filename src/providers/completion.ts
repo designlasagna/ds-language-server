@@ -21,8 +21,12 @@ export function getCompletions(
     case 'tag-open':
       return getTagCompletions(context.prefix, store);
     case 'attribute-name':
-      return getAttributeCompletions(context.tagName!, context.prefix, store);
+      return getAttributeCompletions(context.tagName!, context.prefix, context.parentTagName, store);
     case 'attribute-value':
+      // Special case: slot="..." should suggest parent component's slots
+      if (context.attributeName === 'slot') {
+        return getSlotValueCompletions(context.parentTagName, context.prefix, store);
+      }
       return getAttributeValueCompletions(
         context.tagName!,
         context.attributeName!,
@@ -117,40 +121,67 @@ function buildComponentDoc(
 function getAttributeCompletions(
   tagName: string,
   prefix: string,
+  parentTagName: string | undefined,
   store: DSStore,
 ): CompletionItem[] {
   const component = store.getComponent(tagName);
-  if (!component) return [];
-
+  // Even without a known component, we can still offer slot= if there's a parent
   const items: CompletionItem[] = [];
 
-  for (const attr of component.attributes) {
-    if (!attr.htmlName.startsWith(prefix)) continue;
+  if (component) {
+    for (const attr of component.attributes) {
+      if (!attr.htmlName.startsWith(prefix)) continue;
 
-    const deprecated = isDeprecated(attr);
-    const typeLabel = attr.values
-      ? `"${attr.values.join('" | "')}"` : attr.type;
+      const deprecated = isDeprecated(attr);
+      const typeLabel = attr.values
+        ? `"${attr.values.join('" | "')}"` : attr.type;
 
-    const item: CompletionItem = {
-      label: attr.htmlName,
-      kind: CompletionItemKind.Property,
-      detail: typeLabel,
-      documentation: attr.description
-        ? { kind: MarkupKind.Markdown, value: buildAttrDoc(attr) }
-        : undefined,
-      // For boolean attributes, just insert the name. For others, add ="$1"
-      insertText: attr.type === 'boolean'
-        ? attr.htmlName
-        : `${attr.htmlName}="$1"`,
-      insertTextFormat: InsertTextFormat.Snippet,
-      sortText: deprecated ? `z${attr.htmlName}` : `a${attr.htmlName}`,
-    };
+      const item: CompletionItem = {
+        label: attr.htmlName,
+        kind: CompletionItemKind.Property,
+        detail: typeLabel,
+        documentation: attr.description
+          ? { kind: MarkupKind.Markdown, value: buildAttrDoc(attr) }
+          : undefined,
+        // For boolean attributes, just insert the name. For others, add ="$1"
+        insertText: attr.type === 'boolean'
+          ? attr.htmlName
+          : `${attr.htmlName}="$1"`,
+        insertTextFormat: InsertTextFormat.Snippet,
+        sortText: deprecated ? `z${attr.htmlName}` : `a${attr.htmlName}`,
+      };
 
-    if (deprecated) {
-      item.tags = [CompletionItemTag.Deprecated];
+      if (deprecated) {
+        item.tags = [CompletionItemTag.Deprecated];
+      }
+
+      items.push(item);
     }
+  }
 
-    items.push(item);
+  // Offer slot="" if we're inside a parent custom element with named slots
+  if ('slot'.startsWith(prefix) && parentTagName) {
+    const parentComponent = store.getComponent(parentTagName);
+    if (parentComponent) {
+      const namedSlots = parentComponent.slots.filter(
+        (s) => s.name && s.name !== 'default' && s.name !== '',
+      );
+      if (namedSlots.length > 0) {
+        const slotNames = namedSlots.map((s) => s.name);
+        items.push({
+          label: 'slot',
+          kind: CompletionItemKind.Property,
+          detail: `"${slotNames.join('" | "')}"`,
+          documentation: {
+            kind: MarkupKind.Markdown,
+            value: `Assign this element to a named slot in \`<${parentTagName}>\`.\n\n**Available slots:** ${slotNames.map((s) => `\`${s}\``).join(', ')}`,
+          },
+          insertText: `slot="$1"`,
+          insertTextFormat: InsertTextFormat.Snippet,
+          sortText: 'aslot',
+        });
+      }
+    }
   }
 
   return items;
@@ -233,6 +264,39 @@ function getAttributeValueCompletions(
     }
 
     items.push(item);
+  }
+
+  return items;
+}
+
+// ─── Slot Value Completions ────────────────────────────────────────
+
+function getSlotValueCompletions(
+  parentTagName: string | undefined,
+  prefix: string,
+  store: DSStore,
+): CompletionItem[] {
+  if (!parentTagName) return [];
+
+  const component = store.getComponent(parentTagName);
+  if (!component) return [];
+
+  const items: CompletionItem[] = [];
+
+  for (const slot of component.slots) {
+    const slotName = slot.name || 'default';
+    if (slotName === 'default') continue; // default slot doesn't need slot="default"
+    if (!slotName.startsWith(prefix)) continue;
+
+    items.push({
+      label: slotName,
+      kind: CompletionItemKind.EnumMember,
+      detail: `slot — <${parentTagName}>`,
+      documentation: slot.description
+        ? { kind: MarkupKind.Markdown, value: slot.description }
+        : undefined,
+      sortText: `a${slotName}`,
+    });
   }
 
   return items;

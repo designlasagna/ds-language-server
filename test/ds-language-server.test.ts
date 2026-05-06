@@ -404,6 +404,36 @@ describe('Completion provider', () => {
     expect(items.length).toBeGreaterThan(0);
     expect(items.some((i) => i.label === 'lf-text-heading-1')).toBe(true);
   });
+
+  it('completes slot values from parent component', () => {
+    const items = getCompletions(
+      { kind: 'attribute-value', prefix: '', tagName: 'span', attributeName: 'slot', parentTagName: 'lfds-button' },
+      store,
+    );
+    expect(items.length).toBe(2);
+    expect(items.some((i) => i.label === 'start')).toBe(true);
+    expect(items.some((i) => i.label === 'end')).toBe(true);
+  });
+
+  it('offers slot attribute when inside a parent component', () => {
+    const items = getCompletions(
+      { kind: 'attribute-name', prefix: '', tagName: 'span', parentTagName: 'lfds-button' },
+      store,
+    );
+    const slotItem = items.find((i) => i.label === 'slot');
+    expect(slotItem).toBeDefined();
+    expect(slotItem!.detail).toContain('start');
+    expect(slotItem!.detail).toContain('end');
+  });
+
+  it('does not offer slot attribute without parent component', () => {
+    const items = getCompletions(
+      { kind: 'attribute-name', prefix: '', tagName: 'span' },
+      store,
+    );
+    const slotItem = items.find((i) => i.label === 'slot');
+    expect(slotItem).toBeUndefined();
+  });
 });
 
 // ─── Diagnostics Tests ─────────────────────────────────────────────

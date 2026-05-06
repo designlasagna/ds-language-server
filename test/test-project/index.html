@@ -1,30 +1,30 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-    <head>
-        <style>
-            .container {
-                /* Try hovering over this token ↓ — it's deprecated! */
-                background: var(--lfds-color-background-button-primary-pressed);
-                padding: var(--lfds-spacing-lg);
-                border-radius: var(--lfds-border-radius-2xs);
-            }
-        </style>
-    </head>
-    <body>
-        <!-- This component uses a deprecated attribute value -->
-        <lfds-button variant="secondary" size="small"> Click me </lfds-button>
+<head>
+  <style>
+    .container {
+      background: var(--lfds-color-background-button-primary-pressed);
+      padding: var(--lfds-spacing-lg);
+    }
+  </style>
+</head>
+<body>
+  <!-- deprecated value: should warn -->
+  <lfds-button variant="tertiary" size="medium">Bad</lfds-button>
 
-        <!-- This uses the deprecated 'label' attribute -->
-        <lfds-button label="Don't do this" variant="primary"></lfds-button>
+  <!-- good values: should NOT warn -->
+  <lfds-button variant="secondary" size="small">Good</lfds-button>
 
-        <!-- This is a draft component -->
-        <lfds-shortcut label="Settings"></lfds-shortcut>
+  <!-- slot completions: type slot=" inside here -->
+  <lfds-button variant="primary">
+    <svg slot="">Icon</svg>
+    Click me
+  </lfds-button>
 
-        <!-- Ut   ility classes -->
-        <div class="lf-text-heading-1 lf-text-color-primary">Hello World</div>
+  <!-- deprecated attribute: should warn -->
+  <lfds-button label="Don't do this" variant="primary"></lfds-button>
 
-        <p class="lf-text-body-default lf-text-color-secondary">
-            This is a paragraph with utility classes.
-        </p>
-    </body>
+  <!-- draft component: should info -->
+  <lfds-shortcut label="Settings"></lfds-shortcut>
+</body>
 </html>
