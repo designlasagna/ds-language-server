@@ -205,7 +205,7 @@ The build pipeline merges this with parsed description data.
 
 ```json
 {
-  "$schema": "https://ds.magnus.dev/schemas/v1/tokens.json",
+  "$schema": "https://ds.foundation/schemas/v1/tokens.json",
   "schemaVersion": "0.3.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "tokens": [
@@ -284,7 +284,7 @@ Minimal schema — just `name` and `description`. No deprecation, no values, no 
 
 ```json
 {
-  "$schema": "https://ds.magnus.dev/schemas/v1/utilities.json",
+  "$schema": "https://ds.foundation/schemas/v1/utilities.json",
   "schemaVersion": "1.0.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "categories": [
@@ -449,15 +449,15 @@ The LSP normalizes both patterns internally into the same `DeprecationInfo` type
 
 ## 5. Schema Hosting
 
-### Decision: `ds.magnus.dev`
+### Decision: `ds.foundation`
 
-Schemas are hosted at `https://ds.magnus.dev/schemas/` — a subdomain of `magnus.dev`.
+Schemas are hosted at `https://ds.foundation/schemas/`.
 
 **URL structure:**
 ```
-https://ds.magnus.dev/schemas/v1/tokens.json
-https://ds.magnus.dev/schemas/v1/utilities.json
-https://ds.magnus.dev/schemas/v1/cem-extensions.json
+https://ds.foundation/schemas/v1/tokens.json
+https://ds.foundation/schemas/v1/utilities.json
+https://ds.foundation/schemas/v1/cem-extensions.json
 ```
 
 **Why this works:**
@@ -468,7 +468,7 @@ https://ds.magnus.dev/schemas/v1/cem-extensions.json
 
 ### Distribution layers
 
-1. **URL** (`$schema` field): `https://ds.magnus.dev/schemas/v1/tokens.json`
+1. **URL** (`$schema` field): `https://ds.foundation/schemas/v1/tokens.json`
    - Enables IDE JSON validation when opening manifest files
    - Accessible publicly
 
@@ -843,6 +843,6 @@ Same Figma-like pattern — deprecation in the description text:
 | Utility schema | New `utilities` v1.0.0 with `deprecated`, `properties`, `tokens` |
 | Deprecation shape | `{ message, removal?, replacement? }` — unified across all three |
 | Source authoring | JSDoc tags (components), `$extensions` (tokens), CSS comments (utilities) |
-| Schema hosting | `ds.magnus.dev/schemas/v1/` + npm package + bundled in LSP |
+| Schema hosting | `ds.foundation/schemas/v1/` + npm package + bundled in LSP |
 | Discovery | `package.json` fields (`customElements` + `designSystem.*`) |
 | Generic reuse | Schemas are design-system-agnostic, namespace via `$schema` URL |
