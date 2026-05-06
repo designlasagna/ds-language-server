@@ -24,12 +24,18 @@ interface LFDSTokenEntry {
   cssVariable?: string;
   visibility?: { isComponent?: boolean; isPrimitive?: boolean };
 
-  // Lifecycle fields (optional)
+  // Lifecycle fields — supports both flat (v0.2.0) and structured (v1.0.0)
   status?: string;
+
+  // v0.2.0 flat format:
   deprecated?: boolean | string;
   deprecationMessage?: string;
   removal?: string;
   replacement?: string;
+
+  // v1.0.0 structured format (deprecated as object):
+  // deprecated?: { message: string; removal?: string; replacement?: string }
+  // (handled via union type in parseTokenEntry)
 }
 
 // ─── Parser ────────────────────────────────────────────────────────
@@ -72,7 +78,27 @@ function parseTokenEntry(entry: LFDSTokenEntry, source: string): DSToken | null 
   // Must have a CSS variable name
   if (!entry.cssVariable) return null;
 
-  const deprecated = parseDeprecated(entry.deprecated);
+  // Handle both v0.2.0 flat format and v1.0.0 structured format
+  let isDeprecated = false;
+  let deprecationMessage: string | undefined;
+  let removal: string | undefined;
+  let replacement: string | undefined;
+
+  if (entry.deprecated && typeof entry.deprecated === 'object' && 'message' in (entry.deprecated as object)) {
+    // v1.0.0 structured: deprecated: { message, removal?, replacement? }
+    const dep = entry.deprecated as unknown as { message: string; removal?: string; replacement?: string };
+    isDeprecated = true;
+    deprecationMessage = dep.message;
+    removal = dep.removal;
+    replacement = dep.replacement;
+  } else {
+    // v0.2.0 flat format
+    const deprecated = parseDeprecated(entry.deprecated);
+    isDeprecated = deprecated.isDeprecated;
+    deprecationMessage = deprecated.message ?? entry.deprecationMessage;
+    removal = entry.removal;
+    replacement = entry.replacement;
+  }
 
   // Determine default resolved value
   const resolved = entry.resolved;
@@ -91,10 +117,10 @@ function parseTokenEntry(entry: LFDSTokenEntry, source: string): DSToken | null 
     resolved,
     value,
     status: parseStatus(entry.status),
-    deprecated: deprecated.isDeprecated,
-    deprecationMessage: deprecated.message ?? entry.deprecationMessage,
-    removal: entry.removal,
-    replacement: entry.replacement,
+    deprecated: isDeprecated,
+    deprecationMessage,
+    removal,
+    replacement,
     source,
   };
 }
