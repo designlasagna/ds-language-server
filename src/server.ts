@@ -51,10 +51,6 @@ connection.onInitialize((params: InitializeParams) => {
       },
       hoverProvider: true,
       codeActionProvider: true,
-      diagnosticProvider: {
-        interFileDependencies: false,
-        workspaceDiagnostics: false,
-      },
     },
   };
 });
