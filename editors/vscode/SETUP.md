@@ -7,8 +7,9 @@ cd editors/vscode
 npm install
 npm run bundle-server
 
-# Install in VS Code
-code --install-extension .
+# Package and install
+npx vsce package --allow-missing-repository
+code --install-extension ds-language-server-0.1.0.vsix
 ```
 
 Or for F5 development:

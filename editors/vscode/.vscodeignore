@@ -1,0 +1,10 @@
+.gitignore
+.npmrc
+node_modules/**/test/
+node_modules/**/tests/
+node_modules/**/*.d.ts.map
+node_modules/**/CHANGELOG.md
+node_modules/**/README.md
+node_modules/.package-lock.json
+package-lock.json
+SETUP.md
