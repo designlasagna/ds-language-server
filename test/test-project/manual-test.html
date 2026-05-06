@@ -1,0 +1,152 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     MANUAL TEST: HTML — Design System Language Server
+     ═══════════════════════════════════════════════════════════════════
+     Open this file in Zed and test each numbered scenario.
+     Expected behavior is documented in comments.
+-->
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>DS Language Server — Manual Test</title>
+  <style>
+    /* ─── TEST 1: Token completions in <style> ───────────────────────
+       Place cursor after "var(--lfds-" and trigger autocomplete.
+       EXPECT: 6 token suggestions, --lfds-color-background-button-primary-pressed marked ⛔
+    */
+    .hero {
+      border-radius: var(--lfds-);
+      /* ↑ cursor here */
+    }
+
+    /* ─── TEST 2: Deprecated token diagnostic ────────────────────────
+       EXPECT: ⚠️ warning squiggle on the token name below
+       EXPECT: hover shows deprecation message + removal date
+    */
+    .deprecated-token {
+      background: var(--lfds-color-background-button-primary-pressed);
+    }
+
+    /* ─── TEST 3: Valid token — no diagnostic ────────────────────────
+       EXPECT: no warning, clean
+    */
+    .valid-token {
+      border-radius: var(--lfds-border-radius-md);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── TEST 4: Component tag completions ──────────────────────────
+       Place cursor after "<lfds-" and trigger autocomplete.
+       EXPECT: lfds-button, lfds-shortcut suggested
+  -->
+  <lfds-></lfds->
+  <!-- ↑ cursor between "lfds-" and ">" -->
+
+
+  <!-- ─── TEST 5: Attribute name completions ─────────────────────────
+       Place cursor after "lfds-button " (space after tag) and trigger.
+       EXPECT: variant, size, type, href, disabled, label⛔, slot, etc.
+  -->
+  <lfds-button ></lfds-button>
+  <!-- ↑ cursor before ">" -->
+
+
+  <!-- ─── TEST 6: Attribute VALUE completions ────────────────────────
+       Place cursor between the quotes and trigger.
+       EXPECT: primary, secondary, tertiary⛔
+  -->
+  <lfds-button variant=""></lfds-button>
+  <!-- ↑ cursor inside quotes -->
+
+
+  <!-- ─── TEST 7: Deprecated attribute value diagnostic ──────────────
+       EXPECT: ⚠️ warning on variant="tertiary"
+       EXPECT: message mentions "Use `secondary` instead"
+       EXPECT: code action offers replacement
+  -->
+  <lfds-button variant="tertiary">Don't use this</lfds-button>
+
+
+  <!-- ─── TEST 8: Deprecated ATTRIBUTE diagnostic ────────────────────
+       EXPECT: ⚠️ warning on the "label" attribute
+       EXPECT: message says "Use `default` slot instead"
+  -->
+  <lfds-button label="Old API">Deprecated attr</lfds-button>
+
+
+  <!-- ─── TEST 9: Valid usage — no diagnostics ───────────────────────
+       EXPECT: clean, no warnings
+  -->
+  <lfds-button variant="primary" size="small">
+    All good here
+  </lfds-button>
+
+
+  <!-- ─── TEST 10: Slot completions ──────────────────────────────────
+       Place cursor inside slot="" and trigger.
+       EXPECT: "start" and "end" suggested (not "default")
+  -->
+  <lfds-button variant="primary">
+    <svg slot="">←</svg>
+    <!-- ↑ cursor inside slot="" -->
+    Click me
+  </lfds-button>
+
+
+  <!-- ─── TEST 11: Slot attribute suggestion ─────────────────────────
+       Place cursor after "<span " inside lfds-button and trigger.
+       EXPECT: "slot" attribute offered with detail "start | end"
+  -->
+  <lfds-button variant="secondary">
+    <span ></span>
+    <!-- ↑ cursor after "span " -->
+  </lfds-button>
+
+
+  <!-- ─── TEST 12: Draft component diagnostic ────────────────────────
+       EXPECT: ℹ️ info diagnostic on <lfds-shortcut>
+       EXPECT: message mentions "draft" status
+  -->
+  <lfds-shortcut label="Settings" layout="horizontal"></lfds-shortcut>
+
+
+  <!-- ─── TEST 13: Utility class completions ─────────────────────────
+       Place cursor after "lf-" and trigger.
+       EXPECT: 44 utility classes (lf-text-*, lf-font-*)
+  -->
+  <div class="lf-"></div>
+  <!-- ↑ cursor after "lf-" -->
+
+
+  <!-- ─── TEST 14: Multiple classes — completion mid-value ───────────
+       Place cursor after the space (before lf-font-) and trigger.
+       EXPECT: utility class suggestions
+  -->
+  <p class="lf-text-body-default lf-"></p>
+  <!-- ↑ cursor after last "lf-" -->
+
+
+  <!-- ─── TEST 15: Hover on valid token ──────────────────────────────
+       Hover over "--lfds-border-radius-lg" below.
+       EXPECT: markdown popup with value (16px), group, category, type
+  -->
+  <div style="border-radius: var(--lfds-border-radius-lg)"></div>
+
+
+  <!-- ─── TEST 16: Hover on component tag ────────────────────────────
+       Hover over "lfds-button" in the opening tag.
+       EXPECT: component description, attribute list, slot info
+  -->
+  <lfds-button variant="primary">Hover me</lfds-button>
+
+
+  <!-- ─── TEST 17: Hover on attribute ────────────────────────────────
+       Hover over "size" attribute name.
+       EXPECT: type info, allowed values
+  -->
+  <lfds-button size="large">Hover the attr</lfds-button>
+
+</body>
+</html>
