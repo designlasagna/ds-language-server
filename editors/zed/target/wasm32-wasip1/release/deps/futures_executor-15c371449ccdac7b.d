@@ -1,0 +1,9 @@
+/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/wasm32-wasip1/release/deps/futures_executor-15c371449ccdac7b.d: /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs
+
+/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/wasm32-wasip1/release/deps/libfutures_executor-15c371449ccdac7b.rlib: /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs
+
+/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/wasm32-wasip1/release/deps/libfutures_executor-15c371449ccdac7b.rmeta: /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs /Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs
+
+/Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/lib.rs:
+/Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/local_pool.rs:
+/Users/Magnus.Fredlundh/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-executor-0.3.32/src/enter.rs:

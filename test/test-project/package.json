@@ -1,0 +1,8 @@
+{
+  "name": "test-project",
+  "private": true,
+  "dependencies": {
+    "@lansforsakringar/core-components": "3.2.0",
+    "@lansforsakringar/core-css": "3.2.0"
+  }
+}

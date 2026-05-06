@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
   createConnection,
   TextDocuments,
@@ -13,7 +15,7 @@ import {
 } from 'vscode-languageserver/node.js';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { DSStore } from './store.js';
-import { discoverManifests, loadConfig } from './discovery.js';
+import { discoverManifests } from './discovery.js';
 import { getCursorContext } from './scanner.js';
 import { getCompletions } from './providers/completion.js';
 import { getHover } from './providers/hover.js';
@@ -29,6 +31,7 @@ const documents = new TextDocuments(TextDocument);
 const store = new DSStore();
 let config: DSConfig | undefined;
 let workspaceRoot = '';
+let manifestsLoaded = false;
 
 // ─── Initialize ────────────────────────────────────────────────────
 
@@ -56,11 +59,16 @@ connection.onInitialize((params: InitializeParams) => {
   };
 });
 
-connection.onInitialized(async () => {
-  // Load config
-  config = await loadConfig(workspaceRoot);
-  if (config) {
-    console.error('[ds-ls] Loaded ds.config');
+connection.onInitialized(() => {
+  // Try to load ds.config.json synchronously
+  const configPath = path.join(workspaceRoot, 'ds.config.json');
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      console.error('[ds-ls] Loaded ds.config.json');
+    } catch (e) {
+      console.error(`[ds-ls] Failed to parse ds.config.json: ${e}`);
+    }
   }
 
   // Discover and load manifests
@@ -75,10 +83,11 @@ function loadManifests(): void {
 
   const sources = discoverManifests(workspaceRoot, config);
   store.load(sources);
+  manifestsLoaded = true;
 
   const stats = store.stats();
-  connection.window.showInformationMessage(
-    `DS Language Server: loaded ${stats.components} components, ` +
+  console.error(
+    `[ds-ls] Ready: ${stats.components} components, ` +
     `${stats.tokens} tokens, ${stats.utilities} utilities`,
   );
 
@@ -113,6 +122,7 @@ connection.onHover((params: HoverParams) => {
 
 function validateDocument(document: TextDocument): void {
   const diagnostics = getDiagnostics(document, store, config);
+  console.error(`[ds-ls] Validated ${document.uri}: ${diagnostics.length} diagnostics`);
   connection.sendDiagnostics({
     uri: document.uri,
     diagnostics,
@@ -120,11 +130,18 @@ function validateDocument(document: TextDocument): void {
 }
 
 documents.onDidChangeContent((change) => {
-  validateDocument(change.document);
+  if (manifestsLoaded) {
+    validateDocument(change.document);
+  }
+});
+
+documents.onDidOpen((event) => {
+  if (manifestsLoaded) {
+    validateDocument(event.document);
+  }
 });
 
 documents.onDidClose((event) => {
-  // Clear diagnostics when document is closed
   connection.sendDiagnostics({
     uri: event.document.uri,
     diagnostics: [],
@@ -142,15 +159,21 @@ connection.onCodeAction((params: CodeActionParams) => {
 
 // ─── Configuration changes ─────────────────────────────────────────
 
-connection.onDidChangeConfiguration(async () => {
-  config = await loadConfig(workspaceRoot);
+connection.onDidChangeConfiguration(() => {
+  const configPath = path.join(workspaceRoot, 'ds.config.json');
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch {
+      // ignore
+    }
+  }
   loadManifests();
 });
 
 // ─── File watching ─────────────────────────────────────────────────
 
 connection.onDidChangeWatchedFiles(() => {
-  // Reload manifests when files change
   loadManifests();
 });
 

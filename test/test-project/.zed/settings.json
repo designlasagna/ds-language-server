@@ -1,0 +1,9 @@
+{
+  "lsp": {
+    "ds-language-server": {
+      "settings": {
+        "serverPath": "/Users/Magnus.Fredlundh/Code/Private/ds-language-server/dist/server.js"
+      }
+    }
+  }
+}

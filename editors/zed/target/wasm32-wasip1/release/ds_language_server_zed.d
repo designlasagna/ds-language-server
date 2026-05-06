@@ -1,0 +1,1 @@
+/Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/target/wasm32-wasip1/release/ds_language_server_zed.wasm: /Users/Magnus.Fredlundh/Code/Private/ds-language-server/editors/zed/src/lib.rs

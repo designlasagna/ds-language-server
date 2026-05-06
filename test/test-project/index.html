@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .container {
+      /* Try hovering over this token ↓ — it's deprecated! */
+      background: var(--lfds-color-background-button-primary-pressed);
+      padding: var(--lfds-spacing-lg);
+      border-radius: var(--lfds-border-radius-2xs);
+    }
+  </style>
+</head>
+<body>
+  <!-- This component uses a deprecated attribute value -->
+  <lfds-button variant="tertiary" size="medium">
+    Click me
+  </lfds-button>
+
+  <!-- This uses the deprecated 'label' attribute -->
+  <lfds-button label="Don't do this" variant="primary"></lfds-button>
+
+  <!-- This is a draft component -->
+  <lfds-shortcut label="Settings"></lfds-shortcut>
+
+  <!-- Utility classes -->
+  <div class="lf-text-heading-1 lf-text-color-primary">
+    Hello World
+  </div>
+
+  <p class="lf-text-body-default lf-text-color-secondary">
+    This is a paragraph with utility classes.
+  </p>
+</body>
+</html>
