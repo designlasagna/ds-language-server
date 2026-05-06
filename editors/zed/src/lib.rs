@@ -15,7 +15,8 @@ impl zed::Extension for DsLanguageServerExtension {
         let settings = LspSettings::for_worktree(language_server_id.as_ref(), worktree)
             .map_err(|e| format!("Failed to get settings: {e}"))?;
 
-        // Get server path from settings, or use default
+        // Get server path from settings
+        // Priority: settings.serverPath > "ds-language-server" (global npm bin)
         let server_path = settings
             .settings
             .as_ref()
@@ -24,7 +25,7 @@ impl zed::Extension for DsLanguageServerExtension {
             .unwrap_or("ds-language-server")
             .to_string();
 
-        // Get node binary path from settings
+        // Get node binary path from settings, or use "node"
         let node_path = settings
             .settings
             .as_ref()
@@ -41,7 +42,7 @@ impl zed::Extension for DsLanguageServerExtension {
                 env: Default::default(),
             })
         } else {
-            // Assume it's a binary
+            // Assume it's a bin/script that handles node itself
             Ok(zed::Command {
                 command: server_path,
                 args: vec!["--stdio".to_string()],
