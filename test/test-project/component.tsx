@@ -1,3 +1,4 @@
+// @ts-nocheck
 import styles from './component.module.css';
 
 export function MyComponent() {
