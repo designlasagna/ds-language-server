@@ -54,12 +54,12 @@ function tryVarHover(text: string, offset: number, store: DSStore): Hover | null
   const token = store.getToken(match.value);
   if (!token) return null;
 
-  const parts: string[] = [];
   const deprecated = isDeprecated(token);
 
-  if (deprecated) {
-    parts.push(`⚠️ **DEPRECATED** — \`${token.name}\`\n\n${buildDeprecationMessage(token)}\n\n---`);
-  }
+  // If deprecated, skip hover — the diagnostic already shows the warning
+  if (deprecated) return null;
+
+  const parts: string[] = [];
 
   parts.push(`### \`${token.name}\``);
 
@@ -116,12 +116,10 @@ function tryClassHover(text: string, offset: number, store: DSStore): Hover | nu
       const utility = store.getUtility(className);
       if (!utility) return null;
 
-      const parts: string[] = [];
-      const deprecated = isDeprecated(utility);
+      // If deprecated, skip hover — the diagnostic already shows the warning
+      if (isDeprecated(utility)) return null;
 
-      if (deprecated) {
-        parts.push(`⚠️ **DEPRECATED** — \`.${utility.name}\`\n\n${buildDeprecationMessage(utility)}\n\n---`);
-      }
+      const parts: string[] = [];
 
       parts.push(`### \`.${utility.name}\``);
       if (utility.description) parts.push(utility.description);
@@ -229,7 +227,11 @@ function tryAttrValueHover(text: string, offset: number, store: DSStore): Hover 
   );
   if (!attr) return null;
 
-  // Show attribute documentation (the diagnostic already handles deprecation warnings)
+  // If this value is deprecated, skip hover — the diagnostic already shows the warning
+  const isDeprecatedValue = attr.deprecatedValues?.some((dv) => dv.value === attrValue);
+  if (isDeprecatedValue) return null;
+
+  // Show attribute documentation for non-deprecated values
   const parts: string[] = [];
   parts.push(`### \`${attr.htmlName}="${attrValue}"\`  — \`<${tagName}>\``);
   if (attr.description) parts.push(attr.description);
@@ -237,9 +239,7 @@ function tryAttrValueHover(text: string, offset: number, store: DSStore): Hover 
   if (attr.default !== undefined) parts.push(`**Default:** \`${attr.default}\``);
 
   if (attr.values && attr.values.length > 0) {
-    const allValues = [...(attr.values || [])];
-    const deprecatedNames = new Set(attr.deprecatedValues?.map((dv) => dv.value) ?? []);
-    const formatted = allValues.map((v) => {
+    const formatted = attr.values.map((v) => {
       if (v === attrValue) return `**\`${v}\`** ← current`;
       return `\`${v}\``;
     });
@@ -275,12 +275,10 @@ function tryAttrHover(text: string, offset: number, store: DSStore): Hover | nul
   );
   if (!attr) return null;
 
-  const parts: string[] = [];
-  const deprecated = isDeprecated(attr);
+  // If deprecated, skip hover — the diagnostic already shows the warning
+  if (isDeprecated(attr)) return null;
 
-  if (deprecated) {
-    parts.push(`⚠️ **DEPRECATED** — \`${attr.htmlName}\`\n\n${buildDeprecationMessage(attr)}\n\n---`);
-  }
+  const parts: string[] = [];
 
   parts.push(`### \`${attr.htmlName}\``);
   if (attr.description) parts.push(attr.description);
