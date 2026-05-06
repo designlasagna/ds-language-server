@@ -2,5 +2,5 @@ node_modules/
 dist/
 *.tsbuildinfo
 .DS_Store
-editors/vscode/.npmrc
 .npmrc
+**/.npmrc
