@@ -1,0 +1,27 @@
+{
+  "name": "@ds-foundation/schemas",
+  "version": "0.1.0",
+  "description": "JSON schemas for design system manifests — tokens, utilities, and CEM extensions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ds-foundation/schemas"
+  },
+  "homepage": "https://ds.foundation",
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "json-schema",
+    "custom-elements-manifest",
+    "css-utilities",
+    "lsp"
+  ],
+  "exports": {
+    "./v1/tokens.json": "./v1/tokens.json",
+    "./v1/utilities.json": "./v1/utilities.json",
+    "./v1/cem-extensions.json": "./v1/cem-extensions.json"
+  },
+  "files": [
+    "v1/"
+  ]
+}

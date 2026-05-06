@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ds.foundation/schemas/v1/cem-extensions.json",
+  "title": "CEM Extensions for Design Systems",
+  "description": "Extensions to the Custom Elements Manifest (CEM) spec for design system lifecycle management. These fields are added alongside standard CEM fields on declarations, attributes, members, slots, cssProperties, cssParts, and events.",
+  "definitions": {
+    "LifecycleFields": {
+      "type": "object",
+      "description": "Fields that can be added to any CEM declaration or member to express lifecycle state.",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["draft", "ready", "deprecated"],
+          "description": "Component lifecycle status. 'draft' = not yet stable, 'ready' = stable for production, 'deprecated' = scheduled for removal."
+        },
+        "removal": {
+          "type": "string",
+          "description": "When the deprecated item will be removed. ISO date (2026-07-30), semver (4.0.0), or quarter (Q3-2026)."
+        },
+        "replacement": {
+          "type": "string",
+          "description": "Machine-readable replacement identifier. For attributes: new attribute name or instruction. For values: the replacement value."
+        }
+      }
+    },
+    "DeprecatedValue": {
+      "type": "object",
+      "required": ["value", "message"],
+      "description": "Deprecation info for a specific attribute value (without deprecating the entire attribute).",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The deprecated enum value"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable deprecation reason"
+        },
+        "removal": {
+          "type": "string",
+          "description": "When this value will be removed"
+        },
+        "replacement": {
+          "type": "string",
+          "description": "The value to use instead"
+        }
+      }
+    },
+    "AttributeExtensions": {
+      "type": "object",
+      "description": "Extension fields for CEM attribute/member entries.",
+      "properties": {
+        "enum": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Allowed values for this attribute"
+        },
+        "removal": {
+          "type": "string",
+          "description": "When the deprecated attribute will be removed"
+        },
+        "replacement": {
+          "type": "string",
+          "description": "What to use instead of this attribute"
+        },
+        "deprecatedValues": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DeprecatedValue" },
+          "description": "Individual deprecated values. When present, the attribute itself is NOT deprecated — only these specific values are."
+        }
+      }
+    },
+    "SlotExtensions": {
+      "type": "object",
+      "description": "Extension fields for CEM slot entries.",
+      "properties": {
+        "deprecated": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ],
+          "description": "True or deprecation message"
+        },
+        "removal": { "type": "string" },
+        "replacement": { "type": "string" }
+      }
+    },
+    "CssPropertyExtensions": {
+      "type": "object",
+      "description": "Extension fields for CEM cssProperty entries.",
+      "properties": {
+        "deprecated": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "string" }
+          ],
+          "description": "True or deprecation message"
+        },
+        "removal": { "type": "string" },
+        "replacement": { "type": "string" }
+      }
+    }
+  }
+}
