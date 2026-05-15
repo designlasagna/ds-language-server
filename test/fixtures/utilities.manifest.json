@@ -3,7 +3,7 @@
 		{
 			"name": "Text Style – Display",
 			"prefix": "lf-text-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-text-display-default",
 					"description": "Typography style display default"
@@ -13,7 +13,7 @@
 		{
 			"name": "Text Style – Heading",
 			"prefix": "lf-text-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-text-heading-1",
 					"description": "Typography style heading level-1"
@@ -43,7 +43,7 @@
 		{
 			"name": "Text Style – Body",
 			"prefix": "lf-text-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-text-body-lg",
 					"description": "Typography style body lg"
@@ -61,7 +61,7 @@
 		{
 			"name": "Text Style – Label",
 			"prefix": "lf-text-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-text-label-lg",
 					"description": "Typography style label lg"
@@ -79,7 +79,7 @@
 		{
 			"name": "Text Style – Caption",
 			"prefix": "lf-text-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-text-caption-default",
 					"description": "Typography style caption default"
@@ -89,7 +89,7 @@
 		{
 			"name": "Text Style – Value",
 			"prefix": "lf-text-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-text-value-2xl",
 					"description": "Typography style value 2xl"
@@ -115,7 +115,7 @@
 		{
 			"name": "Font Weight",
 			"prefix": "lf-font-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-font-normal"
 				},
@@ -141,7 +141,7 @@
 		{
 			"name": "Text Color",
 			"prefix": "lf-text-color-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-text-color-primary",
 					"description": "Default text primary color."
@@ -215,7 +215,7 @@
 		{
 			"name": "Base",
 			"prefix": "lf-",
-			"classes": [
+			"utilities": [
 				{
 					"name": "lf-sr-only",
 					"description": "Visually hide an element while keeping it accessible to screen readers."

@@ -3,12 +3,16 @@ import * as path from 'node:path';
 import type { ManifestSources, ManifestFile, DSConfig } from './types.js';
 
 /**
- * Discover design system manifests by scanning node_modules.
+ * Discover design system manifests.
  *
- * Looks for:
- * - "customElements" in package.json → CEM path
- * - "designSystem.tokens" in package.json → token manifest path
- * - "designSystem.utilities" in package.json → utility manifest path
+ * Two sources of manifests, merged together:
+ * 1. Auto-discovery — scans node_modules for packages with "customElements" or "designSystem" fields
+ * 2. Explicit sources — paths listed in ds.config.json "sources"
+ *
+ * Config controls:
+ * - `sources` — additional manifest files (always merged with auto-discovered)
+ * - `discovery.enabled` — set to false to disable node_modules scanning (default: true)
+ * - `discovery.packages` — allowlist of package names to scan (default: all)
  */
 export function discoverManifests(
   workspaceRoot: string,
@@ -20,55 +24,59 @@ export function discoverManifests(
     utilities: [],
   };
 
-  // If explicit sources are configured, use those
-  if (config?.sources) {
-    if (config.sources.components) {
-      for (const p of config.sources.components) {
-        const abs = path.resolve(workspaceRoot, p);
-        if (fs.existsSync(abs)) {
-          sources.components.push({ path: abs, packageName: 'config' });
-        }
-      }
-    }
-    if (config.sources.tokens) {
-      for (const p of config.sources.tokens) {
-        const abs = path.resolve(workspaceRoot, p);
-        if (fs.existsSync(abs)) {
-          sources.tokens.push({ path: abs, packageName: 'config' });
-        }
-      }
-    }
-    if (config.sources.utilities) {
-      for (const p of config.sources.utilities) {
-        const abs = path.resolve(workspaceRoot, p);
-        if (fs.existsSync(abs)) {
-          sources.utilities.push({ path: abs, packageName: 'config' });
-        }
-      }
-    }
+  // 1. Auto-discovery from node_modules (unless disabled)
+  const discoveryEnabled = config?.discovery?.enabled !== false;
 
-    // If any explicit sources found, skip auto-discovery
-    if (sources.components.length || sources.tokens.length || sources.utilities.length) {
-      return sources;
+  if (discoveryEnabled) {
+    const nodeModules = path.join(workspaceRoot, 'node_modules');
+    if (fs.existsSync(nodeModules)) {
+      const allowlist = config?.discovery?.packages;
+      scanDirectory(nodeModules, sources, allowlist);
     }
   }
 
-  // Auto-discovery: scan node_modules
-  const nodeModules = path.join(workspaceRoot, 'node_modules');
-  if (!fs.existsSync(nodeModules)) return sources;
-
-  scanDirectory(nodeModules, sources);
+  // 2. Merge explicit sources from config
+  if (config?.sources) {
+    addExplicitSources(config.sources.components, sources.components, workspaceRoot);
+    addExplicitSources(config.sources.tokens, sources.tokens, workspaceRoot);
+    addExplicitSources(config.sources.utilities, sources.utilities, workspaceRoot);
+  }
 
   return sources;
 }
 
-function scanDirectory(nodeModulesDir: string, sources: ManifestSources): void {
+function addExplicitSources(
+  paths: string[] | undefined,
+  target: ManifestFile[],
+  workspaceRoot: string,
+): void {
+  if (!paths) return;
+
+  for (const p of paths) {
+    const abs = path.resolve(workspaceRoot, p);
+    if (fs.existsSync(abs)) {
+      // Avoid duplicates (same file already found via auto-discovery)
+      if (!target.some((f) => f.path === abs)) {
+        target.push({ path: abs, packageName: 'config' });
+      }
+    }
+  }
+}
+
+function scanDirectory(
+  nodeModulesDir: string,
+  sources: ManifestSources,
+  allowlist?: string[],
+): void {
   let entries: string[];
   try {
     entries = fs.readdirSync(nodeModulesDir);
   } catch {
     return;
   }
+
+  // Build a Set for fast allowlist lookups
+  const allowed = allowlist ? new Set(allowlist) : undefined;
 
   for (const entry of entries) {
     if (entry.startsWith('.')) continue;
@@ -84,10 +92,15 @@ function scanDirectory(nodeModulesDir: string, sources: ManifestSources): void {
         continue;
       }
       for (const scopedEntry of scopedEntries) {
+        const packageName = `${entry}/${scopedEntry}`;
+        if (allowed && !allowed.has(packageName)) continue;
+
         const pkgDir = path.join(entryPath, scopedEntry);
-        scanPackage(pkgDir, `${entry}/${scopedEntry}`, sources);
+        scanPackage(pkgDir, packageName, sources);
       }
     } else {
+      if (allowed && !allowed.has(entry)) continue;
+
       scanPackage(entryPath, entry, sources);
     }
   }

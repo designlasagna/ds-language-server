@@ -205,7 +205,7 @@ The build pipeline merges this with parsed description data.
 
 ```json
 {
-  "$schema": "https://ds.foundation/schemas/v1/tokens.json",
+  "$schema": "https://designlasagna.recipes/v0.2/tokens.json",
   "schemaVersion": "0.3.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "tokens": [
@@ -284,7 +284,7 @@ Minimal schema — just `name` and `description`. No deprecation, no values, no 
 
 ```json
 {
-  "$schema": "https://ds.foundation/schemas/v1/utilities.json",
+  "$schema": "https://designlasagna.recipes/v0.2/utilities.json",
   "schemaVersion": "1.0.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "categories": [
@@ -292,7 +292,7 @@ Minimal schema — just `name` and `description`. No deprecation, no values, no 
       "name": "Text Style – Heading",
       "description": "Typography heading utilities.",
       "prefix": "lf-text-heading-",
-      "classes": [
+      "utilities": [
         {
           "name": "lf-text-heading-1",
           "description": "Typography style heading level-1",
@@ -449,33 +449,33 @@ The LSP normalizes both patterns internally into the same `DeprecationInfo` type
 
 ## 5. Schema Hosting
 
-### Decision: `ds.foundation`
+### Decision: `designlasagna.recipes`
 
-Schemas are hosted at `https://ds.foundation/schemas/`.
+Schemas are hosted at `https://designlasagna.recipes/`.
 
 **URL structure:**
 ```
-https://ds.foundation/schemas/v1/tokens.json
-https://ds.foundation/schemas/v1/utilities.json
-https://ds.foundation/schemas/v1/cem-extensions.json
+https://designlasagna.recipes/v0.2/tokens.json
+https://designlasagna.recipes/v0.2/utilities.json
+https://designlasagna.recipes/v0.2/cem-extensions.json
 ```
 
 **Why this works:**
 - Domain already owned and controlled
 - Can redirect to a dedicated domain later if the project grows
 - Static JSON hosting (GitHub Pages, Cloudflare Pages, or similar)
-- Versioned path (`/v1/`) allows breaking changes without breaking existing manifests
+- Versioned path (`/v0.2/`) allows breaking changes without breaking existing manifests
 
 ### Distribution layers
 
-1. **URL** (`$schema` field): `https://ds.foundation/schemas/v1/tokens.json`
+1. **URL** (`$schema` field): `https://designlasagna.recipes/v0.2/tokens.json`
    - Enables IDE JSON validation when opening manifest files
    - Accessible publicly
 
 2. **npm package** (optional): `ds-manifest-schemas`
    - Versioned alongside the manifests
    - Available offline via `node_modules`
-   - CI validation: `ajv validate -s node_modules/ds-manifest-schemas/v1/tokens.json -d dist/tokens.json`
+   - CI validation: `ajv validate -s node_modules/ds-manifest-schemas/v0.2/tokens.json -d dist/tokens.json`
 
 3. **Bundled in LSP**: The language server ships with a copy
    - Works even if the URL is unreachable (corporate proxies, offline)
@@ -723,12 +723,12 @@ Same Figma-like pattern — deprecation in the description text:
   "definitions": {
     "Category": {
       "type": "object",
-      "required": ["name", "classes"],
+      "required": ["name", "utilities"],
       "properties": {
         "name": { "type": "string", "description": "Human-readable category name" },
         "description": { "type": "string" },
         "prefix": { "type": "string", "description": "Common class prefix for this category" },
-        "classes": {
+        "utilities": {
           "type": "array",
           "items": { "$ref": "#/definitions/UtilityClass" }
         }
@@ -843,6 +843,6 @@ Same Figma-like pattern — deprecation in the description text:
 | Utility schema | New `utilities` v1.0.0 with `deprecated`, `properties`, `tokens` |
 | Deprecation shape | `{ message, removal?, replacement? }` — unified across all three |
 | Source authoring | JSDoc tags (components), `$extensions` (tokens), CSS comments (utilities) |
-| Schema hosting | `ds.foundation/schemas/v1/` + npm package + bundled in LSP |
+| Schema hosting | `designlasagna.recipes/v0.2/` + npm package + bundled in LSP |
 | Discovery | `package.json` fields (`customElements` + `designSystem.*`) |
 | Generic reuse | Schemas are design-system-agnostic, namespace via `$schema` URL |

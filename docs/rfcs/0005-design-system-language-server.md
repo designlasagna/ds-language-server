@@ -284,7 +284,7 @@ This means the LSP works out of the box with LFDS's `lfds-tokens.json` without a
     {
       "name": "Text Style – Heading",
       "prefix": "lf-text-",
-      "classes": [
+      "utilities": [
         {
           "name": "lf-text-heading-1",
           "description": "Typography style heading level-1.",

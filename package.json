@@ -1,10 +1,15 @@
 {
-  "name": "ds-language-server",
+  "name": "@designlasagna/ds-language-server",
   "version": "0.1.0",
   "description": "Language Server for design systems — IntelliSense for components, tokens, and utility classes with lifecycle-aware deprecation diagnostics.",
   "author": "Magnus Fredlundh",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/designlasagna/ds-language-server"
+  },
+  "homepage": "https://designlasagna.recipes",
   "main": "dist/server.js",
   "bin": {
     "ds-language-server": "dist/server.js"

@@ -5,7 +5,7 @@ import type { DSUtilityClass } from '../types.js';
 /**
  * Supported utility manifest structures:
  *
- * 1. LFDS format: { categories: [ { name, prefix, classes: [ { name, description } ] } ] }
+ * 1. Categorized: { categories: [ { name, prefix, utilities: [ { name, description } ] } ] }
  * 2. Flat array:  [ { name, description, category } ]
  */
 
@@ -16,7 +16,7 @@ interface CategorizedManifest {
 interface UtilityCategory {
   name: string;
   prefix?: string;
-  classes: UtilityEntry[];
+  utilities: UtilityEntry[];
 }
 
 interface UtilityEntry {
@@ -63,9 +63,9 @@ function parseCategorized(manifest: CategorizedManifest, source: string): DSUtil
   const utilities: DSUtilityClass[] = [];
 
   for (const category of manifest.categories) {
-    if (!Array.isArray(category.classes)) continue;
+    if (!Array.isArray(category.utilities)) continue;
 
-    for (const entry of category.classes) {
+    for (const entry of category.utilities) {
       const utility = parseEntry(entry, category.name, source);
       if (utility) {
         utilities.push(utility);

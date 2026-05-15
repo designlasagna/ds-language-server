@@ -117,10 +117,20 @@ export interface ManifestFile {
 // ─── Configuration ─────────────────────────────────────────────────
 
 export interface DSConfig {
+  /** Additional manifest files to load (merged with auto-discovered manifests). */
   sources?: {
     components?: string[];
     tokens?: string[];
     utilities?: string[];
+  };
+  /** Control auto-discovery from node_modules. */
+  discovery?: {
+    /** Set to false to disable node_modules scanning entirely. Default: true. */
+    enabled?: boolean;
+    /** Package names to scan (allowlist). Only these packages are scanned in node_modules.
+     *  Supports scoped packages (e.g. '@acme/design-system').
+     *  If omitted, all packages are scanned. */
+    packages?: string[];
   };
   diagnostics?: {
     deprecated?: 'auto' | 'off' | 'information' | 'warning' | 'error';

@@ -63,7 +63,36 @@ Create a `ds.config.json` in the workspace root:
 }
 ```
 
-This is useful when developing the design system itself (packages are local, not in `node_modules`).
+Sources are **merged** with auto-discovered manifests from `node_modules`. This means a team can use a published design system and add their own local tokens or utilities on top.
+
+### Controlling discovery
+
+By default the LSP scans all packages in `node_modules`. You can limit this with `discovery`:
+
+```json
+{
+  "discovery": {
+    "packages": ["@acme/design-system", "@acme/tokens"]
+  },
+  "sources": {
+    "utilities": ["src/local-utilities.json"]
+  }
+}
+```
+
+Only the listed packages are scanned — everything else in `node_modules` is ignored. Local `sources` are still loaded alongside.
+
+To disable auto-discovery entirely and use only explicit paths:
+
+```json
+{
+  "discovery": { "enabled": false },
+  "sources": {
+    "components": ["path/to/custom-elements.json"],
+    "tokens": ["path/to/tokens.json"]
+  }
+}
+```
 
 ### For consumers
 
@@ -122,19 +151,19 @@ Install the editor extension and open a project that depends on a design system 
 
 ## Schemas
 
-JSON schemas for manifest validation:
+JSON schemas for manifest validation are maintained in a separate repository: [`@designlasagna/schemas`](https://github.com/designlasagna/schemas)
 
 ```
-https://ds.foundation/schemas/v1/tokens.json
-https://ds.foundation/schemas/v1/utilities.json
-https://ds.foundation/schemas/v1/cem-extensions.json
+https://designlasagna.recipes/v0.2/tokens.json
+https://designlasagna.recipes/v0.2/utilities.json
+https://designlasagna.recipes/v0.2/cem-extensions.json
 ```
 
 Add `$schema` to your manifests for IDE validation:
 ```json
 {
-  "$schema": "https://ds.foundation/schemas/v1/tokens.json",
-  "schemaVersion": "1.0.0",
+  "$schema": "https://designlasagna.recipes/v0.2/tokens.json",
+  "schemaVersion": "0.2.0",
   "tokens": [...]
 }
 ```
@@ -208,13 +237,6 @@ editors/
 │   ├── extension.js
 │   └── server/server.js   # esbuild bundle of src/server.ts
 └── zed/                   # Zed extension (Rust → WASM)
-
-packages/
-└── schemas/               # JSON Schema files for manifest validation
-    └── v1/
-        ├── tokens.json
-        ├── utilities.json
-        └── cem-extensions.json
 ```
 
 ---
