@@ -28,16 +28,18 @@ export function getDiagnostics(
 
   // Build sets for the scanner
   const knownTags = new Set(store.getComponents().map((c) => c.tagName));
+  // Also include PascalCase class names for JSX/TSX
+  const knownClassNames = new Set(store.getComponents().filter((c) => c.className).map((c) => c.className));
   const knownTokens = new Set(store.getTokens().map((t) => t.name));
   const knownUtilities = new Set(store.getUtilities().map((u) => u.name));
 
-  const symbols = scanDocument(document, knownTags, knownTokens, knownUtilities);
+  const symbols = scanDocument(document, knownTags, knownTokens, knownUtilities, knownClassNames);
   const severityOverride = config?.diagnostics?.deprecated;
 
   for (const symbol of symbols) {
     switch (symbol.kind) {
       case 'tag': {
-        const component = store.getComponent(symbol.name);
+        const component = store.getComponent(symbol.name) ?? store.getComponentByClassName(symbol.name);
         if (!component) break;
 
         // Deprecated component
@@ -89,7 +91,7 @@ export function getDiagnostics(
 
       case 'attribute': {
         if (!symbol.tagName) break;
-        const component = store.getComponent(symbol.tagName);
+        const component = store.getComponent(symbol.tagName) ?? store.getComponentByClassName(symbol.tagName);
         if (!component) break;
 
         const attr = component.attributes.find(
@@ -126,7 +128,7 @@ export function getDiagnostics(
 
       case 'attribute-value': {
         if (!symbol.tagName || !symbol.attributeName) break;
-        const component = store.getComponent(symbol.tagName);
+        const component = store.getComponent(symbol.tagName) ?? store.getComponentByClassName(symbol.tagName);
         if (!component) break;
 
         const attr = component.attributes.find(

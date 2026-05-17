@@ -48,23 +48,30 @@ function getTagCompletions(prefix: string, store: DSStore): CompletionItem[] {
   const items: CompletionItem[] = [];
 
   for (const component of store.getComponents()) {
-    if (!component.tagName.startsWith(prefix)) continue;
+    // Match against both tagName (lfds-button) and className (LfdsButton)
+    const matchesTag = component.tagName.startsWith(prefix);
+    const matchesClass = component.className?.startsWith(prefix);
+    if (!matchesTag && !matchesClass) continue;
+
+    // Use whichever name matches the prefix (prefer className for PascalCase prefix)
+    const label = matchesClass ? component.className : component.tagName;
+    const insertName = matchesClass ? component.className : component.tagName;
 
     const deprecated = isDeprecated(component);
     const emoji = statusEmoji(component.status);
     const statusLabel = component.status ? ` — ${component.status}` : '';
 
     const item: CompletionItem = {
-      label: component.tagName,
+      label,
       kind: CompletionItemKind.Class,
       detail: `${emoji} Custom Element${statusLabel}`.trim(),
       documentation: {
         kind: MarkupKind.Markdown,
         value: buildComponentDoc(component.tagName, component.description, component),
       },
-      insertText: buildTagSnippet(component),
+      insertText: buildTagSnippet({ ...component, tagName: insertName }),
       insertTextFormat: InsertTextFormat.Snippet,
-      sortText: deprecated ? `~${component.tagName}` : `!${component.tagName}`,
+      sortText: deprecated ? `~${label}` : `!${label}`,
     };
 
     if (deprecated) {
@@ -124,7 +131,7 @@ function getAttributeCompletions(
   parentTagName: string | undefined,
   store: DSStore,
 ): CompletionItem[] {
-  const component = store.getComponent(tagName);
+  const component = store.getComponent(tagName) ?? store.getComponentByClassName(tagName);
   // Even without a known component, we can still offer slot= if there's a parent
   const items: CompletionItem[] = [];
 
@@ -161,7 +168,7 @@ function getAttributeCompletions(
 
   // Offer slot="" if we're inside a parent custom element with named slots
   if ('slot'.startsWith(prefix) && parentTagName) {
-    const parentComponent = store.getComponent(parentTagName);
+    const parentComponent = store.getComponent(parentTagName) ?? store.getComponentByClassName(parentTagName);
     if (parentComponent) {
       const namedSlots = parentComponent.slots.filter(
         (s) => s.name && s.name !== 'default' && s.name !== '',
@@ -214,7 +221,7 @@ function getAttributeValueCompletions(
   prefix: string,
   store: DSStore,
 ): CompletionItem[] {
-  const component = store.getComponent(tagName);
+  const component = store.getComponent(tagName) ?? store.getComponentByClassName(tagName);
   if (!component) return [];
 
   // Find the attribute — match by either htmlName or field name
@@ -278,7 +285,7 @@ function getSlotValueCompletions(
 ): CompletionItem[] {
   if (!parentTagName) return [];
 
-  const component = store.getComponent(parentTagName);
+  const component = store.getComponent(parentTagName) ?? store.getComponentByClassName(parentTagName);
   if (!component) return [];
 
   const items: CompletionItem[] = [];

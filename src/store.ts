@@ -20,6 +20,7 @@ export class DSStore {
 
   // Lookup indices
   private componentsByTag = new Map<string, DSComponent>();
+  private componentsByClassName = new Map<string, DSComponent>();
   private tokensByName = new Map<string, DSToken>();
   private utilitiesByName = new Map<string, DSUtilityClass>();
 
@@ -78,11 +79,15 @@ export class DSStore {
 
   private buildIndices(): void {
     this.componentsByTag.clear();
+    this.componentsByClassName.clear();
     this.tokensByName.clear();
     this.utilitiesByName.clear();
 
     for (const c of this.components) {
       this.componentsByTag.set(c.tagName, c);
+      if (c.className) {
+        this.componentsByClassName.set(c.className, c);
+      }
     }
     for (const t of this.tokens) {
       this.tokensByName.set(t.name, t);
@@ -100,6 +105,10 @@ export class DSStore {
 
   getComponent(tagName: string): DSComponent | undefined {
     return this.componentsByTag.get(tagName);
+  }
+
+  getComponentByClassName(className: string): DSComponent | undefined {
+    return this.componentsByClassName.get(className);
   }
 
   getTokens(): readonly DSToken[] {

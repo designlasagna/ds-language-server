@@ -145,6 +145,7 @@ export function scanDocument(
   knownTags: Set<string>,
   knownTokens: Set<string>,
   knownUtilities: Set<string>,
+  knownClassNames?: Set<string>,
 ): DocumentSymbol[] {
   const text = document.getText();
   const symbols: DocumentSymbol[] = [];
@@ -166,13 +167,31 @@ export function scanDocument(
     }
   }
 
+  // ── Find PascalCase JSX components ─────────────────────────────
+  if (knownClassNames && knownClassNames.size > 0) {
+    const jsxTagRegex = /<([A-Z][\w]*)/g;
+    while ((match = jsxTagRegex.exec(text)) !== null) {
+      const className = match[1];
+      if (knownClassNames.has(className)) {
+        symbols.push({
+          kind: 'tag',
+          name: className,
+          start: match.index + 1,
+          end: match.index + 1 + className.length,
+        });
+      }
+    }
+  }
+
   // ── Find attribute values on known tags ────────────────────────
-  // Match <tag-name ... attr="value" patterns
-  const tagBlockRegex = /<([\w]+-[\w-]+)((?:\s+[\w-]+(?:=(?:"[^"]*"|'[^']*'|\S+))?)*)\s*\/?>/g;
+  // Match <TagName or <tag-name followed by attributes up to > or />
+  // Supports multiline JSX by using [\s\S] for the attribute block
+  const allKnownComponents = new Set([...knownTags, ...(knownClassNames ?? [])]);
+  const tagBlockRegex = /<([\w]+-[\w-]+|[A-Z][\w]*)([\s\S]*?)(?:\/?>)/g;
 
   while ((match = tagBlockRegex.exec(text)) !== null) {
     const tagName = match[1];
-    if (!knownTags.has(tagName)) continue;
+    if (!allKnownComponents.has(tagName)) continue;
 
     const attrsStr = match[2];
     if (!attrsStr) continue;
@@ -183,7 +202,9 @@ export function scanDocument(
     while ((attrMatch = attrRegex.exec(attrsStr)) !== null) {
       const attrName = attrMatch[1];
       const attrValue = attrMatch[2];
-      const attrStart = match.index + match[0].indexOf(attrsStr) + attrMatch.index;
+      // Calculate the absolute position: tag start + offset to attrsStr + attrMatch offset
+      const attrsStrStart = match.index + match[0].indexOf(attrsStr);
+      const attrStart = attrsStrStart + attrMatch.index;
 
       symbols.push({
         kind: 'attribute',

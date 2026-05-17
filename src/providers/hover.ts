@@ -148,10 +148,14 @@ function tryClassHover(text: string, offset: number, store: DSStore): Hover | nu
 // ─── HTML Tag Hover ────────────────────────────────────────────────
 
 function tryTagHover(text: string, offset: number, store: DSStore): Hover | null {
-  const match = findPatternAroundOffset(text, offset, /<([\w]+-[\w-]+)/g, 1);
+  // Match custom elements (hyphenated) or PascalCase JSX components
+  const match = findPatternAroundOffset(text, offset, /<([\w]+-[\w-]+)/g, 1)
+    ?? findPatternAroundOffset(text, offset, /<([A-Z][\w]*)/g, 1);
   if (!match) return null;
 
-  const component = store.getComponent(match.value);
+  // Look up by tag name first, then by class name (PascalCase React wrappers)
+  const component = store.getComponent(match.value)
+    ?? store.getComponentByClassName(match.value);
   if (!component) return null;
 
   return {
