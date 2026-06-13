@@ -21,8 +21,20 @@ interface LFDSTokenEntry {
   modes?: Record<string, string>;
   resolved?: Record<string, string>;
   aliasChain?: string;
+
+  // v0.2: CSS variable as top-level field
   cssVariable?: string;
+  // v0.3: CSS variable in platforms object
+  platforms?: {
+    web?: { reference?: string };
+    ios?: { reference?: string };
+    android?: { reference?: string };
+  };
+
   visibility?: { isComponent?: boolean; isPrimitive?: boolean };
+  // v0.3 replacements for visibility
+  tier?: 'primitive' | 'semantic' | 'component';
+  collection?: string;
 
   // Lifecycle fields — supports both flat (v0.2.0) and structured (v1.0.0)
   status?: string;
@@ -75,8 +87,11 @@ export function parseTokens(json: unknown, source: string): DSToken[] {
 }
 
 function parseTokenEntry(entry: LFDSTokenEntry, source: string): DSToken | null {
+  // Resolve CSS variable name: v0.3 platforms.web.reference or v0.2 cssVariable
+  const cssVariable = entry.platforms?.web?.reference ?? entry.cssVariable;
+
   // Must have a CSS variable name
-  if (!entry.cssVariable) return null;
+  if (!cssVariable) return null;
 
   // Handle both v0.2.0 flat format and v1.0.0 structured format
   let isDeprecated = false;
@@ -109,7 +124,7 @@ function parseTokenEntry(entry: LFDSTokenEntry, source: string): DSToken | null 
   }
 
   return {
-    name: entry.cssVariable,
+    name: cssVariable,
     description: entry.description,
     group: entry.group,
     category: entry.category,
