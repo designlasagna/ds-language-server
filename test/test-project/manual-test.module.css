@@ -5,30 +5,30 @@
 */
 
 /* ─── TEST 1: Token completions ──────────────────────────────────────
-   Place cursor after "var(--lfds-" and trigger autocomplete (Ctrl+Space).
+   Place cursor after "var(--acme-" and trigger autocomplete (Ctrl+Space).
    EXPECT: 6 token suggestions with values in detail
-   EXPECT: --lfds-color-background-button-primary-pressed marked ⛔
+   EXPECT: --acme-color-background-button-primary-pressed marked ⛔
 */
 .card {
-  border-radius: var(--lfds-);
-  /* ↑ cursor after "--lfds-" */
+  border-radius: var(--acme-);
+  /* ↑ cursor after "--acme-" */
 }
 
 /* ─── TEST 2: Deprecated token diagnostic ────────────────────────────
    EXPECT: ⚠️ squiggle on the deprecated token
-   EXPECT: message says "Use --lfds-color-interactive-primary-pressed instead"
+   EXPECT: message says "Use --acme-color-interactive-primary-pressed instead"
    EXPECT: removal date shown (2026-07-30)
 */
 .bad-background {
-  background-color: var(--lfds-color-background-button-primary-pressed);
+  background-color: var(--acme-color-background-button-primary-pressed);
 }
 
 /* ─── TEST 3: Valid tokens — no warnings ─────────────────────────────
    EXPECT: no diagnostics on any line here
 */
 .good-card {
-  border-radius: var(--lfds-border-radius-md);
-  padding: var(--lfds-border-radius-sm);
+  border-radius: var(--acme-border-radius-md);
+  padding: var(--acme-border-radius-sm);
 }
 
 /* ─── TEST 4: Hover on tokens ────────────────────────────────────────
@@ -36,18 +36,18 @@
    EXPECT: popup with value, group, category, type
 */
 .hover-test {
-  border-radius: var(--lfds-border-radius-2xs);   /* → 2px, Border, radius, dimension */
-  margin: var(--lfds-border-radius-lg);            /* → 16px */
-  max-width: var(--lfds-border-radius-round);      /* → 100000px */
+  border-radius: var(--acme-border-radius-2xs);   /* → 2px, Border, radius, dimension */
+  margin: var(--acme-border-radius-lg);            /* → 16px */
+  max-width: var(--acme-border-radius-round);      /* → 100000px */
 }
 
 /* ─── TEST 5: Partial prefix filtering ───────────────────────────────
    Type more of the prefix to filter completions.
-   Place cursor after "--lfds-border-" and trigger.
+   Place cursor after "--acme-border-" and trigger.
    EXPECT: only border-radius tokens shown (5 items)
 */
 .filtered {
-  border-radius: var(--lfds-border-);
+  border-radius: var(--acme-border-);
   /* ↑ cursor here */
 }
 

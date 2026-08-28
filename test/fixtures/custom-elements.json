@@ -7,7 +7,7 @@
         {
           "kind": "class",
           "description": "",
-          "name": "LfdsShortcut",
+          "name": "AcmeShortcut",
           "slots": [
             {
               "description": "Text label",
@@ -247,14 +247,14 @@
           "mixins": [
             {
               "name": "compose",
-              "module": "/src/components/button/shortcut/lfds-shortcut.ts"
+              "module": "/src/components/button/shortcut/acme-shortcut.ts"
             }
           ],
           "superclass": {
             "name": "LfuiElement",
-            "module": "/src/components/button/shortcut/lfds-shortcut.ts"
+            "module": "/src/components/button/shortcut/acme-shortcut.ts"
           },
-          "tagName": "lfds-shortcut",
+          "tagName": "acme-shortcut",
           "customElement": true,
           "status": {
             "name": "draft",
@@ -267,8 +267,8 @@
           "kind": "js",
           "name": "default",
           "declaration": {
-            "name": "LfdsShortcut",
-            "module": "src/components/button/shortcut/lfds-shortcut.ts"
+            "name": "AcmeShortcut",
+            "module": "src/components/button/shortcut/acme-shortcut.ts"
           }
         }
       ]
@@ -279,7 +279,7 @@
         {
           "kind": "class",
           "description": "",
-          "name": "LfdsButton",
+          "name": "AcmeButton",
           "slots": [
             {
               "description": "Button label",
@@ -618,14 +618,14 @@
           "mixins": [
             {
               "name": "compose",
-              "module": "/src/components/button/button/lfds-button.ts"
+              "module": "/src/components/button/button/acme-button.ts"
             }
           ],
           "superclass": {
             "name": "LfuiElement",
-            "module": "/src/components/button/button/lfds-button.ts"
+            "module": "/src/components/button/button/acme-button.ts"
           },
-          "tagName": "lfds-button",
+          "tagName": "acme-button",
           "customElement": true,
           "status": {
             "name": "ready",
@@ -638,8 +638,8 @@
           "kind": "js",
           "name": "default",
           "declaration": {
-            "name": "LfdsButton",
-            "module": "src/components/button/button/lfds-button.ts"
+            "name": "AcmeButton",
+            "module": "src/components/button/button/acme-button.ts"
           }
         }
       ]

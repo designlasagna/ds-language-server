@@ -5,12 +5,12 @@ import type { DSToken, Status } from '../types.js';
 /**
  * Supported token manifest structures:
  *
- * 1. LFDS format: { tokens: [ { cssVariable, resolved, group, ... } ] }
+ * 1. Acme format: { tokens: [ { cssVariable, resolved, group, ... } ] }
  * 2. Flat array:  [ { cssVariable, ... } ]
  * 3. Object with tokens key and arbitrary nesting
  */
 
-interface LFDSTokenEntry {
+interface AcmeTokenEntry {
   id?: string;
   path?: string[];
   group?: string;
@@ -59,12 +59,12 @@ interface LFDSTokenEntry {
 export function parseTokens(json: unknown, source: string): DSToken[] {
   if (!json || typeof json !== 'object') return [];
 
-  // Try: { tokens: [...] } (LFDS format)
+  // Try: { tokens: [...] } (Acme format)
   if ('tokens' in (json as Record<string, unknown>)) {
     const tokens = (json as { tokens: unknown[] }).tokens;
     if (Array.isArray(tokens)) {
       return tokens
-        .map((t) => parseTokenEntry(t as LFDSTokenEntry, source))
+        .map((t) => parseTokenEntry(t as AcmeTokenEntry, source))
         .filter((t): t is DSToken => t !== null);
     }
   }
@@ -72,7 +72,7 @@ export function parseTokens(json: unknown, source: string): DSToken[] {
   // Try: plain array
   if (Array.isArray(json)) {
     return json
-      .map((t) => parseTokenEntry(t as LFDSTokenEntry, source))
+      .map((t) => parseTokenEntry(t as AcmeTokenEntry, source))
       .filter((t): t is DSToken => t !== null);
   }
 
@@ -86,7 +86,7 @@ export function parseTokens(json: unknown, source: string): DSToken[] {
   return [];
 }
 
-function parseTokenEntry(entry: LFDSTokenEntry, source: string): DSToken | null {
+function parseTokenEntry(entry: AcmeTokenEntry, source: string): DSToken | null {
   // Resolve CSS variable name: v0.3 platforms.web.reference or v0.2 cssVariable
   const cssVariable = entry.platforms?.web?.reference ?? entry.cssVariable;
 

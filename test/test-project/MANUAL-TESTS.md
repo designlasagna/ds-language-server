@@ -15,12 +15,12 @@ Each file has numbered test scenarios with expected behavior in comments.
 ## Quick Feature Checklist
 
 ### Completions (Ctrl+Space / auto-trigger)
-- [ ] Component tags: `<lfds-` → suggests lfds-button, lfds-shortcut
-- [ ] Attributes: `<lfds-button ` → suggests variant, size, label⛔, slot...
+- [ ] Component tags: `<acme-` → suggests acme-button, acme-shortcut
+- [ ] Attributes: `<acme-button ` → suggests variant, size, label⛔, slot...
 - [ ] Attribute values: `variant="` → primary, secondary, tertiary⛔
-- [ ] CSS tokens: `var(--lfds-` → 6 tokens with values
-- [ ] Utility classes: `class="lf-` → 44 classes
-- [ ] Slot values: `slot="` (inside lfds-button) → start, end
+- [ ] CSS tokens: `var(--acme-` → 6 tokens with values
+- [ ] Utility classes: `class="acme-` → 44 classes
+- [ ] Slot values: `slot="` (inside acme-button) → start, end
 
 ### Diagnostics (automatic squiggles)
 - [ ] Deprecated token → ⚠️ warning with replacement + removal date

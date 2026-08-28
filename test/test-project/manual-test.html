@@ -11,11 +11,11 @@
   <title>DS Language Server — Manual Test</title>
   <style>
     /* ─── TEST 1: Token completions in <style> ───────────────────────
-       Place cursor after "var(--lfds-" and trigger autocomplete.
-       EXPECT: 6 token suggestions, --lfds-color-background-button-primary-pressed marked ⛔
+       Place cursor after "var(--acme-" and trigger autocomplete.
+       EXPECT: 6 token suggestions, --acme-color-background-button-primary-pressed marked ⛔
     */
     .hero {
-      border-radius: var(--lfds-);
+      border-radius: var(--acme-);
       /* ↑ cursor here */
     }
 
@@ -24,32 +24,32 @@
        EXPECT: hover shows deprecation message + removal date
     */
     .deprecated-token {
-      background: var(--lfds-color-background-button-primary-pressed);
+      background: var(--acme-color-background-button-primary-pressed);
     }
 
     /* ─── TEST 3: Valid token — no diagnostic ────────────────────────
        EXPECT: no warning, clean
     */
     .valid-token {
-      border-radius: var(--lfds-border-radius-md);
+      border-radius: var(--acme-border-radius-md);
     }
   </style>
 </head>
 <body>
 
   <!-- ─── TEST 4: Component tag completions ──────────────────────────
-       Place cursor after "<lfds-" and trigger autocomplete.
-       EXPECT: lfds-button, lfds-shortcut suggested
+       Place cursor after "<acme-" and trigger autocomplete.
+       EXPECT: acme-button, acme-shortcut suggested
   -->
-  <lfds-></lfds->
-  <!-- ↑ cursor between "lfds-" and ">" -->
+  <acme-></acme->
+  <!-- ↑ cursor between "acme-" and ">" -->
 
 
   <!-- ─── TEST 5: Attribute name completions ─────────────────────────
-       Place cursor after "lfds-button " (space after tag) and trigger.
+       Place cursor after "acme-button " (space after tag) and trigger.
        EXPECT: variant, size, type, href, disabled, label⛔, slot, etc.
   -->
-  <lfds-button ></lfds-button>
+  <acme-button ></acme-button>
   <!-- ↑ cursor before ">" -->
 
 
@@ -57,7 +57,7 @@
        Place cursor between the quotes and trigger.
        EXPECT: primary, secondary, tertiary⛔
   -->
-  <lfds-button variant=""></lfds-button>
+  <acme-button variant=""></acme-button>
   <!-- ↑ cursor inside quotes -->
 
 
@@ -66,87 +66,87 @@
        EXPECT: message mentions "Use `secondary` instead"
        EXPECT: code action offers replacement
   -->
-  <lfds-button variant="tertiary">Don't use this</lfds-button>
+  <acme-button variant="tertiary">Don't use this</acme-button>
 
 
   <!-- ─── TEST 8: Deprecated ATTRIBUTE diagnostic ────────────────────
        EXPECT: ⚠️ warning on the "label" attribute
        EXPECT: message says "Use `default` slot instead"
   -->
-  <lfds-button label="Old API">Deprecated attr</lfds-button>
+  <acme-button label="Old API">Deprecated attr</acme-button>
 
 
   <!-- ─── TEST 9: Valid usage — no diagnostics ───────────────────────
        EXPECT: clean, no warnings
   -->
-  <lfds-button variant="primary" size="small">
+  <acme-button variant="primary" size="small">
     All good here
-  </lfds-button>
+  </acme-button>
 
 
   <!-- ─── TEST 10: Slot completions ──────────────────────────────────
        Place cursor inside slot="" and trigger.
        EXPECT: "start" and "end" suggested (not "default")
   -->
-  <lfds-button variant="primary">
+  <acme-button variant="primary">
     <svg slot="">←</svg>
     <!-- ↑ cursor inside slot="" -->
     Click me
-  </lfds-button>
+  </acme-button>
 
 
   <!-- ─── TEST 11: Slot attribute suggestion ─────────────────────────
-       Place cursor after "<span " inside lfds-button and trigger.
+       Place cursor after "<span " inside acme-button and trigger.
        EXPECT: "slot" attribute offered with detail "start | end"
   -->
-  <lfds-button variant="secondary">
+  <acme-button variant="secondary">
     <span ></span>
     <!-- ↑ cursor after "span " -->
-  </lfds-button>
+  </acme-button>
 
 
   <!-- ─── TEST 12: Draft component diagnostic ────────────────────────
-       EXPECT: ℹ️ info diagnostic on <lfds-shortcut>
+       EXPECT: ℹ️ info diagnostic on <acme-shortcut>
        EXPECT: message mentions "draft" status
   -->
-  <lfds-shortcut label="Settings" layout="horizontal"></lfds-shortcut>
+  <acme-shortcut label="Settings" layout="horizontal"></acme-shortcut>
 
 
   <!-- ─── TEST 13: Utility class completions ─────────────────────────
-       Place cursor after "lf-" and trigger.
-       EXPECT: 44 utility classes (lf-text-*, lf-font-*)
+       Place cursor after "acme-" and trigger.
+       EXPECT: 44 utility classes (acme-text-*, acme-font-*)
   -->
-  <div class="lf-"></div>
-  <!-- ↑ cursor after "lf-" -->
+  <div class="acme-"></div>
+  <!-- ↑ cursor after "acme-" -->
 
 
   <!-- ─── TEST 14: Multiple classes — completion mid-value ───────────
-       Place cursor after the space (before lf-font-) and trigger.
+       Place cursor after the space (before acme-font-) and trigger.
        EXPECT: utility class suggestions
   -->
-  <p class="lf-text-body-default lf-"></p>
-  <!-- ↑ cursor after last "lf-" -->
+  <p class="acme-text-body-default acme-"></p>
+  <!-- ↑ cursor after last "acme-" -->
 
 
   <!-- ─── TEST 15: Hover on valid token ──────────────────────────────
-       Hover over "--lfds-border-radius-lg" below.
+       Hover over "--acme-border-radius-lg" below.
        EXPECT: markdown popup with value (16px), group, category, type
   -->
-  <div style="border-radius: var(--lfds-border-radius-lg)"></div>
+  <div style="border-radius: var(--acme-border-radius-lg)"></div>
 
 
   <!-- ─── TEST 16: Hover on component tag ────────────────────────────
-       Hover over "lfds-button" in the opening tag.
+       Hover over "acme-button" in the opening tag.
        EXPECT: component description, attribute list, slot info
   -->
-  <lfds-button variant="primary">Hover me</lfds-button>
+  <acme-button variant="primary">Hover me</acme-button>
 
 
   <!-- ─── TEST 17: Hover on attribute ────────────────────────────────
        Hover over "size" attribute name.
        EXPECT: type info, allowed values
   -->
-  <lfds-button size="large">Hover the attr</lfds-button>
+  <acme-button size="large">Hover the attr</acme-button>
 
 </body>
 </html>

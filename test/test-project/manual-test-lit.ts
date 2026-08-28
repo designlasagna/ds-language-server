@@ -14,56 +14,56 @@ import { customElement } from 'lit/decorators.js';
 export class MyCard extends LitElement {
 
   /* ─── TEST 1: css`` token completions ──────────────────────────────
-     Place cursor after "var(--lfds-" and trigger.
+     Place cursor after "var(--acme-" and trigger.
      EXPECT (if supported): 6 token suggestions
   */
   static styles = css`
     :host {
-      border-radius: var(--lfds-);
+      border-radius: var(--acme-);
       /* ↑ test here */
     }
 
     .deprecated {
-      background: var(--lfds-color-background-button-primary-pressed);
+      background: var(--acme-color-background-button-primary-pressed);
       /* EXPECT: ⚠️ deprecated token diagnostic */
     }
 
     .valid {
-      border-radius: var(--lfds-border-radius-md);
-      padding: var(--lfds-border-radius-sm);
+      border-radius: var(--acme-border-radius-md);
+      padding: var(--acme-border-radius-sm);
       /* EXPECT: no warnings */
     }
   `;
 
   /* ─── TEST 2: html`` component completions ─────────────────────────
-     Place cursor after "<lfds-" and trigger.
-     EXPECT (if supported): lfds-button, lfds-shortcut
+     Place cursor after "<acme-" and trigger.
+     EXPECT (if supported): acme-button, acme-shortcut
   */
   render() {
     return html`
-      <div class="lf-text-heading-1">
+      <div class="acme-text-heading-1">
         <!-- TEST 3: class completions in html`` -->
-        <!-- Place cursor after "lf-" and trigger -->
+        <!-- Place cursor after "acme-" and trigger -->
       </div>
 
-      <lfds-button variant="">
+      <acme-button variant="">
         <!-- TEST 4: attribute value completions -->
         <!-- Place cursor inside variant="" -->
         <span slot="">
           <!-- TEST 5: slot completions -->
         </span>
         Click me
-      </lfds-button>
+      </acme-button>
 
       <!-- TEST 6: deprecated value in template -->
-      <lfds-button variant="tertiary">
+      <acme-button variant="tertiary">
         Bad value
-      </lfds-button>
+      </acme-button>
 
       <!-- TEST 7: deprecated attribute in template -->
-      <lfds-button label="Old">
+      <acme-button label="Old">
         Old attribute
-      </lfds-button>
+      </acme-button>
     `;
   }
 }

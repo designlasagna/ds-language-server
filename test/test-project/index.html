@@ -3,28 +3,28 @@
 <head>
   <style>
     .container {
-      background: var(--lfds-color-background-button-primary-pressed);
-      padding: var(--lfds-spacing-lg);
+      background: var(--acme-color-background-button-primary-pressed);
+      padding: var(--acme-spacing-lg);
     }
   </style>
 </head>
 <body>
   <!-- deprecated value: should warn -->
-  <lfds-button variant="tertiary" size="medium">Bad</lfds-button>
+  <acme-button variant="tertiary" size="medium">Bad</acme-button>
 
   <!-- good values: should NOT warn -->
-  <lfds-button variant="secondary" size="small">Good</lfds-button>
+  <acme-button variant="secondary" size="small">Good</acme-button>
 
   <!-- slot completions: type slot=" inside here -->
-  <lfds-button variant="primary">
+  <acme-button variant="primary">
     <svg slot="">Icon</svg>
     Click me
-  </lfds-button>
+  </acme-button>
 
   <!-- deprecated attribute: should warn -->
-  <lfds-button label="Don't do this" variant="primary"></lfds-button>
+  <acme-button label="Don't do this" variant="primary"></acme-button>
 
   <!-- draft component: should info -->
-  <lfds-shortcut label="Settings"></lfds-shortcut>
+  <acme-shortcut label="Settings"></acme-shortcut>
 </body>
 </html>

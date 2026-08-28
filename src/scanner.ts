@@ -23,11 +23,11 @@ export interface DocumentSymbol {
  */
 export interface CursorContext {
   kind:
-    | 'tag-open'          // <|  or <lfds-|
-    | 'attribute-name'    // <lfds-button |
-    | 'attribute-value'   // <lfds-button variant="|"
-    | 'css-var'           // var(--| or var(--|lfds-
-    | 'class-value'       // class="lf-|"
+    | 'tag-open'          // <|  or <acme-|
+    | 'attribute-name'    // <acme-button |
+    | 'attribute-value'   // <acme-button variant="|"
+    | 'css-var'           // var(--| or var(--|acme-
+    | 'class-value'       // class="acme-|"
     | 'none';
   /** Partial text already typed */
   prefix: string;

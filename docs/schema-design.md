@@ -43,7 +43,7 @@ This means:
 ### Standard: Already defined
 CEM is an established spec: https://github.com/webcomponents/custom-elements-manifest
 
-**LFDS extensions to CEM** (non-standard fields):
+**Acme extensions to CEM** (non-standard fields):
 - `removal` — date or version when deprecated item is removed
 - `enum` — attribute value options (non-standard but widely used)
 - `status` — component lifecycle status (draft/ready/deprecated)
@@ -153,7 +153,7 @@ These are already in use (except `deprecatedValues` and `replacement`) and backw
 ## 2. Tokens — `parsed-tokens.schema.json`
 
 ### Current state
-LFDS uses a custom "parsed tokens" format that is purpose-built after resolving W3C DTCG raw tokens. There is NO deprecation in the current token pipeline — the deprecated token in our test fixtures was hand-crafted.
+Acme uses a custom "parsed tokens" format that is purpose-built after resolving W3C DTCG raw tokens. There is NO deprecation in the current token pipeline — the deprecated token in our test fixtures was hand-crafted.
 
 ### Authoring deprecation in tokens
 
@@ -194,7 +194,7 @@ function extractDeprecation(description) {
   "deprecated": [
     {
       "id": "color.bg.button-primary-pressed",
-      "replacement": "--lfds-color-interactive-primary-pressed"
+      "replacement": "--acme-color-interactive-primary-pressed"
     }
   ]
 }
@@ -216,7 +216,7 @@ The build pipeline merges this with parsed description data.
       "category": "Background",
       "type": "color",
       "description": "Primary button pressed background.",
-      "cssVariable": "--lfds-color-background-button-primary-pressed",
+      "cssVariable": "--acme-color-background-button-primary-pressed",
       "resolved": {
         "light": "#00427a",
         "dark": "#52a8e1"
@@ -227,9 +227,9 @@ The build pipeline merges this with parsed description data.
       },
 
       "deprecated": {
-        "message": "Use `--lfds-color-interactive-primary-pressed` instead.",
+        "message": "Use `--acme-color-interactive-primary-pressed` instead.",
         "removal": "2026-07-30",
-        "replacement": "--lfds-color-interactive-primary-pressed"
+        "replacement": "--acme-color-interactive-primary-pressed"
       },
 
       "visibility": {
@@ -291,34 +291,34 @@ Minimal schema — just `name` and `description`. No deprecation, no values, no 
     {
       "name": "Text Style – Heading",
       "description": "Typography heading utilities.",
-      "prefix": "lf-text-heading-",
+      "prefix": "acme-text-heading-",
       "utilities": [
         {
-          "name": "lf-text-heading-1",
+          "name": "acme-text-heading-1",
           "description": "Typography style heading level-1",
           "properties": {
-            "font-size": "var(--lfds-typography-heading-1-font-size)",
-            "line-height": "var(--lfds-typography-heading-1-line-height)",
-            "font-weight": "var(--lfds-typography-heading-1-font-weight)"
+            "font-size": "var(--acme-typography-heading-1-font-size)",
+            "line-height": "var(--acme-typography-heading-1-line-height)",
+            "font-weight": "var(--acme-typography-heading-1-font-weight)"
           },
           "tokens": [
-            "--lfds-typography-heading-1-font-size",
-            "--lfds-typography-heading-1-line-height",
-            "--lfds-typography-heading-1-font-weight"
+            "--acme-typography-heading-1-font-size",
+            "--acme-typography-heading-1-line-height",
+            "--acme-typography-heading-1-font-weight"
           ],
           "deprecated": null
         },
         {
-          "name": "lf-text-subtitle",
+          "name": "acme-text-subtitle",
           "description": "Typography style subtitle",
           "properties": {
             "font-size": "14px",
             "font-weight": "600"
           },
           "deprecated": {
-            "message": "Use `lf-text-heading-6` instead.",
+            "message": "Use `acme-text-heading-6` instead.",
             "removal": "2026-09-01",
-            "replacement": "lf-text-heading-6"
+            "replacement": "acme-text-heading-6"
           }
         }
       ]
@@ -349,8 +349,8 @@ Minimal schema — just `name` and `description`. No deprecation, no values, no 
 ### How to author deprecation in utility source CSS
 
 ```css
-/* @deprecated Use `lf-text-heading-6` instead. @removal 2026-09-01 */
-.lf-text-subtitle {
+/* @deprecated Use `acme-text-heading-6` instead. @removal 2026-09-01 */
+.acme-text-subtitle {
   font-size: 14px;
   font-weight: 600;
 }
@@ -377,8 +377,8 @@ interface Deprecated {
 
   /**
    * Machine-readable replacement identifier.
-   * For tokens: CSS variable name (--lfds-color-interactive-primary-pressed)
-   * For utilities: class name (lf-text-heading-6)
+   * For tokens: CSS variable name (--acme-color-interactive-primary-pressed)
+   * For utilities: class name (acme-text-heading-6)
    * For component attrs: the replacement attribute name or instruction
    */
   replacement?: string;
@@ -420,9 +420,9 @@ The LSP handles both: if `deprecated` is present, the whole attribute is depreca
 ```json
 {
   "deprecated": {
-    "message": "Use `--lfds-color-interactive-primary-pressed` instead.",
+    "message": "Use `--acme-color-interactive-primary-pressed` instead.",
     "removal": "2026-07-30",
-    "replacement": "--lfds-color-interactive-primary-pressed"
+    "replacement": "--acme-color-interactive-primary-pressed"
   }
 }
 ```
@@ -432,9 +432,9 @@ Same as tokens:
 ```json
 {
   "deprecated": {
-    "message": "Use `lf-text-heading-6` instead.",
+    "message": "Use `acme-text-heading-6` instead.",
     "removal": "2026-09-01",
-    "replacement": "lf-text-heading-6"
+    "replacement": "acme-text-heading-6"
   }
 }
 ```
@@ -491,7 +491,7 @@ https://designlasagna.recipes/v0.2/cem-extensions.json
   "name": "@lansforsakringar/core-components",
   "customElements": "dist/lit/custom-elements.json",
   "designSystem": {
-    "tokens": "dist/lfds-tokens.json",
+    "tokens": "dist/acme-tokens.json",
     "utilities": "dist/utilities.manifest.json"
   }
 }
@@ -508,9 +508,9 @@ export default {
   packages: ['@lansforsakringar/core-components', '@lansforsakringar/core-css'],
   // Or explicit paths:
   manifests: {
-    components: ['./node_modules/@lfds/components/custom-elements.json'],
-    tokens: ['./node_modules/@lfds/tokens/lfds-tokens.json'],
-    utilities: ['./node_modules/@lfds/css/utilities.manifest.json'],
+    components: ['./node_modules/@acme/components/custom-elements.json'],
+    tokens: ['./node_modules/@acme/tokens/acme-tokens.json'],
+    utilities: ['./node_modules/@acme/css/utilities.manifest.json'],
   }
 }
 ```
@@ -559,7 +559,7 @@ Optionally, for hand-authored tokens outside Figma (`$extensions`):
 {
   "$description": "Primary button pressed background.",
   "$extensions": {
-    "com.lfds.deprecated": {
+    "com.acme.deprecated": {
       "message": "Use color.interactive.primary-pressed instead.",
       "removal": "2026-07-30",
       "replacement": "color.interactive.primary-pressed"
@@ -574,17 +574,17 @@ Optionally, for hand-authored tokens outside Figma (`$extensions`):
 
 ```css
 /**
- * @deprecated Use `lf-text-heading-6` instead.
+ * @deprecated Use `acme-text-heading-6` instead.
  * @removal 2026-09-01
- * @replacement lf-text-heading-6
+ * @replacement acme-text-heading-6
  */
-.lf-text-subtitle {
+.acme-text-subtitle {
   font-size: 14px;
   font-weight: 600;
 }
 ```
 
-**Build tool**: `build-utilities-manifest.mjs` parses structured JSDoc-like comments preceding `.lf-*` rules.
+**Build tool**: `build-utilities-manifest.mjs` parses structured JSDoc-like comments preceding `.acme-*` rules.
 
 ### Slots, CSS Parts, Events (description field)
 
@@ -738,7 +738,7 @@ Same Figma-like pattern — deprecation in the description text:
       "type": "object",
       "required": ["name"],
       "properties": {
-        "name": { "type": "string", "description": "Full CSS class name (e.g. lf-text-heading-1)" },
+        "name": { "type": "string", "description": "Full CSS class name (e.g. acme-text-heading-1)" },
         "description": { "type": "string" },
         "properties": {
           "type": "object",
@@ -818,7 +818,7 @@ Same Figma-like pattern — deprecation in the description text:
 
 3. **Should we publish a generic `@design-system/manifest-schemas` npm package?**
    - This would make the LSP truly generic — any design system can adopt
-   - The schemas wouldn't be LFDS-specific
+   - The schemas wouldn't be Acme-specific
    - **Recommendation**: Yes, publish as `@ADS/manifest-schemas` or similar (where ADS = "Any Design System")
 
 4. **Token visibility filtering — should the LSP only suggest "public" tokens?**

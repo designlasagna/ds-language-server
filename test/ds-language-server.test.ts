@@ -110,19 +110,19 @@ describe('CEM parser', () => {
 
   it('parses components from CEM', () => {
     expect(components.length).toBeGreaterThanOrEqual(1);
-    const button = components.find((c) => c.tagName === 'lfds-button');
+    const button = components.find((c) => c.tagName === 'acme-button');
     expect(button).toBeDefined();
   });
 
   it('extracts attributes with types', () => {
-    const button = components.find((c) => c.tagName === 'lfds-button')!;
+    const button = components.find((c) => c.tagName === 'acme-button')!;
     const variant = button.attributes.find((a) => a.htmlName === 'variant');
     expect(variant).toBeDefined();
     expect(variant!.type).toBe('string');
   });
 
   it('detects deprecated attributes', () => {
-    const button = components.find((c) => c.tagName === 'lfds-button')!;
+    const button = components.find((c) => c.tagName === 'acme-button')!;
     const label = button.attributes.find((a) => a.htmlName === 'label');
     expect(label).toBeDefined();
     expect(label!.deprecated).toBe(true);
@@ -130,7 +130,7 @@ describe('CEM parser', () => {
   });
 
   it('detects deprecated values from message + enum', () => {
-    const button = components.find((c) => c.tagName === 'lfds-button')!;
+    const button = components.find((c) => c.tagName === 'acme-button')!;
     const variant = button.attributes.find((a) => a.htmlName === 'variant');
     expect(variant).toBeDefined();
     expect(variant!.deprecatedValues).toBeDefined();
@@ -142,7 +142,7 @@ describe('CEM parser', () => {
   });
 
   it('extracts removal dates', () => {
-    const button = components.find((c) => c.tagName === 'lfds-button')!;
+    const button = components.find((c) => c.tagName === 'acme-button')!;
     const variant = button.attributes.find((a) => a.htmlName === 'variant');
     // variant itself is NOT deprecated — only specific values are
     expect(variant!.deprecated).toBe(false);
@@ -158,15 +158,15 @@ describe('CEM parser', () => {
   });
 
   it('extracts component status', () => {
-    const button = components.find((c) => c.tagName === 'lfds-button');
+    const button = components.find((c) => c.tagName === 'acme-button');
     expect(button!.status).toBe('ready');
 
-    const shortcut = components.find((c) => c.tagName === 'lfds-shortcut');
+    const shortcut = components.find((c) => c.tagName === 'acme-shortcut');
     expect(shortcut!.status).toBe('draft');
   });
 
   it('extracts slots', () => {
-    const button = components.find((c) => c.tagName === 'lfds-button')!;
+    const button = components.find((c) => c.tagName === 'acme-button')!;
     expect(button.slots.length).toBeGreaterThan(0);
     expect(button.slots.some((s) => s.name === 'default')).toBe(true);
   });
@@ -182,7 +182,7 @@ describe('Token parser', () => {
     tokens = parseTokens(data, '@test/tokens');
   });
 
-  it('parses tokens from LFDS format', () => {
+  it('parses tokens from Acme format', () => {
     expect(tokens.length).toBeGreaterThan(0);
   });
 
@@ -201,10 +201,10 @@ describe('Token parser', () => {
   it('detects deprecated tokens', () => {
     const deprecated = tokens.find((t) => t.deprecated);
     expect(deprecated).toBeDefined();
-    expect(deprecated!.name).toBe('--lfds-color-background-button-primary-pressed');
+    expect(deprecated!.name).toBe('--acme-color-background-button-primary-pressed');
     expect(deprecated!.deprecationMessage).toContain('interactive');
     expect(deprecated!.removal).toBe('2026-07-30');
-    expect(deprecated!.replacement).toBe('--lfds-color-interactive-primary-pressed');
+    expect(deprecated!.replacement).toBe('--acme-color-interactive-primary-pressed');
   });
 
   it('extracts group and category', () => {
@@ -228,21 +228,21 @@ describe('Utility parser', () => {
   });
 
   it('extracts class names and descriptions', () => {
-    const heading = utilities.find((u) => u.name === 'lf-text-heading-1');
+    const heading = utilities.find((u) => u.name === 'acme-text-heading-1');
     expect(heading).toBeDefined();
     expect(heading!.description).toContain('heading');
   });
 
   it('assigns category from parent', () => {
-    const heading = utilities.find((u) => u.name === 'lf-text-heading-1');
+    const heading = utilities.find((u) => u.name === 'acme-text-heading-1');
     expect(heading!.category).toBe('Text Style – Heading');
   });
 
   it('parses all expected classes', () => {
     const names = utilities.map((u) => u.name);
-    expect(names).toContain('lf-sr-only');
-    expect(names).toContain('lf-text-body-default');
-    expect(names).toContain('lf-font-bold');
+    expect(names).toContain('acme-sr-only');
+    expect(names).toContain('acme-text-body-default');
+    expect(names).toContain('acme-font-bold');
   });
 });
 
@@ -279,18 +279,18 @@ describe('DSStore', () => {
   });
 
   it('looks up components by tag name', () => {
-    expect(store.getComponent('lfds-button')).toBeDefined();
+    expect(store.getComponent('acme-button')).toBeDefined();
     expect(store.getComponent('nonexistent')).toBeUndefined();
   });
 
   it('looks up tokens by name', () => {
-    const token = store.getToken('--lfds-color-background-button-primary-pressed');
+    const token = store.getToken('--acme-color-background-button-primary-pressed');
     expect(token).toBeDefined();
     expect(token!.deprecated).toBe(true);
   });
 
   it('looks up utilities by name', () => {
-    expect(store.getUtility('lf-text-heading-1')).toBeDefined();
+    expect(store.getUtility('acme-text-heading-1')).toBeDefined();
   });
 });
 
@@ -298,41 +298,41 @@ describe('DSStore', () => {
 
 describe('Scanner: getCursorContext', () => {
   it('detects tag-open context', () => {
-    const doc = createDoc('<lfds-');
+    const doc = createDoc('<acme-');
     const ctx = getCursorContext(doc, 6);
     expect(ctx.kind).toBe('tag-open');
-    expect(ctx.prefix).toBe('lfds-');
+    expect(ctx.prefix).toBe('acme-');
   });
 
   it('detects attribute-name context', () => {
-    const doc = createDoc('<lfds-button var');
+    const doc = createDoc('<acme-button var');
     const ctx = getCursorContext(doc, 16);
     expect(ctx.kind).toBe('attribute-name');
-    expect(ctx.tagName).toBe('lfds-button');
+    expect(ctx.tagName).toBe('acme-button');
     expect(ctx.prefix).toBe('var');
   });
 
   it('detects attribute-value context', () => {
-    const doc = createDoc('<lfds-button variant="pri');
+    const doc = createDoc('<acme-button variant="pri');
     const ctx = getCursorContext(doc, 25); // cursor after 'pri'
     expect(ctx.kind).toBe('attribute-value');
-    expect(ctx.tagName).toBe('lfds-button');
+    expect(ctx.tagName).toBe('acme-button');
     expect(ctx.attributeName).toBe('variant');
     expect(ctx.prefix).toBe('pri');
   });
 
   it('detects css-var context', () => {
-    const doc = createDoc('color: var(--lfds-', 'css');
+    const doc = createDoc('color: var(--acme-', 'css');
     const ctx = getCursorContext(doc, 18);
     expect(ctx.kind).toBe('css-var');
-    expect(ctx.prefix).toBe('--lfds-');
+    expect(ctx.prefix).toBe('--acme-');
   });
 
   it('detects class-value context', () => {
-    const doc = createDoc('<div class="lf-text-');
-    const ctx = getCursorContext(doc, 20);
+    const doc = createDoc('<div class="acme-text-');
+    const ctx = getCursorContext(doc, doc.getText().length);
     expect(ctx.kind).toBe('class-value');
-    expect(ctx.prefix).toBe('lf-text-');
+    expect(ctx.prefix).toBe('acme-text-');
   });
 });
 
@@ -351,14 +351,14 @@ describe('Completion provider', () => {
   });
 
   it('completes component tags', () => {
-    const items = getCompletions({ kind: 'tag-open', prefix: 'lfds-' }, store);
+    const items = getCompletions({ kind: 'tag-open', prefix: 'acme-' }, store);
     expect(items.length).toBeGreaterThan(0);
-    expect(items.some((i) => i.label === 'lfds-button')).toBe(true);
+    expect(items.some((i) => i.label === 'acme-button')).toBe(true);
   });
 
   it('completes component attributes', () => {
     const items = getCompletions(
-      { kind: 'attribute-name', prefix: '', tagName: 'lfds-button' },
+      { kind: 'attribute-name', prefix: '', tagName: 'acme-button' },
       store,
     );
     expect(items.length).toBeGreaterThan(0);
@@ -367,7 +367,7 @@ describe('Completion provider', () => {
 
   it('marks deprecated attributes with strikethrough', () => {
     const items = getCompletions(
-      { kind: 'attribute-name', prefix: '', tagName: 'lfds-button' },
+      { kind: 'attribute-name', prefix: '', tagName: 'acme-button' },
       store,
     );
     const label = items.find((i) => i.label === 'label');
@@ -377,7 +377,7 @@ describe('Completion provider', () => {
 
   it('completes attribute values with deprecated values marked', () => {
     const items = getCompletions(
-      { kind: 'attribute-value', prefix: '', tagName: 'lfds-button', attributeName: 'variant' },
+      { kind: 'attribute-value', prefix: '', tagName: 'acme-button', attributeName: 'variant' },
       store,
     );
     expect(items.length).toBeGreaterThan(0);
@@ -388,26 +388,26 @@ describe('Completion provider', () => {
   });
 
   it('completes CSS variables', () => {
-    const items = getCompletions({ kind: 'css-var', prefix: '--lfds-' }, store);
+    const items = getCompletions({ kind: 'css-var', prefix: '--acme-' }, store);
     expect(items.length).toBeGreaterThan(0);
   });
 
   it('marks deprecated tokens with strikethrough', () => {
-    const items = getCompletions({ kind: 'css-var', prefix: '--lfds-color-background-button' }, store);
+    const items = getCompletions({ kind: 'css-var', prefix: '--acme-color-background-button' }, store);
     const deprecated = items.find((i) => i.label.includes('pressed'));
     expect(deprecated).toBeDefined();
     expect(deprecated!.tags).toContain(1);
   });
 
   it('completes utility classes', () => {
-    const items = getCompletions({ kind: 'class-value', prefix: 'lf-text-' }, store);
+    const items = getCompletions({ kind: 'class-value', prefix: 'acme-text-' }, store);
     expect(items.length).toBeGreaterThan(0);
-    expect(items.some((i) => i.label === 'lf-text-heading-1')).toBe(true);
+    expect(items.some((i) => i.label === 'acme-text-heading-1')).toBe(true);
   });
 
   it('completes slot values from parent component', () => {
     const items = getCompletions(
-      { kind: 'attribute-value', prefix: '', tagName: 'span', attributeName: 'slot', parentTagName: 'lfds-button' },
+      { kind: 'attribute-value', prefix: '', tagName: 'span', attributeName: 'slot', parentTagName: 'acme-button' },
       store,
     );
     expect(items.length).toBe(2);
@@ -417,7 +417,7 @@ describe('Completion provider', () => {
 
   it('offers slot attribute when inside a parent component', () => {
     const items = getCompletions(
-      { kind: 'attribute-name', prefix: '', tagName: 'span', parentTagName: 'lfds-button' },
+      { kind: 'attribute-name', prefix: '', tagName: 'span', parentTagName: 'acme-button' },
       store,
     );
     const slotItem = items.find((i) => i.label === 'slot');
@@ -452,16 +452,17 @@ describe('Diagnostics', () => {
 
   it('diagnoses deprecated token usage', () => {
     const doc = createDoc(
-      '.btn { color: var(--lfds-color-background-button-primary-pressed); }',
+      '.btn { color: var(--acme-color-background-button-primary-pressed); }',
       'css',
     );
     const diagnostics = getDiagnostics(doc, store);
     expect(diagnostics.length).toBeGreaterThan(0);
-    expect(diagnostics[0].message).toContain('deprecated');
+    expect(diagnostics[0].message).toContain('scheduled for removal');
+    expect(diagnostics[0].message).toContain('--acme-color-interactive-primary-pressed');
   });
 
   it('diagnoses deprecated attribute values', () => {
-    const doc = createDoc('<lfds-button variant="tertiary">Click</lfds-button>');
+    const doc = createDoc('<acme-button variant="tertiary">Click</acme-button>');
     const diagnostics = getDiagnostics(doc, store);
     const valueDiag = diagnostics.find((d) =>
       d.message.includes('tertiary'),
@@ -470,14 +471,14 @@ describe('Diagnostics', () => {
   });
 
   it('diagnoses draft component usage', () => {
-    const doc = createDoc('<lfds-shortcut label="test"></lfds-shortcut>');
+    const doc = createDoc('<acme-shortcut label="test"></acme-shortcut>');
     const diagnostics = getDiagnostics(doc, store);
     const draftDiag = diagnostics.find((d) => d.message.includes('draft'));
     expect(draftDiag).toBeDefined();
   });
 
   it('provides code actions for replaceable values', () => {
-    const doc = createDoc('<lfds-button variant="tertiary">Click</lfds-button>');
+    const doc = createDoc('<acme-button variant="tertiary">Click</acme-button>');
     const diagnostics = getDiagnostics(doc, store);
     const valueDiag = diagnostics.filter((d) =>
       d.data && (d.data as { replacement?: string }).replacement,

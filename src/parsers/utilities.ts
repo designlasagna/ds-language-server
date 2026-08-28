@@ -41,7 +41,7 @@ interface UtilityEntry {
 export function parseUtilities(json: unknown, source: string): DSUtilityClass[] {
   if (!json || typeof json !== 'object') return [];
 
-  // Try: { categories: [...] } (LFDS format)
+  // Try: { categories: [...] } (Acme format)
   if ('categories' in (json as Record<string, unknown>)) {
     const manifest = json as CategorizedManifest;
     if (Array.isArray(manifest.categories)) {

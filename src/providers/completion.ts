@@ -48,7 +48,7 @@ function getTagCompletions(prefix: string, store: DSStore): CompletionItem[] {
   const items: CompletionItem[] = [];
 
   for (const component of store.getComponents()) {
-    // Match against both tagName (lfds-button) and className (LfdsButton)
+    // Match against both tagName (acme-button) and className (AcmeButton)
     const matchesTag = component.tagName.startsWith(prefix);
     const matchesClass = component.className?.startsWith(prefix);
     if (!matchesTag && !matchesClass) continue;

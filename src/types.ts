@@ -73,7 +73,7 @@ export interface DSCssPart {
 // ─── Tokens ────────────────────────────────────────────────────────
 
 export interface DSToken extends LifecycleInfo {
-  /** CSS variable name, e.g., --lfds-spacing-lg */
+  /** CSS variable name, e.g., --acme-spacing-lg */
   name: string;
   description?: string;
   group?: string;

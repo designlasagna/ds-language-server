@@ -106,7 +106,7 @@ These optional fields can appear on any entry in any supported format. They are 
 | `removal` | `string` | ISO date (`2026-07-30`) or semver version (`v4.0.0`) when it will be removed |
 | `replacement` | `string` | Name of the replacement item (token name, class name, attribute value) |
 
-These fields follow existing conventions — CEM already supports `deprecated: boolean | string`, LFDS already uses `removal` and `status` as custom CEM fields. The LSP simply reads them.
+These fields follow existing conventions — CEM already supports `deprecated: boolean | string`, Acme already uses `removal` and `status` as custom CEM fields. The LSP simply reads them.
 
 ### 1.2 Components — Custom Elements Manifest (CEM)
 
@@ -128,8 +128,8 @@ This is already a standard field — wc-language-server, Storybook, and other to
 ```jsonc
 {
   "kind": "class",
-  "name": "LfdsButton",
-  "tagName": "lfds-button",
+  "name": "AcmeButton",
+  "tagName": "acme-button",
   "description": "A button or link component.",
 
   // Standard CEM fields
@@ -155,7 +155,7 @@ This is already a standard field — wc-language-server, Storybook, and other to
   "cssParts": [...],
 
   // Lifecycle fields on the component itself
-  "status": { "name": "ready" },          // ← custom field (LFDS format)
+  "status": { "name": "ready" },          // ← custom field (Acme format)
   "deprecated": false
 }
 ```
@@ -207,7 +207,7 @@ This is already a standard field — wc-language-server, Storybook, and other to
 // package.json
 {
   "designSystem": {
-    "tokens": "dist/viewer/lfds-tokens.json"
+    "tokens": "dist/viewer/acme-tokens.json"
   }
 }
 ```
@@ -216,7 +216,7 @@ This is already a standard field — wc-language-server, Storybook, and other to
 
 ```jsonc
 {
-  "cssVariable": "--lfds-spacing-lg"        // Required: the CSS variable name
+  "cssVariable": "--acme-spacing-lg"        // Required: the CSS variable name
 }
 ```
 
@@ -224,7 +224,7 @@ This is already a standard field — wc-language-server, Storybook, and other to
 
 ```jsonc
 {
-  "cssVariable": "--lfds-spacing-lg",         // Required
+  "cssVariable": "--acme-spacing-lg",         // Required
   "description": "Large spacing unit.",        // Hover docs
   "group": "Spacing",                          // Category grouping in completions
   "category": "Scale",                         // Subcategory
@@ -238,9 +238,9 @@ This is already a standard field — wc-language-server, Storybook, and other to
   // Lifecycle fields
   "status": "ready",
   "deprecated": false,
-  "deprecationMessage": "Use --lfds-spacing-xl instead.",
+  "deprecationMessage": "Use --acme-spacing-xl instead.",
   "removal": "2026-07-30",
-  "replacement": "--lfds-spacing-xl",
+  "replacement": "--acme-spacing-xl",
 
   // Ignored by LSP (passthrough — other tools may use these)
   "id": "lg",
@@ -256,10 +256,10 @@ This is already a standard field — wc-language-server, Storybook, and other to
 **Token array detection:** The LSP auto-detects the structure:
 
 - **Flat array** — `[{ cssVariable, ... }, ...]` → reads directly
-- **Object with `tokens` key** — `{ tokens: [...] }` → reads `.tokens` array (LFDS format)
+- **Object with `tokens` key** — `{ tokens: [...] }` → reads `.tokens` array (Acme format)
 - **Nested object (W3C DTCG-like)** — walks the tree looking for entries with `$value` and maps them to CSS variables using `$extensions.cssVariable` or name derivation
 
-This means the LSP works out of the box with LFDS's `lfds-tokens.json` without any transformation.
+This means the LSP works out of the box with Acme's `acme-tokens.json` without any transformation.
 
 ### 1.4 Utility Classes — Utility Manifest
 
@@ -276,17 +276,17 @@ This means the LSP works out of the box with LFDS's `lfds-tokens.json` without a
 }
 ```
 
-**Categorized format (LFDS's current format):**
+**Categorized format (Acme's current format):**
 
 ```jsonc
 {
   "categories": [
     {
       "name": "Text Style – Heading",
-      "prefix": "lf-text-",
+      "prefix": "acme-text-",
       "utilities": [
         {
-          "name": "lf-text-heading-1",
+          "name": "acme-text-heading-1",
           "description": "Typography style heading level-1.",
 
           // Lifecycle fields (optional — add when needed)
@@ -304,7 +304,7 @@ This means the LSP works out of the box with LFDS's `lfds-tokens.json` without a
 ```jsonc
 [
   {
-    "name": "lf-text-heading-1",
+    "name": "acme-text-heading-1",
     "description": "Typography style heading level-1.",
     "category": "typography"
   }
@@ -340,7 +340,7 @@ For packages that ship everything together:
 }
 ```
 
-For LFDS where it's split across packages:
+For Acme where it's split across packages:
 
 ```jsonc
 // @lansforsakringar/core-components/package.json
@@ -354,7 +354,7 @@ For LFDS where it's split across packages:
 // @lansforsakringar/core-css/package.json
 {
   "designSystem": {
-    "tokens": "dist/viewer/lfds-tokens.json",
+    "tokens": "dist/viewer/acme-tokens.json",
     "utilities": "dist/utilities.manifest.json"
   }
 }
@@ -371,10 +371,10 @@ For LFDS where it's split across packages:
 Trigger: `<` in HTML/JSX/Lit templates
 
 ```html
-<lfds-  →  autocomplete shows:
-  lfds-button      Custom Element — ready
-  lfds-alert       Custom Element — ready
-  lfds-input       Custom Element — draft
+<acme-  →  autocomplete shows:
+  acme-button      Custom Element — ready
+  acme-alert       Custom Element — ready
+  acme-input       Custom Element — draft
   ̶l̶f̶d̶s̶-̶l̶e̶g̶a̶c̶y̶     Custom Element — deprecated (strikethrough)
 ```
 
@@ -387,7 +387,7 @@ Trigger: `<` in HTML/JSX/Lit templates
 Trigger: space inside a custom element tag
 
 ```html
-<lfds-button | →  autocomplete shows:
+<acme-button | →  autocomplete shows:
   variant      string — "primary" | "secondary"
   size         string — "large" | "small"
   ̶l̶a̶b̶e̶l̶        string — ⚠ deprecated (strikethrough)
@@ -400,7 +400,7 @@ Trigger: space inside a custom element tag
 Trigger: `="` after an attribute name
 
 ```html
-<lfds-button variant="| →  autocomplete shows:
+<acme-button variant="| →  autocomplete shows:
   primary      (default)
   secondary
   ̶t̶e̶r̶t̶i̶a̶r̶y̶      ⚠ deprecated — Use `secondary` instead (strikethrough)
@@ -411,24 +411,24 @@ Trigger: `="` after an attribute name
 Trigger: `var(` or `--` in CSS/SCSS/Lit `css` templates
 
 ```css
-color: var(--lfds- →  autocomplete shows:
-  --lfds-spacing-lg                 24px — Spacing
-  --lfds-color-text-primary         #1a1a1a — Color
+color: var(--acme- →  autocomplete shows:
+  --acme-spacing-lg                 24px — Spacing
+  --acme-color-text-primary         #1a1a1a — Color
   ̶-̶-̶l̶f̶d̶s̶-̶c̶o̶l̶o̶r̶-̶b̶g̶-̶b̶u̶t̶t̶o̶n̶-̶p̶r̶i̶m̶a̶r̶y̶-̶p̶r̶e̶s̶s̶e̶d̶  ⚠ deprecated (strikethrough)
 ```
 
-The LSP merges tokens from the token manifest with component-scoped `cssProperties` from the CEM. Component CSS properties (e.g., `--lfds--button-background-color`) appear when editing CSS that targets that component.
+The LSP merges tokens from the token manifest with component-scoped `cssProperties` from the CEM. Component CSS properties (e.g., `--acme--button-background-color`) appear when editing CSS that targets that component.
 
 #### Utility class completions
 
 Trigger: `class="` or `className="` in HTML/JSX, Lit `classMap`, or relevant template syntax
 
 ```html
-<div class="lf- →  autocomplete shows:
-  lf-text-heading-1     Typography style heading level-1
-  lf-text-body-default  Typography style body default
-  lf-bg-primary         Primary background color
-  lf-sr-only            Visually hidden, accessible to screen readers
+<div class="acme- →  autocomplete shows:
+  acme-text-heading-1     Typography style heading level-1
+  acme-text-body-default  Typography style body default
+  acme-bg-primary         Primary background color
+  acme-sr-only            Visually hidden, accessible to screen readers
 ```
 
 ### 2.2 Hover (`textDocument/hover`)
@@ -438,7 +438,7 @@ Rich markdown hover documentation for all design system symbols.
 #### Token hover
 
 ```
---lfds-spacing-lg
+--acme-spacing-lg
 
 Large spacing unit.
 
@@ -450,12 +450,12 @@ Status: ready
 #### Deprecated token hover
 
 ```
-⚠️ DEPRECATED — --lfds-color-background-button-primary-pressed
+⚠️ DEPRECATED — --acme-color-background-button-primary-pressed
 
-Use `--lfds-color-interactive-primary-pressed` instead.
+Use `--acme-color-interactive-primary-pressed` instead.
 
 Removal: 2026-07-30 (in 85 days)
-Replacement: --lfds-color-interactive-primary-pressed
+Replacement: --acme-color-interactive-primary-pressed
 
 ───
 
@@ -468,7 +468,7 @@ Category: Color
 #### Component hover
 
 ```
-<lfds-button>
+<acme-button>
 
 A button or link component.
 
@@ -494,12 +494,12 @@ The LSP publishes diagnostics for deprecated usage with **time-aware severity**:
 
 | Condition | Severity | Example |
 |---|---|---|
-| Deprecated, removal > 90 days away | `Information` | ℹ️ `--lfds-color-bg-pressed` is deprecated. Use `--lfds-color-interactive-pressed`. Removal: 2026-07-30. |
-| Deprecated, removal 30–90 days away | `Warning` | ⚠️ `--lfds-color-bg-pressed` is deprecated and will be removed in 62 days. Use `--lfds-color-interactive-pressed`. |
-| Deprecated, removal < 30 days away | `Error` | 🔴 `--lfds-color-bg-pressed` will be removed on 2026-07-30 (in 12 days!). Replace with `--lfds-color-interactive-pressed`. |
-| Deprecated, removal date passed | `Error` | 🔴 `--lfds-color-bg-pressed` was scheduled for removal on 2026-04-01. It may stop working in the next update. |
-| Deprecated, no removal date | `Warning` | ⚠️ `--lfds-color-bg-pressed` is deprecated. Use `--lfds-color-interactive-pressed`. |
-| Using `draft` component | `Information` | ℹ️ `<lfds-heading>` is in draft status. API may change. |
+| Deprecated, removal > 90 days away | `Information` | ℹ️ `--acme-color-bg-pressed` is deprecated. Use `--acme-color-interactive-pressed`. Removal: 2026-07-30. |
+| Deprecated, removal 30–90 days away | `Warning` | ⚠️ `--acme-color-bg-pressed` is deprecated and will be removed in 62 days. Use `--acme-color-interactive-pressed`. |
+| Deprecated, removal < 30 days away | `Error` | 🔴 `--acme-color-bg-pressed` will be removed on 2026-07-30 (in 12 days!). Replace with `--acme-color-interactive-pressed`. |
+| Deprecated, removal date passed | `Error` | 🔴 `--acme-color-bg-pressed` was scheduled for removal on 2026-04-01. It may stop working in the next update. |
+| Deprecated, no removal date | `Warning` | ⚠️ `--acme-color-bg-pressed` is deprecated. Use `--acme-color-interactive-pressed`. |
+| Using `draft` component | `Information` | ℹ️ `<acme-heading>` is in draft status. API may change. |
 | Using deprecated attribute value | `Warning` | ⚠️ `variant="tertiary"` is deprecated. Use `secondary` instead. |
 
 This is the killer feature — **urgency increases as the removal date approaches**. Developers see informational hints early, then warnings, then errors. No surprises.
@@ -515,9 +515,9 @@ When a `replacement` is specified, the LSP offers quick-fix code actions:
 ```
 
 ```
-⚠️ --lfds-color-bg-pressed is deprecated.
+⚠️ --acme-color-bg-pressed is deprecated.
 
-  Quick Fix: Replace with `--lfds-color-interactive-pressed`
+  Quick Fix: Replace with `--acme-color-interactive-pressed`
 ```
 
 ---
@@ -538,7 +538,7 @@ export default {
       "node_modules/@lansforsakringar/core-components/dist/lit/custom-elements.json"
     ],
     tokens: [
-      "node_modules/@lansforsakringar/core-css/dist/viewer/lfds-tokens.json"
+      "node_modules/@lansforsakringar/core-css/dist/viewer/acme-tokens.json"
     ],
     utilities: [
       "node_modules/@lansforsakringar/core-css/dist/utilities.manifest.json"
@@ -640,7 +640,7 @@ LSP client plugin. Design systems that also generate `web-types.json` get basic 
 
 ---
 
-## 5. What Changes for LFDS
+## 5. What Changes for Acme
 
 The key benefit of this approach: **almost nothing changes in the build pipeline.**
 
@@ -652,7 +652,7 @@ The key benefit of this approach: **almost nothing changes in the build pipeline
 | `core-components` | Already has `deprecated`, `removal`, `status` in CEM | Zero |
 | `core-css` | Add `"designSystem"` field to `package.json` pointing to existing files | 2 lines |
 | `core-css` | Add lifecycle fields (`deprecated`, `removal`, `status`) to `utilities.manifest.json` when deprecating utilities | Per-item, when needed |
-| `core-tokens` | Add lifecycle fields to `lfds-tokens.json` when deprecating tokens | Per-item, when needed |
+| `core-tokens` | Add lifecycle fields to `acme-tokens.json` when deprecating tokens | Per-item, when needed |
 
 ### `core-css/package.json` — the only structural change
 
@@ -661,7 +661,7 @@ The key benefit of this approach: **almost nothing changes in the build pipeline
   "name": "@lansforsakringar/core-css",
   // ... existing fields ...
   "designSystem": {
-    "tokens": "dist/viewer/lfds-tokens.json",
+    "tokens": "dist/viewer/acme-tokens.json",
     "utilities": "dist/utilities.manifest.json"
   }
 }
@@ -670,9 +670,9 @@ The key benefit of this approach: **almost nothing changes in the build pipeline
 ### What stays the same
 
 - `custom-elements.json` generation — unchanged
-- `lfds-tokens.json` generation — unchanged
+- `acme-tokens.json` generation — unchanged
 - `utilities.manifest.json` generation — unchanged
-- `lfds.css-data.json`, `web-types.json`, `vscode.html-custom-data.json` — keep generating as fallback for users without the extension
+- `acme.css-data.json`, `web-types.json`, `vscode.html-custom-data.json` — keep generating as fallback for users without the extension
 - TypeScript types (`classes.d.ts`, `css-variables.d.ts`) — unchanged, these serve a different purpose
 
 ---
@@ -687,7 +687,7 @@ For consumers who install the DSLS extension, it **replaces**:
 | wc-language-server | DSLS (component completions with lifecycle info) |
 | HTML CSS Support extension | DSLS (utility class completions) |
 
-Current fallback files (`lfds.css-data.json`, `web-types.json`, `vscode.html-custom-data.json`) continue to be generated for users who haven't installed the extension. But the DSLS provides the richer experience — lifecycle-aware diagnostics, code actions, and unified hover docs.
+Current fallback files (`acme.css-data.json`, `web-types.json`, `vscode.html-custom-data.json`) continue to be generated for users who haven't installed the extension. But the DSLS provides the richer experience — lifecycle-aware diagnostics, code actions, and unified hover docs.
 
 ---
 
@@ -697,7 +697,7 @@ Current fallback files (`lfds.css-data.json`, `web-types.json`, `vscode.html-cus
 
 - [ ] Document lifecycle field conventions for CEM, tokens, utilities
 - [ ] Add `"designSystem"` to `core-css/package.json` (points to existing files)
-- [ ] Validate that existing LFDS data (CEM + tokens + utilities) covers all LSP needs
+- [ ] Validate that existing Acme data (CEM + tokens + utilities) covers all LSP needs
 - [ ] Add lifecycle fields to token and utility manifests in the build pipeline
 
 ### Phase 2: Language server MVP
@@ -732,21 +732,21 @@ Current fallback files (`lfds.css-data.json`, `web-types.json`, `vscode.html-cus
 
 1. **Naming** — `ds-language-server`? `design-system-lsp`? `dsls`? Needs a name that's clear and discoverable in extension marketplaces.
 
-2. **Lit template support** — Analyzing `html\`<lfds-button>\`` and `css\`var(--lfds-*)\`` inside tagged template literals requires understanding JS/TS context. Use volar? Regex-based extraction? Scope for v1 or later?
+2. **Lit template support** — Analyzing `html\`<acme-button>\`` and `css\`var(--acme-*)\`` inside tagged template literals requires understanding JS/TS context. Use volar? Regex-based extraction? Scope for v1 or later?
 
 3. **Framework template support** — Vue `<template>`, Svelte templates, Angular templates, JSX. Which frameworks in v1?
 
-4. **Runtime implementation language** — TypeScript (faster to build, leverage `vscode-html-languageservice`) vs Rust (no Node dependency, faster startup). Current proposal: TypeScript, distributed as self-contained binary via `pkg` or Node SEA (Single Executable Application).
+4. **Runtime implementation language** — TypeScript (faster to build, leverage `vscode-html-languageservice`) vs Rust (no Node dependency, faster startup). Current proposal: TypeScript, distributed as seacme-contained binary via `pkg` or Node SEA (Single Executable Application).
 
 5. **Coexistence with existing extensions** — If a user has both `wc-language-server` and the DSLS installed, they'll get duplicate component completions. Options: (a) document that DSLS replaces wc-ls, (b) detect and defer, (c) make it configurable which sources to handle.
 
-6. **Token manifest format diversity** — LFDS uses `lfds-tokens.json` with a `tokens[]` array and `cssVariable` field. Other design systems may use W3C DTCG format, Style Dictionary output, or custom structures. How many formats to support in v1? Start with "array of objects with `cssVariable`" + auto-detect common structures.
+6. **Token manifest format diversity** — Acme uses `acme-tokens.json` with a `tokens[]` array and `cssVariable` field. Other design systems may use W3C DTCG format, Style Dictionary output, or custom structures. How many formats to support in v1? Start with "array of objects with `cssVariable`" + auto-detect common structures.
 
 7. **Upstream contribution** — Should we contribute `removal`/`replacement`/`status` field support to the CEM spec? And/or to `wc-language-server`? Would strengthen the ecosystem even if we build our own LSP.
 
 8. **Schema governance** — If `"designSystem"` in `package.json` becomes a convention used by multiple design systems, should it be formalized via a spec or community group?
 
-9. **Performance at scale** — LFDS has ~20 components, ~340 tokens, ~44 utilities. Large design systems (Material, Carbon) could have 100+ components and 1000+ tokens. Need to validate that manifest parsing and completion generation stay fast.
+9. **Performance at scale** — Acme has ~20 components, ~340 tokens, ~44 utilities. Large design systems (Material, Carbon) could have 100+ components and 1000+ tokens. Need to validate that manifest parsing and completion generation stay fast.
 
 10. **File watching** — Should the LSP watch manifest files for changes and hot-reload? Important for monorepo development where the design system is a local dependency being actively developed.
 
