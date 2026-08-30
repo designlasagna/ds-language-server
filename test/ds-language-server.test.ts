@@ -29,21 +29,24 @@ function createDoc(content: string, languageId = 'html'): TextDocument {
   return TextDocument.create('file:///test.html', languageId, 1, content);
 }
 
+// DTCG lifecycle dates are date-only UTC strings. Noon avoids crossing a UTC
+// date boundary when this test happens to run shortly after local midnight.
+function relativeUtcDate(days: number): string {
+  const date = new Date();
+  date.setUTCHours(12, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().split('T')[0]!;
+}
+
 // ─── Lifecycle Tests ───────────────────────────────────────────────
 
 describe('lifecycle', () => {
   it('calculates days until removal', () => {
-    const future = new Date();
-    future.setDate(future.getDate() + 30);
-    const dateStr = future.toISOString().split('T')[0];
-    expect(daysUntilRemoval(dateStr)).toBe(30);
+    expect(daysUntilRemoval(relativeUtcDate(30))).toBe(30);
   });
 
   it('returns negative for past dates', () => {
-    const past = new Date();
-    past.setDate(past.getDate() - 10);
-    const dateStr = past.toISOString().split('T')[0];
-    expect(daysUntilRemoval(dateStr)).toBe(-10);
+    expect(daysUntilRemoval(relativeUtcDate(-10))).toBe(-10);
   });
 
   it('returns undefined for invalid dates', () => {
@@ -52,10 +55,7 @@ describe('lifecycle', () => {
   });
 
   it('formats removal date with human-readable suffix', () => {
-    const future = new Date();
-    future.setDate(future.getDate() + 5);
-    const dateStr = future.toISOString().split('T')[0];
-    expect(formatRemovalDate(dateStr)).toContain('in 5 days');
+    expect(formatRemovalDate(relativeUtcDate(5))).toContain('in 5 days');
   });
 
   it('severity escalates with proximity', () => {

@@ -11,9 +11,11 @@ export function daysUntilRemoval(removal: string | undefined): number | undefine
   const date = new Date(removal);
   if (isNaN(date.getTime())) return undefined;
 
+  // Date-only ISO strings are UTC calendar dates. Normalize both values in
+  // UTC so the result does not change with the machine's local timezone.
   const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
+  now.setUTCHours(0, 0, 0, 0);
+  date.setUTCHours(0, 0, 0, 0);
 
   return Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
