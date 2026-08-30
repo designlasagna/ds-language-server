@@ -1,8 +1,5 @@
 {
-  "name": "test-project",
+  "name": "ds-language-server-manual-fixtures",
   "private": true,
-  "dependencies": {
-    "@lansforsakringar/core-components": "3.2.0",
-    "@lansforsakringar/core-css": "3.2.0"
-  }
+  "description": "Self-contained manual editor fixtures for ds-language-server"
 }

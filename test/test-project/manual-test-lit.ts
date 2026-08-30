@@ -25,7 +25,7 @@ export class MyCard extends LitElement {
 
     .deprecated {
       background: var(--acme-color-background-button-primary-pressed);
-      /* EXPECT: ⚠️ deprecated token diagnostic */
+      /* EXPECT: editor-native deprecated token diagnostic */
     }
 
     .valid {

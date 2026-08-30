@@ -16,17 +16,17 @@ Each file has numbered test scenarios with expected behavior in comments.
 
 ### Completions (Ctrl+Space / auto-trigger)
 - [ ] Component tags: `<acme-` → suggests acme-button, acme-shortcut
-- [ ] Attributes: `<acme-button ` → suggests variant, size, label⛔, slot...
-- [ ] Attribute values: `variant="` → primary, secondary, tertiary⛔
+- [ ] Attributes: `<acme-button ` → suggests variant, size, deprecated `label`, slot...
+- [ ] Attribute values: `variant="` → primary, secondary, deprecated `tertiary`
 - [ ] CSS tokens: `var(--acme-` → 6 tokens with values
 - [ ] Utility classes: `class="acme-` → 44 classes
 - [ ] Slot values: `slot="` (inside acme-button) → start, end
 
 ### Diagnostics (automatic squiggles)
-- [ ] Deprecated token → ⚠️ warning with replacement + removal date
-- [ ] Deprecated attribute value → ⚠️ "Use secondary instead"
-- [ ] Deprecated attribute → ⚠️ "Use default slot instead"
-- [ ] Draft component → ℹ️ info "draft status"
+- [ ] Deprecated token → editor-native warning/error with replacement + removal date
+- [ ] Deprecated attribute value → editor-native warning/error: "Use secondary instead"
+- [ ] Deprecated attribute → editor-native warning/error: "Use default slot instead"
+- [ ] Draft component → editor-native information diagnostic: "draft status"
 
 ### Hover (mouse over)
 - [ ] Token name → value, group, category, type
@@ -35,25 +35,17 @@ Each file has numbered test scenarios with expected behavior in comments.
 - [ ] Utility class → description, category
 - [ ] Slot value → slot description
 
-### Code Actions (click 💡 on diagnostic)
+### Code Actions (from the editor diagnostic menu)
 - [ ] Replace `tertiary` → `secondary`
 - [ ] Replace deprecated token → new token name
 
 ## Setup
 
-Make sure your Zed settings have the server configured:
-```json
-{
-  "lsp": {
-    "ds-language-server": {
-      "settings": {
-        "serverPath": "~/Code/Private/ds-language-server/dist/server.js",
-        "nodePath": "~/.nvm/versions/node/v22.20.0/bin/node"
-      }
-    }
-  }
-}
+Build the server from the repository root:
+```bash
+npm run build
 ```
 
-Then open this project folder in Zed. The LSP auto-discovers manifests from
-`node_modules/@lansforsakringar/core-components` and `core-css`.
+Then open this project folder in Zed. Its `.zed/settings.json` starts the local
+`../../dist/server.js`, and `ds.config.json` loads the neutral manifests in
+`manifests/`. No dependency installation or package discovery is required.

@@ -23,6 +23,19 @@ function workspaceWithTokenDocument(name: string, document: unknown): string {
   return workspace;
 }
 
+describe('manual fixture workspace', () => {
+  it('uses only its local manifests with package discovery disabled', () => {
+    const workspace = path.join(import.meta.dirname, 'test-project');
+    const config = JSON.parse(fs.readFileSync(path.join(workspace, 'ds.config.json'), 'utf8'));
+
+    expect(discoverManifests(workspace, config)).toEqual({
+      components: [expect.objectContaining({ packageName: 'config', path: expect.stringMatching(/manifests\/custom-elements\.json$/) })],
+      tokens: [expect.objectContaining({ packageName: 'config', path: expect.stringMatching(/manifests\/tokens\.json$/) })],
+      utilities: [expect.objectContaining({ packageName: 'config', path: expect.stringMatching(/manifests\/utilities\.manifest\.json$/) })],
+    });
+  });
+});
+
 describe('discoverManifests token sources', () => {
   it.each([
     ['a Design Lasagna manifest', { schemaVersion: '0.3.0', tokens: [] }],

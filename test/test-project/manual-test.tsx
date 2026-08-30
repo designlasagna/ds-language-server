@@ -19,27 +19,27 @@ export function ManualTestPage() {
 
       {/* ─── TEST 2: Attribute completions on component ─────────────
           Place cursor after "acme-button " and trigger.
-          EXPECT: variant, size, type, href, disabled, label⛔, etc.
+          EXPECT: variant, size, type, href, disabled, deprecated label, etc.
       */}
       <acme-button ></acme-button>
 
 
       {/* ─── TEST 3: Attribute VALUE completions ────────────────────
           Place cursor inside variant="" and trigger.
-          EXPECT: primary, secondary, tertiary⛔
+          EXPECT: primary, secondary, deprecated tertiary
       */}
       <acme-button variant=""></acme-button>
 
 
       {/* ─── TEST 4: Deprecated value diagnostic + code action ──────
-          EXPECT: ⚠️ on "tertiary"
+          EXPECT: editor-native warning/error on "tertiary"
           EXPECT: code action → replace with "secondary"
       */}
       <acme-button variant="tertiary">Bad value</acme-button>
 
 
       {/* ─── TEST 5: Deprecated attribute diagnostic ────────────────
-          EXPECT: ⚠️ on "label" attribute
+          EXPECT: editor-native warning/error on "label" attribute
           EXPECT: message says "Use `default` slot instead"
       */}
       <acme-button label="Old way">Deprecated attr</acme-button>
@@ -73,7 +73,7 @@ export function ManualTestPage() {
 
 
       {/* ─── TEST 9: Draft component info diagnostic ────────────────
-          EXPECT: ℹ️ info on acme-shortcut (draft status)
+          EXPECT: editor-native information diagnostic on acme-shortcut (draft status)
       */}
       <acme-shortcut label="Draft warning"></acme-shortcut>
 

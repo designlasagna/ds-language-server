@@ -12,7 +12,7 @@
   <style>
     /* ─── TEST 1: Token completions in <style> ───────────────────────
        Place cursor after "var(--acme-" and trigger autocomplete.
-       EXPECT: 6 token suggestions, --acme-color-background-button-primary-pressed marked ⛔
+       EXPECT: 6 token suggestions; the deprecated token uses native editor styling
     */
     .hero {
       border-radius: var(--acme-);
@@ -20,7 +20,7 @@
     }
 
     /* ─── TEST 2: Deprecated token diagnostic ────────────────────────
-       EXPECT: ⚠️ warning squiggle on the token name below
+       EXPECT: editor-native warning/error diagnostic on the token name below
        EXPECT: hover shows deprecation message + removal date
     */
     .deprecated-token {
@@ -47,7 +47,7 @@
 
   <!-- ─── TEST 5: Attribute name completions ─────────────────────────
        Place cursor after "acme-button " (space after tag) and trigger.
-       EXPECT: variant, size, type, href, disabled, label⛔, slot, etc.
+       EXPECT: variant, size, type, href, disabled, deprecated label, slot, etc.
   -->
   <acme-button ></acme-button>
   <!-- ↑ cursor before ">" -->
@@ -55,14 +55,14 @@
 
   <!-- ─── TEST 6: Attribute VALUE completions ────────────────────────
        Place cursor between the quotes and trigger.
-       EXPECT: primary, secondary, tertiary⛔
+       EXPECT: primary, secondary, deprecated tertiary
   -->
   <acme-button variant=""></acme-button>
   <!-- ↑ cursor inside quotes -->
 
 
   <!-- ─── TEST 7: Deprecated attribute value diagnostic ──────────────
-       EXPECT: ⚠️ warning on variant="tertiary"
+       EXPECT: editor-native warning/error on variant="tertiary"
        EXPECT: message mentions "Use `secondary` instead"
        EXPECT: code action offers replacement
   -->
@@ -70,7 +70,7 @@
 
 
   <!-- ─── TEST 8: Deprecated ATTRIBUTE diagnostic ────────────────────
-       EXPECT: ⚠️ warning on the "label" attribute
+       EXPECT: editor-native warning/error on the "label" attribute
        EXPECT: message says "Use `default` slot instead"
   -->
   <acme-button label="Old API">Deprecated attr</acme-button>
@@ -106,7 +106,7 @@
 
 
   <!-- ─── TEST 12: Draft component diagnostic ────────────────────────
-       EXPECT: ℹ️ info diagnostic on <acme-shortcut>
+       EXPECT: editor-native information diagnostic on <acme-shortcut>
        EXPECT: message mentions "draft" status
   -->
   <acme-shortcut label="Settings" layout="horizontal"></acme-shortcut>

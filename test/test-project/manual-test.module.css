@@ -7,7 +7,7 @@
 /* ─── TEST 1: Token completions ──────────────────────────────────────
    Place cursor after "var(--acme-" and trigger autocomplete (Ctrl+Space).
    EXPECT: 6 token suggestions with values in detail
-   EXPECT: --acme-color-background-button-primary-pressed marked ⛔
+   EXPECT: --acme-color-background-button-primary-pressed uses native deprecated styling
 */
 .card {
   border-radius: var(--acme-);
@@ -15,7 +15,7 @@
 }
 
 /* ─── TEST 2: Deprecated token diagnostic ────────────────────────────
-   EXPECT: ⚠️ squiggle on the deprecated token
+   EXPECT: editor-native warning/error diagnostic on the deprecated token
    EXPECT: message says "Use --acme-color-interactive-primary-pressed instead"
    EXPECT: removal date shown (2026-07-30)
 */
