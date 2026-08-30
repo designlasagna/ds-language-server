@@ -6,6 +6,10 @@
 
 The language server already has good coverage across HTML, JSX, CSS, classes, slots, and token documents. Its main presentation weakness is inconsistency: completions often contain richer information than hover; deprecated items intentionally lose hover entirely; and schema errors expose raw AJV wording. The most valuable next change is a small shared presentation layer, not new data sources.
 
+## Presentation decision: no emoji in LSP output
+
+Do not put emoji in completion details, hover Markdown, or diagnostic messages. Use LSP-native semantics for editor affordances—`CompletionItemTag.Deprecated`, `DiagnosticTag.Deprecated`, and `DiagnosticSeverity`—and use plain text for the information that remains visible in content: `Deprecated`, `Draft`, `Beta`, and `Status: ready`. This lets each editor apply its native theme, iconography, accessibility settings, and localization without semantic duplication.
+
 ## Current strengths
 
 - Context-specific completion and hover providers keep LSP dispatch behavior clear.
@@ -22,7 +26,7 @@ The language server already has good coverage across HTML, JSX, CSS, classes, sl
 
 **Why it matters:** users frequently discover API information by hovering; a diagnostic can be hidden, filtered, or located elsewhere in the line. The current behavior makes the most important lifecycle information unavailable in the hover channel and makes deprecation presentation differ by entity (components still show it).
 
-**Recommendation:** keep the normal hover card and prepend a compact, shared deprecation callout: status, replacement, and removal timing. Do not duplicate the full diagnostic prose. Retain the diagnostic and quick fix as the action path.
+**Recommendation:** keep the normal hover card and prepend a compact, plain-text deprecation callout: `**Deprecated**`, replacement, and removal timing. Do not duplicate the full diagnostic prose. Retain the diagnostic and quick fix as the action path.
 
 **Boundary/tests:** extract a shared lifecycle callout formatter; test one deprecated token, utility, attribute, and attribute value for equivalent callout content.
 
@@ -69,7 +73,7 @@ The language server already has good coverage across HTML, JSX, CSS, classes, sl
 5. lifecycle callout;
 6. source package.
 
-Use text as the semantic signal (`Deprecated`, `Draft`, `Beta`) and treat emoji as optional decoration rather than the only indicator.
+Use text as the semantic signal (`Deprecated`, `Draft`, `Beta`); do not add emoji decoration to LSP output.
 
 ### P2 — Make completion ordering deterministic and intentional
 
