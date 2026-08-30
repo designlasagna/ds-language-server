@@ -57,10 +57,14 @@
     }
   },
   "scripts": {
-    "bundle-server": "esbuild ../../src/server.ts --bundle --outfile=server/server.js --format=cjs --platform=node --minify",
+    "bundle-server": "esbuild ../../src/server.ts --bundle --outfile=server/server.js --format=cjs --platform=node --minify --define:import.meta.url=__filename --external:ajv --external:ajv-formats --external:jsonc-parser --external:@designlasagna/schemas",
     "package": "npm run bundle-server && vsce package"
   },
   "dependencies": {
+    "@designlasagna/schemas": "^0.3.4",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "jsonc-parser": "^3.3.1",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
