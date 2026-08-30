@@ -18,8 +18,7 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "start": "node dist/server.js --stdio",
-    "test": "vitest run --reporter=dot",
-    "lint": "eslint src/"
+    "test": "vitest run --reporter=dot"
   },
   "dependencies": {
     "@designlasagna/schemas": "^0.3.3",
