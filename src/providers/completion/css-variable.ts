@@ -45,7 +45,7 @@ function buildTokenDoc(token: DSToken): string {
   const parts: string[] = [];
 
   if (isDeprecated(token)) {
-    parts.push(`⚠️ **DEPRECATED** — \`${token.name}\`\n\n${buildDeprecationMessage(token)}\n\n---`);
+    parts.push(`**Deprecated** — \`${token.name}\`\n\n${buildDeprecationMessage(token)}\n\n---`);
   }
 
   if (token.description) parts.push(token.description);

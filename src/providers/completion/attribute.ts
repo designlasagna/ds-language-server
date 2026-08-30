@@ -93,7 +93,7 @@ function buildAttrDoc(attr: DSAttribute): string {
   }
 
   if (isDeprecated(attr)) {
-    parts.push(`\n---\n\n⚠️ **Deprecated**\n\n${buildDeprecationMessage(attr)}`);
+    parts.push(`\n---\n\n**Deprecated**\n\n${buildDeprecationMessage(attr)}`);
   }
 
   return parts.join('\n\n');

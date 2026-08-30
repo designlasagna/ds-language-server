@@ -1,6 +1,6 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
-import { isDeprecated, statusEmoji } from '../../lifecycle.js';
+import { isDeprecated } from '../../lifecycle.js';
 import { findPatternAroundOffset } from './shared.js';
 
 // ─── Class Name Hover ──────────────────────────────────────────────
@@ -38,7 +38,7 @@ export function tryClassHover(text: string, offset: number, store: DSStore): Hov
       parts.push(`### \`.${utility.name}\``);
       if (utility.description) parts.push(utility.description);
       if (utility.category) parts.push(`**Category:** ${utility.category}`);
-      if (utility.status) parts.push(`**Status:** ${statusEmoji(utility.status)} ${utility.status}`);
+      if (utility.status) parts.push(`**Status:** ${utility.status}`);
       parts.push(`**Package:** ${utility.source}`);
 
       if (utility.relatedTokens && utility.relatedTokens.length > 0) {

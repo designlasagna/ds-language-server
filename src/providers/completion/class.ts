@@ -45,7 +45,7 @@ function buildUtilityDoc(utility: DSUtilityClass): string {
   const parts: string[] = [];
 
   if (isDeprecated(utility)) {
-    parts.push(`⚠️ **DEPRECATED**\n\n${buildDeprecationMessage(utility)}\n\n---`);
+    parts.push(`**Deprecated**\n\n${buildDeprecationMessage(utility)}\n\n---`);
   }
 
   if (utility.description) parts.push(utility.description);

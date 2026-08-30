@@ -356,6 +356,29 @@ describe('Completion provider', () => {
     expect(items.some((i) => i.label === 'acme-button')).toBe(true);
   });
 
+  it('uses text-only lifecycle presentation while preserving deprecation tags', () => {
+    const tagItems = getCompletions({ kind: 'tag-open', prefix: 'acme-shortcut' }, store);
+    const shortcut = tagItems.find((item) => item.label === 'acme-shortcut');
+    expect(shortcut?.detail).toBe('Custom Element — draft');
+    expect(JSON.stringify(tagItems)).not.toMatch(/[\p{Extended_Pictographic}]/u);
+
+    const deprecatedTokens = getCompletions(
+      { kind: 'css-var', prefix: '--acme-color-background-button' },
+      store,
+    );
+    const deprecated = deprecatedTokens.find((item) => item.label.includes('pressed'));
+    expect(deprecated?.tags).toContain(1); // CompletionItemTag.Deprecated = 1
+    expect(JSON.stringify(deprecated)).toContain('**Deprecated**');
+    expect(JSON.stringify(deprecated)).not.toMatch(/[\p{Extended_Pictographic}]/u);
+
+    const document = createDoc('<acme-shortcut></acme-shortcut>');
+    const hover = getHover(document, { line: 0, character: 5 }, store);
+    expect(hover?.contents).toEqual(expect.objectContaining({
+      value: expect.stringContaining('**Status:** draft'),
+    }));
+    expect(JSON.stringify(hover)).not.toMatch(/[\p{Extended_Pictographic}]/u);
+  });
+
   it('completes component attributes', () => {
     const items = getCompletions(
       { kind: 'attribute-name', prefix: '', tagName: 'acme-button' },

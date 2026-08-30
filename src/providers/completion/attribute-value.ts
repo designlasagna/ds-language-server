@@ -51,7 +51,7 @@ export function getAttributeValueCompletions(
       item.tags = [CompletionItemTag.Deprecated];
       item.documentation = {
         kind: MarkupKind.Markdown,
-        value: `⚠️ **Deprecated**\n\n${deprecatedValue.message}${
+        value: `**Deprecated**\n\n${deprecatedValue.message}${
           deprecatedValue.replacement
             ? `\n\n**Replacement:** \`${deprecatedValue.replacement}\``
             : ''

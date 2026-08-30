@@ -7,7 +7,7 @@ import {
 } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
 import type { DSAttribute } from '../../types.js';
-import { isDeprecated, statusEmoji } from '../../lifecycle.js';
+import { isDeprecated } from '../../lifecycle.js';
 
 // ─── Tag Completions ───────────────────────────────────────────────
 
@@ -25,13 +25,12 @@ export function getTagCompletions(prefix: string, store: DSStore): CompletionIte
     const insertName = matchesClass ? component.className : component.tagName;
 
     const deprecated = isDeprecated(component);
-    const emoji = statusEmoji(component.status);
     const statusLabel = component.status ? ` — ${component.status}` : '';
 
     const item: CompletionItem = {
       label,
       kind: CompletionItemKind.Class,
-      detail: `${emoji} Custom Element${statusLabel}`.trim(),
+      detail: `Custom Element${statusLabel}`,
       documentation: {
         kind: MarkupKind.Markdown,
         value: buildComponentDoc(component.tagName, component.description, component),

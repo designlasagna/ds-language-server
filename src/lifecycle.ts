@@ -1,5 +1,5 @@
 import { DiagnosticSeverity } from 'vscode-languageserver';
-import type { LifecycleInfo, Status } from './types.js';
+import type { LifecycleInfo } from './types.js';
 
 /**
  * Calculate days until a removal date.
@@ -79,19 +79,6 @@ export function isDeprecated(item: LifecycleInfo): boolean {
   if (typeof item.deprecated === 'boolean') return item.deprecated;
   if (item.status === 'deprecated') return true;
   return false;
-}
-
-/**
- * Get a status emoji for display.
- */
-export function statusEmoji(status: Status | undefined): string {
-  switch (status) {
-    case 'draft': return '🧪';
-    case 'beta': return '🔶';
-    case 'ready': return '✅';
-    case 'deprecated': return '⚠️';
-    default: return '';
-  }
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
-import { isDeprecated, statusEmoji } from '../../lifecycle.js';
+import { isDeprecated } from '../../lifecycle.js';
 import { findPatternAroundOffset } from './shared.js';
 
 // ─── CSS Variable Hover ────────────────────────────────────────────
@@ -39,7 +39,7 @@ export function tryVarHover(text: string, offset: number, store: DSStore): Hover
   if (token.group) parts.push(`**Group:** ${token.group}`);
   if (token.category) parts.push(`**Category:** ${token.category}`);
   if (token.type) parts.push(`**Type:** ${token.type}`);
-  if (token.status) parts.push(`**Status:** ${statusEmoji(token.status)} ${token.status}`);
+  if (token.status) parts.push(`**Status:** ${token.status}`);
   parts.push(`**Package:** ${token.source}`);
 
   return {
