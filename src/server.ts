@@ -20,7 +20,9 @@ import { getCursorContext } from './scanner.js';
 import { getCompletions } from './providers/completion.js';
 import { getHover } from './providers/hover.js';
 import { getDiagnostics } from './providers/diagnostics.js';
+import { getSchemaDiagnostics } from './providers/schema-diagnostics.js';
 import { getCodeActions } from './providers/code-actions.js';
+import { URI } from 'vscode-uri';
 import type { DSConfig } from './types.js';
 
 // ─── Create connection ─────────────────────────────────────────────
@@ -32,6 +34,9 @@ const store = new DSStore();
 let config: DSConfig | undefined;
 let workspaceRoot = '';
 let manifestsLoaded = false;
+let tokenDocumentUris = new Set<string>();
+const validationTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const VALIDATION_DEBOUNCE_MS = 300;
 
 // ─── Initialize ────────────────────────────────────────────────────
 
@@ -78,6 +83,7 @@ function loadManifests(): void {
   console.error(`[ds-ls] Discovering manifests in ${workspaceRoot}`);
 
   const sources = discoverManifests(workspaceRoot, config);
+  tokenDocumentUris = new Set(sources.tokens.map((source) => URI.file(source.path).toString()));
   store.load(sources);
   manifestsLoaded = true;
 
@@ -87,9 +93,9 @@ function loadManifests(): void {
     `${stats.tokens} tokens, ${stats.utilities} utilities`,
   );
 
-  // Re-validate all open documents
+  // Re-validate all open documents after their manifest sources change.
   for (const doc of documents.all()) {
-    validateDocument(doc);
+    scheduleDocumentValidation(doc);
   }
 }
 
@@ -118,7 +124,10 @@ connection.onHover((params: HoverParams) => {
 // ─── Diagnostics ───────────────────────────────────────────────────
 
 function validateDocument(document: TextDocument): void {
-  const diagnostics = getDiagnostics(document, store, config);
+  const diagnostics = [
+    ...getDiagnostics(document, store, config),
+    ...(tokenDocumentUris.has(document.uri) ? getSchemaDiagnostics(document) : []),
+  ];
   console.error(`[ds-ls] Validated ${document.uri}: ${diagnostics.length} diagnostics`);
   connection.sendDiagnostics({
     uri: document.uri,
@@ -126,19 +135,28 @@ function validateDocument(document: TextDocument): void {
   });
 }
 
+function scheduleDocumentValidation(document: TextDocument): void {
+  const existing = validationTimers.get(document.uri);
+  if (existing) clearTimeout(existing);
+
+  validationTimers.set(document.uri, setTimeout(() => {
+    validationTimers.delete(document.uri);
+    if (manifestsLoaded) validateDocument(document);
+  }, VALIDATION_DEBOUNCE_MS));
+}
+
 documents.onDidChangeContent((change) => {
-  if (manifestsLoaded) {
-    validateDocument(change.document);
-  }
+  scheduleDocumentValidation(change.document);
 });
 
 documents.onDidOpen((event) => {
-  if (manifestsLoaded) {
-    validateDocument(event.document);
-  }
+  scheduleDocumentValidation(event.document);
 });
 
 documents.onDidClose((event) => {
+  const timer = validationTimers.get(event.document.uri);
+  if (timer) clearTimeout(timer);
+  validationTimers.delete(event.document.uri);
   connection.sendDiagnostics({
     uri: event.document.uri,
     diagnostics: [],
