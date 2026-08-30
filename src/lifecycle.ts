@@ -84,7 +84,9 @@ export function isDeprecated(item: LifecycleInfo): boolean {
 /**
  * Build a deprecation message for hover/diagnostics.
  */
-export function buildDeprecationMessage(item: LifecycleInfo): string {
+export function buildDeprecationMessage(
+  item: Pick<LifecycleInfo, 'deprecationMessage' | 'replacement' | 'removal'>,
+): string {
   const parts: string[] = [];
 
   if (item.deprecationMessage) {
@@ -101,4 +103,12 @@ export function buildDeprecationMessage(item: LifecycleInfo): string {
   }
 
   return parts.join('\n\n');
+}
+
+/** A concise, plain-text lifecycle callout for hover cards. */
+export function buildDeprecationHoverCallout(
+  item: Pick<LifecycleInfo, 'deprecationMessage' | 'replacement' | 'removal'>,
+): string {
+  const message = buildDeprecationMessage(item);
+  return message ? `**Deprecated**\n\n${message}` : '**Deprecated**';
 }

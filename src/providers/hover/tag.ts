@@ -1,7 +1,7 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
 import type { DSComponent } from '../../types.js';
-import { isDeprecated, buildDeprecationMessage } from '../../lifecycle.js';
+import { isDeprecated, buildDeprecationHoverCallout } from '../../lifecycle.js';
 import { findPatternAroundOffset } from './shared.js';
 
 // ─── HTML Tag Hover ────────────────────────────────────────────────
@@ -30,7 +30,7 @@ function buildComponentHover(component: DSComponent): string {
   const deprecated = isDeprecated(component);
 
   if (deprecated) {
-    parts.push(`**Deprecated** — \`<${component.tagName}>\`\n\n${buildDeprecationMessage(component)}\n\n---`);
+    parts.push(`${buildDeprecationHoverCallout(component)}\n\n---`);
   }
 
   parts.push(`### \`<${component.tagName}>\``);

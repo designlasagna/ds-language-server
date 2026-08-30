@@ -1,6 +1,6 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
-import { isDeprecated } from '../../lifecycle.js';
+import { isDeprecated, buildDeprecationHoverCallout } from '../../lifecycle.js';
 import { findPatternAroundOffset } from './shared.js';
 
 // ─── Class Name Hover ──────────────────────────────────────────────
@@ -30,10 +30,9 @@ export function tryClassHover(text: string, offset: number, store: DSStore): Hov
       const utility = store.getUtility(className);
       if (!utility) return null;
 
-      // If deprecated, skip hover — the diagnostic already shows the warning
-      if (isDeprecated(utility)) return null;
-
       const parts: string[] = [];
+
+      if (isDeprecated(utility)) parts.push(`${buildDeprecationHoverCallout(utility)}\n\n---`);
 
       parts.push(`### \`.${utility.name}\``);
       if (utility.description) parts.push(utility.description);

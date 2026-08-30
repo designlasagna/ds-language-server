@@ -1,6 +1,6 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
-import { isDeprecated } from '../../lifecycle.js';
+import { isDeprecated, buildDeprecationHoverCallout } from '../../lifecycle.js';
 import { findPatternAroundOffset } from './shared.js';
 
 // ─── CSS Variable Hover ────────────────────────────────────────────
@@ -15,12 +15,9 @@ export function tryVarHover(text: string, offset: number, store: DSStore): Hover
   const token = store.getToken(match.value);
   if (!token) return null;
 
-  const deprecated = isDeprecated(token);
-
-  // If deprecated, skip hover — the diagnostic already shows the warning
-  if (deprecated) return null;
-
   const parts: string[] = [];
+
+  if (isDeprecated(token)) parts.push(`${buildDeprecationHoverCallout(token)}\n\n---`);
 
   parts.push(`### \`${token.name}\``);
 

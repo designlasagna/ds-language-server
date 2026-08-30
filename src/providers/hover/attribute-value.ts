@@ -1,5 +1,6 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
+import { buildDeprecationHoverCallout } from '../../lifecycle.js';
 import { findPatternAroundOffset, findParentTag } from './shared.js';
 
 // ─── HTML Attribute Value Hover ────────────────────────────────────
@@ -38,12 +39,17 @@ export function tryAttrValueHover(text: string, offset: number, store: DSStore):
   );
   if (!attr) return null;
 
-  // If this value is deprecated, skip hover — the diagnostic already shows the warning
-  const isDeprecatedValue = attr.deprecatedValues?.some((dv) => dv.value === attrValue);
-  if (isDeprecatedValue) return null;
+  const deprecatedValue = attr.deprecatedValues?.find((dv) => dv.value === attrValue);
 
-  // Show attribute documentation for non-deprecated values
   const parts: string[] = [];
+  if (deprecatedValue) {
+    parts.push(`${buildDeprecationHoverCallout({
+      deprecationMessage: deprecatedValue.message,
+      replacement: deprecatedValue.replacement,
+      removal: deprecatedValue.removal,
+    })}\n\n---`);
+  }
+
   parts.push(`### \`${attr.htmlName}="${attrValue}"\`  — \`<${tagName}>\``);
   if (attr.description) parts.push(attr.description);
   parts.push(`**Type:** \`${attr.type}\``);

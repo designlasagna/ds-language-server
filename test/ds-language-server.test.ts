@@ -459,6 +459,62 @@ describe('Completion provider', () => {
   });
 });
 
+// ─── Hover Provider Tests ──────────────────────────────────────────
+
+describe('deprecated hover presentation', () => {
+  let store: DSStore;
+
+  beforeAll(() => {
+    store = new DSStore();
+    store.load({
+      components: [{ path: path.join(fixturesDir, 'custom-elements.json'), packageName: '@test/components' }],
+      tokens: [{ path: path.join(fixturesDir, 'tokens.json'), packageName: '@test/tokens' }],
+      utilities: [{ path: path.join(fixturesDir, 'utilities.manifest.json'), packageName: '@test/css' }],
+    });
+
+    const utility = store.getUtility('acme-text-heading-1')!;
+    utility.deprecated = true;
+    utility.deprecationMessage = 'Use acme-text-body-default instead.';
+    utility.replacement = 'acme-text-body-default';
+    utility.removal = '2026-12-31';
+  });
+
+  function markdownAt(content: string, needle: string): string {
+    const document = createDoc(content);
+    const hover = getHover(document, document.positionAt(content.indexOf(needle) + 1), store);
+    expect(hover?.contents).toEqual(expect.objectContaining({ value: expect.any(String) }));
+    return (hover!.contents as { value: string }).value;
+  }
+
+  it('shows a callout for a deprecated token', () => {
+    const markdown = markdownAt('a { color: var(--acme-color-background-button-primary-pressed); }', 'pressed');
+    expect(markdown).toContain('**Deprecated**');
+    expect(markdown).toContain('**Replacement:**');
+    expect(markdown).toContain('### `--acme-color-background-button-primary-pressed`');
+  });
+
+  it('shows a callout for a deprecated utility', () => {
+    const markdown = markdownAt('<div class="acme-text-heading-1"></div>', 'heading-1');
+    expect(markdown).toContain('**Deprecated**');
+    expect(markdown).toContain('**Replacement:** `acme-text-body-default`');
+    expect(markdown).toContain('### `.acme-text-heading-1`');
+  });
+
+  it('shows a callout for a deprecated attribute', () => {
+    const markdown = markdownAt('<acme-button label="Old"></acme-button>', 'label');
+    expect(markdown).toContain('**Deprecated**');
+    expect(markdown).toContain('Use `default` slot instead');
+    expect(markdown).toContain('### `label`');
+  });
+
+  it('shows a callout for a deprecated attribute value', () => {
+    const markdown = markdownAt('<acme-button variant="tertiary"></acme-button>', 'tertiary');
+    expect(markdown).toContain('**Deprecated**');
+    expect(markdown).toContain('Use `secondary` instead');
+    expect(markdown).toContain('### `variant="tertiary"`');
+  });
+});
+
 // ─── Diagnostics Tests ─────────────────────────────────────────────
 
 describe('Diagnostics', () => {

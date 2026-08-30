@@ -43,10 +43,12 @@ describe('hover dispatch', () => {
     }
   });
 
-  it('suppresses hover for deprecated tokens because diagnostics own that message', () => {
+  it('shows a concise deprecation callout for deprecated tokens alongside diagnostics', () => {
     const text = 'color: var(--acme-color-background-button-primary-pressed)';
     const doc = document(text, 'css');
-    expect(getHover(doc, doc.positionAt(text.indexOf('--acme-') + 2), store)).toBeNull();
+    expect(getHover(doc, doc.positionAt(text.indexOf('--acme-') + 2), store)?.contents).toEqual(
+      expect.objectContaining({ value: expect.stringContaining('**Deprecated**') }),
+    );
   });
 });
 
