@@ -104,11 +104,3 @@ export function buildDeprecationMessage(
 
   return parts.join('\n\n');
 }
-
-/** A concise, plain-text lifecycle callout for hover cards. */
-export function buildDeprecationHoverCallout(
-  item: Pick<LifecycleInfo, 'deprecationMessage' | 'replacement' | 'removal'>,
-): string {
-  const message = buildDeprecationMessage(item);
-  return message ? `**Deprecated**\n\n${message}` : '**Deprecated**';
-}
