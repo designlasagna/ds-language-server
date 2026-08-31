@@ -1,8 +1,8 @@
 {
   "name": "design-system-language-server",
-  "displayName": "Design Lasagna: Design system Language Server",
+  "displayName": "Design Lasagna: Design System Language Server",
   "description": "Design-system IntelliSense, token schema diagnostics, and lifecycle-aware deprecation guidance.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "DesignLasagna",
   "license": "MIT",
   "icon": "icon.png",
