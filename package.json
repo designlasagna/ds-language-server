@@ -1,6 +1,6 @@
 {
   "name": "@designlasagna/ds-language-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Language Server for design systems — IntelliSense for components, tokens, and utility classes with lifecycle-aware deprecation diagnostics.",
   "author": "Magnus Fredlundh",
   "license": "MIT",
