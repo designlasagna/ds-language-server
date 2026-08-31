@@ -1,8 +1,8 @@
-# DS Foundation
+# @designlasagna/ds-language-server
 
-> A generic Language Server for design systems — IntelliSense for components, tokens, and utility classes with lifecycle-aware deprecation diagnostics.
+> A local-first Language Server for design systems: IntelliSense and diagnostics for components, tokens, and utility classes.
 
-**Any design system can use it.** Point to your manifests, get completions + deprecation warnings in your editor.
+Point the server at Custom Elements, token, and utility manifests to get completions, lifecycle diagnostics, code actions, and DTCG/schema validation.
 
 ---
 
@@ -13,9 +13,10 @@ A single Language Server that reads your design system manifests and provides:
 - **Component completions** — tag names, attributes, attribute values, slots (from [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest))
 - **Token completions** — CSS `var()` autocomplete with resolved values (from your token manifest)
 - **Utility class completions** — `class=""` / `className=""` autocomplete with descriptions (from your utility manifest)
-- **Deprecation diagnostics** — ~~strikethrough~~ on deprecated items, time-aware severity escalation
+- **Deprecation diagnostics** — native editor deprecation styling and time-aware severity escalation
 - **Code actions** — one-click replacements for deprecated tokens, attribute values, and classes
 - **Value-level deprecation** — flag specific attribute values without marking the whole attribute
+- **Token-document schema diagnostics** — DTCG and Design Lasagna manifests are validated on open, with concise messages and JSONC ranges
 
 ### Time-aware diagnostics
 
@@ -23,10 +24,10 @@ Diagnostic severity **escalates as the removal date approaches**:
 
 | Removal date | Severity |
 |---|---|
-| > 90 days away | ℹ️ Information |
-| 30–90 days away | ⚠️ Warning |
-| < 30 days away | 🔴 Error |
-| Past due | 🔴 Error |
+| > 90 days away | Information |
+| 30–90 days away | Warning |
+| < 30 days away | Error |
+| Past due | Error |
 
 ---
 
@@ -94,9 +95,9 @@ To disable auto-discovery entirely and use only explicit paths:
 }
 ```
 
-### For consumers
+### For local consumers
 
-Install the editor extension and open a project that depends on a design system package with the fields above. Auto-discovery handles the rest — no config needed.
+The language server and its editor integrations are currently used from local checkouts. Build the server, then configure your editor with its local server path as shown below. Auto-discovery handles manifests from installed design-system packages; `ds.config.json` adds local sources.
 
 ---
 
@@ -154,16 +155,17 @@ Install the editor extension and open a project that depends on a design system 
 JSON schemas for manifest validation are maintained in a separate repository: [`@designlasagna/schemas`](https://github.com/designlasagna/schemas)
 
 ```
-https://designlasagna.recipes/v0.2/tokens.json
-https://designlasagna.recipes/v0.2/utilities.json
-https://designlasagna.recipes/v0.2/cem-extensions.json
+https://designlasagna.recipes/v0.3/tokens.json
+https://designlasagna.recipes/v0.3/utilities.json
+https://designlasagna.recipes/v0.3/cem-extensions.json
+https://designlasagna.recipes/v0.3/dtcg-extensions.json
 ```
 
 Add `$schema` to your manifests for IDE validation:
 ```json
 {
-  "$schema": "https://designlasagna.recipes/v0.2/tokens.json",
-  "schemaVersion": "0.2.0",
+  "$schema": "https://designlasagna.recipes/v0.3/tokens.json",
+  "schemaVersion": "0.3.0",
   "tokens": [...]
 }
 ```
@@ -197,7 +199,7 @@ Requires the Zed extension (registers the LSP for file types) + the server built
 ```bash
 npm install
 npm run build    # tsc → dist/
-npm test         # vitest (46 tests)
+npm test         # vitest
 ```
 
 ### Run the server
