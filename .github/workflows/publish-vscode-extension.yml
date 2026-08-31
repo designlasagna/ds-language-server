@@ -1,0 +1,54 @@
+name: Publish VS Code extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: vscode-marketplace
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install and verify language server
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+      - name: Install extension packaging dependencies
+        working-directory: editors/vscode
+        run: npm ci
+
+      - name: Verify release versions match the tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node --input-type=module <<'EOF'
+          import root from './package.json' with { type: 'json' };
+          import extension from './editors/vscode/package.json' with { type: 'json' };
+
+          const expected = process.env.RELEASE_TAG.slice(1);
+          if (root.version !== expected || extension.version !== expected) {
+            throw new Error(`Tag ${process.env.RELEASE_TAG} must match root and extension version (found ${root.version} and ${extension.version}).`);
+          }
+          EOF
+
+      - name: Package preview VSIX
+        working-directory: editors/vscode
+        run: npm run package
+
+      - name: Publish Marketplace pre-release
+        working-directory: editors/vscode
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx vsce publish --pre-release --pat "$VSCE_PAT"
