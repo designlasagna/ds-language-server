@@ -59,7 +59,7 @@ Then package the extension:
 cd editors/vscode
 npm ci
 npm run package
-code --install-extension design-system-language-server-0.1.2.vsix
+code --install-extension design-system-language-server-0.1.3.vsix
 ```
 
 See the [repository](https://github.com/designlasagna/ds-language-server) for development setup, supported manifests, and issue tracking.

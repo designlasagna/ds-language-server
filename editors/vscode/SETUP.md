@@ -9,7 +9,7 @@ npm run bundle-server
 
 # Package and install
 npx vsce package --allow-missing-repository
-code --install-extension design-system-language-server-0.1.2.vsix
+code --install-extension design-system-language-server-0.1.3.vsix
 ```
 
 Or for F5 development:
@@ -38,15 +38,15 @@ No TypeScript, no build step for the client. The server is bundled with esbuild.
 
 ## Publishing
 
-Marketplace releases are pre-releases and are published only from a matching Git tag. The root package and `editors/vscode/package.json` versions must match the tag (for example, `v0.1.2`).
+Marketplace releases are pre-releases and are published only from a matching Git tag. The root package and `editors/vscode/package.json` versions must match the tag (for example, `v0.1.3`).
 
 1. Create a Visual Studio Marketplace publishing token for the `DesignLasagna` publisher.
 2. Add it as the `VSCE_PAT` secret in GitHub's `vscode-marketplace` environment.
 3. Tag and push the approved release:
 
 ```bash
-git tag -a v0.1.2 -m "VS Code extension v0.1.2"
-git push origin v0.1.2
+git tag -a v0.1.3 -m "VS Code extension v0.1.3"
+git push origin v0.1.3
 ```
 
-The release workflow tests the server, packages the VSIX, and publishes it with `--pre-release`. Before tagging, install the VSIX locally with `npm run package` and `code --install-extension design-system-language-server-0.1.2.vsix`.
+The release workflow tests the server, packages the VSIX, and publishes it with `--pre-release`. Before tagging, install the VSIX locally with `npm run package` and `code --install-extension design-system-language-server-0.1.3.vsix`.
