@@ -4,6 +4,7 @@ import {
   MarkupKind,
 } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
+import { sortCompletionItems } from './presentation.js';
 
 // ─── Slot Value Completions ────────────────────────────────────────
 
@@ -28,12 +29,17 @@ export function getSlotValueCompletions(
       label: slotName,
       kind: CompletionItemKind.EnumMember,
       detail: `slot — <${parentTagName}>`,
-      documentation: slot.description
-        ? { kind: MarkupKind.Markdown, value: slot.description }
-        : undefined,
+      documentation: {
+        kind: MarkupKind.Markdown,
+        value: [
+          `### \`${slotName}\` slot`,
+          ...(slot.description ? [slot.description] : []),
+          `**Component:** \`<${parentTagName}>\``,
+        ].join('\n\n'),
+      },
       sortText: `!${slotName}`,
     });
   }
 
-  return items;
+  return sortCompletionItems(items);
 }

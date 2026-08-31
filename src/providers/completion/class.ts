@@ -7,6 +7,7 @@ import {
 import type { DSStore } from '../../store.js';
 import type { DSUtilityClass } from '../../types.js';
 import { isDeprecated, buildDeprecationMessage } from '../../lifecycle.js';
+import { sortCompletionItems } from './presentation.js';
 
 // ─── Class Completions ─────────────────────────────────────────────
 
@@ -22,12 +23,10 @@ export function getClassCompletions(prefix: string, store: DSStore): CompletionI
       label: utility.name,
       kind: CompletionItemKind.Value,
       detail: utility.category ?? undefined,
-      documentation: utility.description
-        ? {
-            kind: MarkupKind.Markdown,
-            value: buildUtilityDoc(utility),
-          }
-        : undefined,
+      documentation: {
+        kind: MarkupKind.Markdown,
+        value: buildUtilityDoc(utility),
+      },
       sortText: deprecated ? `~${utility.name}` : `!${utility.name}`,
     };
 
@@ -38,22 +37,19 @@ export function getClassCompletions(prefix: string, store: DSStore): CompletionI
     items.push(item);
   }
 
-  return items;
+  return sortCompletionItems(items);
 }
 
 function buildUtilityDoc(utility: DSUtilityClass): string {
-  const parts: string[] = [];
-
-  if (isDeprecated(utility)) {
-    parts.push(`**Deprecated**\n\n${buildDeprecationMessage(utility)}\n\n---`);
-  }
+  const parts = [`### \`.${utility.name}\``];
 
   if (utility.description) parts.push(utility.description);
   if (utility.category) parts.push(`**Category:** ${utility.category}`);
-
   if (utility.relatedTokens && utility.relatedTokens.length > 0) {
-    parts.push(`**Related tokens:** ${utility.relatedTokens.map((t) => `\`${t}\``).join(', ')}`);
+    parts.push(`**Related tokens:** ${utility.relatedTokens.map((token) => `\`${token}\``).join(', ')}`);
   }
+  if (isDeprecated(utility)) parts.push(`**Deprecated:** ${buildDeprecationMessage(utility)}`);
+  parts.push(`**Package:** ${utility.source}`);
 
   return parts.join('\n\n');
 }

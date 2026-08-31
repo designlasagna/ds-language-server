@@ -5,6 +5,7 @@ import {
   MarkupKind,
 } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
+import { sortCompletionItems } from './presentation.js';
 
 // ─── Attribute Value Completions ───────────────────────────────────
 
@@ -44,27 +45,32 @@ export function getAttributeValueCompletions(
       label: value,
       kind: CompletionItemKind.EnumMember,
       detail: isDefault ? '(default)' : undefined,
+      documentation: {
+        kind: MarkupKind.Markdown,
+        value: buildValueDoc(value, isDefault, deprecatedValue),
+      },
       sortText: deprecatedValue ? `~${value}` : `!${value}`,
     };
 
-    if (deprecatedValue) {
-      item.tags = [CompletionItemTag.Deprecated];
-      item.documentation = {
-        kind: MarkupKind.Markdown,
-        value: `**Deprecated**\n\n${deprecatedValue.message}${
-          deprecatedValue.replacement
-            ? `\n\n**Replacement:** \`${deprecatedValue.replacement}\``
-            : ''
-        }${
-          deprecatedValue.removal
-            ? `\n\n**Removal:** ${deprecatedValue.removal}`
-            : ''
-        }`,
-      };
-    }
+    if (deprecatedValue) item.tags = [CompletionItemTag.Deprecated];
 
     items.push(item);
   }
 
-  return items;
+  return sortCompletionItems(items);
+}
+
+function buildValueDoc(
+  value: string,
+  isDefault: boolean,
+  deprecated: { message: string; replacement?: string; removal?: string } | undefined,
+): string {
+  const parts = [`### \`${value}\``];
+  if (isDefault) parts.push('**Default value**');
+  if (deprecated) {
+    parts.push(`**Deprecated:** ${deprecated.message}`);
+    if (deprecated.replacement) parts.push(`**Replacement:** \`${deprecated.replacement}\``);
+    if (deprecated.removal) parts.push(`**Removal:** ${deprecated.removal}`);
+  }
+  return parts.join('\n\n');
 }

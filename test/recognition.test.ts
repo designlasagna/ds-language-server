@@ -3,6 +3,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { join } from 'node:path';
 import { DSStore } from '../src/store.js';
 import { getHover } from '../src/providers/hover.js';
+import { getTagCompletions } from '../src/providers/completion/tag.js';
 import { findParentCustomElement } from '../src/recognition.js';
 import { scanDocument } from '../src/scanner.js';
 
@@ -49,6 +50,39 @@ describe('hover dispatch', () => {
     expect(getHover(doc, doc.positionAt(text.indexOf('--acme-') + 2), store)?.contents).toEqual(
       expect.objectContaining({ value: expect.stringContaining('### `--acme-color-background-button-primary-pressed`') }),
     );
+  });
+});
+
+describe('tag completion presentation', () => {
+  const store = new DSStore();
+  const fixtures = join(import.meta.dirname, 'fixtures');
+  store.load({
+    components: [{ path: join(fixtures, 'custom-elements.json'), packageName: '@test/components' }],
+    tokens: [],
+    utilities: [],
+  });
+
+  it('uses the selected JSX name as the heading and retains the custom-element tag', () => {
+    const item = getTagCompletions('AcmeBut', store).find(({ label }) => label === 'AcmeButton');
+
+    expect(item).toMatchObject({
+      label: 'AcmeButton',
+      insertText: 'AcmeButton$1>$0</AcmeButton>',
+      documentation: {
+        value: expect.stringContaining('### `AcmeButton`\n\n**Custom element:** `acme-button`'),
+      },
+    });
+  });
+
+  it('keeps HTML custom-element completion presentation tag-based', () => {
+    const item = getTagCompletions('acme-but', store).find(({ label }) => label === 'acme-button');
+
+    expect(item).toMatchObject({
+      label: 'acme-button',
+      insertText: 'acme-button$1>$0</acme-button>',
+    });
+    expect((item?.documentation as { value: string }).value).not.toContain('### `');
+    expect((item?.documentation as { value: string }).value).not.toContain('**Custom element:**');
   });
 });
 

@@ -47,18 +47,69 @@ export function getSchemaDiagnostics(document: TextDocument): Diagnostic[] {
   }
 
   return validateTokenDocument(value).map((error) => ({
-    range: pointerRange(document, root, error.instancePath),
+    range: schemaErrorRange(document, root, error.instancePath, error.keyword, error.params),
     severity: DiagnosticSeverity.Error,
     source: SOURCE,
     code: `schema-${error.schema}`,
-    message: `${error.instancePath || '/'} ${error.message}`,
+    message: formatSchemaError(error.keyword, error.message, error.params),
   }));
+}
+
+function schemaErrorRange(
+  document: TextDocument,
+  root: JsonNode,
+  pointer: string,
+  keyword: string,
+  params: Record<string, unknown>,
+): Range {
+  if (keyword === 'required') {
+    const node = findNodeAtLocation(root, pointerToPath(pointer)) ?? root;
+    if (node.type === 'object') {
+      // Point at the closing brace: this is where the missing property belongs.
+      return offsetRange(document, node.offset + Math.max(node.length - 1, 0), 0);
+    }
+  }
+
+  if (keyword === 'additionalProperties' && typeof params.additionalProperty === 'string') {
+    return pointerRange(document, root, `${pointer}/${escapePointerSegment(params.additionalProperty)}`);
+  }
+
+  return pointerRange(document, root, pointer);
 }
 
 function pointerRange(document: TextDocument, root: JsonNode, pointer: string): Range {
   const path = pointerToPath(pointer);
   const node = findNodeAtLocation(root, path) ?? root;
   return offsetRange(document, node.offset, Math.max(node.length, 1));
+}
+
+function formatSchemaError(
+  keyword: string,
+  fallback: string,
+  params: Record<string, unknown>,
+): string {
+  switch (keyword) {
+    case 'required':
+      return `Missing required property \`${String(params.missingProperty)}\`.`;
+    case 'type':
+      return `Expected ${article(String(params.type))} \`${String(params.type)}\` value.`;
+    case 'enum':
+      return Array.isArray(params.allowedValues)
+        ? `Expected one of: ${params.allowedValues.map((value) => `\`${String(value)}\``).join(', ')}.`
+        : 'Expected one of the allowed values.';
+    case 'additionalProperties':
+      return `Property \`${String(params.additionalProperty)}\` is not allowed.`;
+    default:
+      return fallback === 'is invalid' ? 'Invalid value.' : fallback;
+  }
+}
+
+function article(word: string): string {
+  return /^[aeiou]/i.test(word) ? 'an' : 'a';
+}
+
+function escapePointerSegment(segment: string): string {
+  return segment.replaceAll('~', '~0').replaceAll('/', '~1');
 }
 
 function pointerToPath(pointer: string): (string | number)[] {

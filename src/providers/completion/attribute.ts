@@ -8,6 +8,7 @@ import {
 import type { DSStore } from '../../store.js';
 import type { DSAttribute } from '../../types.js';
 import { isDeprecated, buildDeprecationMessage } from '../../lifecycle.js';
+import { formatValueList, sortCompletionItems } from './presentation.js';
 
 // ─── Attribute Completions ─────────────────────────────────────────
 
@@ -33,9 +34,7 @@ export function getAttributeCompletions(
         label: attr.htmlName,
         kind: CompletionItemKind.Property,
         detail: typeLabel,
-        documentation: attr.description
-          ? { kind: MarkupKind.Markdown, value: buildAttrDoc(attr) }
-          : undefined,
+        documentation: { kind: MarkupKind.Markdown, value: buildAttrDoc(attr) },
         // For boolean attributes, just insert the name. For others, add ="$1"
         insertText: attr.type === 'boolean'
           ? attr.htmlName
@@ -77,24 +76,17 @@ export function getAttributeCompletions(
     }
   }
 
-  return items;
+  return sortCompletionItems(items);
 }
 
 function buildAttrDoc(attr: DSAttribute): string {
-  const parts: string[] = [];
+  const parts = [`### \`${attr.htmlName}\``];
 
   if (attr.description) parts.push(attr.description);
-
   if (attr.type) parts.push(`**Type:** \`${attr.type}\``);
   if (attr.default !== undefined) parts.push(`**Default:** \`${attr.default}\``);
-
-  if (attr.values && attr.values.length > 0) {
-    parts.push(`**Values:** ${attr.values.map((v) => `\`${v}\``).join(', ')}`);
-  }
-
-  if (isDeprecated(attr)) {
-    parts.push(`\n---\n\n**Deprecated**\n\n${buildDeprecationMessage(attr)}`);
-  }
+  if (attr.values && attr.values.length > 0) parts.push(formatValueList('Values', attr.values));
+  if (isDeprecated(attr)) parts.push(`**Deprecated:** ${buildDeprecationMessage(attr)}`);
 
   return parts.join('\n\n');
 }

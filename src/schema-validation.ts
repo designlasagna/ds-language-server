@@ -32,6 +32,7 @@ export interface TokenDocumentValidationError {
   instancePath: string;
   keyword: string;
   message: string;
+  params: Record<string, unknown>;
 }
 
 /**
@@ -48,6 +49,7 @@ export function validateTokenDocument(document: unknown): TokenDocumentValidatio
       instancePath: '',
       keyword: 'type',
       message: 'Token documents must have an object at the root.',
+      params: {},
     }];
   }
 
@@ -101,6 +103,7 @@ function toErrors(
     instancePath: `${prefix}${error.instancePath}`,
     keyword: error.keyword,
     message: error.message ?? 'is invalid',
+    params: error.params,
   }));
 }
 

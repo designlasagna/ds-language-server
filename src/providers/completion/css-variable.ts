@@ -7,6 +7,7 @@ import {
 import type { DSStore } from '../../store.js';
 import type { DSToken } from '../../types.js';
 import { isDeprecated, buildDeprecationMessage } from '../../lifecycle.js';
+import { formatValueList, sortCompletionItems } from './presentation.js';
 
 // ─── CSS Variable Completions ──────────────────────────────────────
 
@@ -38,32 +39,24 @@ export function getCssVarCompletions(prefix: string, store: DSStore): Completion
     items.push(item);
   }
 
-  return items;
+  return sortCompletionItems(items);
 }
 
 function buildTokenDoc(token: DSToken): string {
-  const parts: string[] = [];
-
-  if (isDeprecated(token)) {
-    parts.push(`**Deprecated** — \`${token.name}\`\n\n${buildDeprecationMessage(token)}\n\n---`);
-  }
+  const parts = [`### \`${token.name}\``];
 
   if (token.description) parts.push(token.description);
-
-  // Show resolved values
+  if (token.value) parts.push(`**Value:** \`${token.value}\``);
+  if (token.type) parts.push(`**Type:** \`${token.type}\``);
   if (token.resolved && Object.keys(token.resolved).length > 1) {
-    const modeValues = Object.entries(token.resolved)
-      .map(([mode, val]) => `\`${val}\` (${mode})`)
-      .join(' · ');
-    parts.push(`**Value:** ${modeValues}`);
-  } else if (token.value) {
-    parts.push(`**Value:** \`${token.value}\``);
+    parts.push(formatValueList('Modes', Object.entries(token.resolved)
+      .map(([mode, value]) => `${mode}: ${value}`)));
   }
-
   if (token.group) parts.push(`**Group:** ${token.group}`);
   if (token.category) parts.push(`**Category:** ${token.category}`);
-  if (token.type) parts.push(`**Type:** ${token.type}`);
   if (token.status) parts.push(`**Status:** ${token.status}`);
+  if (isDeprecated(token)) parts.push(`**Deprecated**: ${buildDeprecationMessage(token)}`);
+  parts.push(`**Package:** ${token.source}`);
 
   return parts.join('\n\n');
 }

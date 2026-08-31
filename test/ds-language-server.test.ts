@@ -7,6 +7,7 @@ import { parseUtilities } from '../src/parsers/utilities.js';
 import { DSStore } from '../src/store.js';
 import { getCursorContext } from '../src/scanner.js';
 import { getCompletions } from '../src/providers/completion.js';
+import { formatValueList } from '../src/providers/completion/presentation.js';
 import { getHover } from '../src/providers/hover.js';
 import { getDiagnostics } from '../src/providers/diagnostics.js';
 import { getCodeActions } from '../src/providers/code-actions.js';
@@ -354,6 +355,24 @@ describe('Completion provider', () => {
     const items = getCompletions({ kind: 'tag-open', prefix: 'acme-' }, store);
     expect(items.length).toBeGreaterThan(0);
     expect(items.some((i) => i.label === 'acme-button')).toBe(true);
+  });
+
+  it('uses a useful, ordered documentation hierarchy and deterministic lifecycle ordering', () => {
+    const attributes = getCompletions(
+      { kind: 'attribute-name', prefix: 'label', tagName: 'acme-button' },
+      store,
+    );
+    expect((attributes[0]?.documentation as { value: string }).value).toContain('### `label`');
+    expect((attributes[0]?.documentation as { value: string }).value).toContain('**Type:**');
+
+    const tokens = getCompletions({ kind: 'css-var', prefix: '--acme-' }, store);
+    const deprecatedIndex = tokens.findIndex((item) => item.tags?.includes(1));
+    expect(deprecatedIndex).toBeGreaterThan(0);
+    expect((tokens[0]?.documentation as { value: string }).value).toContain('**Package:**');
+
+    expect(formatValueList('Values', ['one', 'two', 'three', 'four', 'five'])).toBe(
+      '**Values:**\n- `one`\n- `two`\n- `three`\n- `four`\n- `five`',
+    );
   });
 
   it('uses text-only lifecycle presentation while preserving deprecation tags', () => {

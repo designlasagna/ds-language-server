@@ -8,6 +8,7 @@ import {
 import type { DSStore } from '../../store.js';
 import type { DSAttribute } from '../../types.js';
 import { isDeprecated } from '../../lifecycle.js';
+import { formatValueList, sortCompletionItems } from './presentation.js';
 
 // ─── Tag Completions ───────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ export function getTagCompletions(prefix: string, store: DSStore): CompletionIte
       detail: `Custom Element${statusLabel}`,
       documentation: {
         kind: MarkupKind.Markdown,
-        value: buildComponentDoc(component.tagName, component.description, component),
+        value: buildComponentDoc(label, component.tagName, component.description, component),
       },
       insertText: buildTagSnippet({ ...component, tagName: insertName }),
       insertTextFormat: InsertTextFormat.Snippet,
@@ -47,7 +48,7 @@ export function getTagCompletions(prefix: string, store: DSStore): CompletionIte
     items.push(item);
   }
 
-  return items;
+  return sortCompletionItems(items);
 }
 
 function buildTagSnippet(
@@ -61,11 +62,17 @@ function buildTagSnippet(
 }
 
 function buildComponentDoc(
+  displayName: string,
   tagName: string,
   description: string,
   component: { status?: string; source: string; slots: { name: string }[]; attributes: DSAttribute[] },
 ): string {
   const parts: string[] = [];
+
+  if (displayName !== tagName) {
+    parts.push(`### \`${displayName}\``);
+    parts.push(`**Custom element:** \`${tagName}\``);
+  }
 
   if (description) parts.push(description);
 
@@ -76,14 +83,14 @@ function buildComponentDoc(
   parts.push(`**Package:** ${component.source}`);
 
   if (component.slots.length > 0) {
-    parts.push(`**Slots:** ${component.slots.map((s) => s.name || 'default').join(', ')}`);
+    parts.push(formatValueList('Slots', component.slots.map((slot) => slot.name || 'default')));
   }
 
   const attrNames = component.attributes
     .filter((a) => !isDeprecated(a))
     .map((a) => a.htmlName);
   if (attrNames.length > 0) {
-    parts.push(`**Attributes:** ${attrNames.join(', ')}`);
+    parts.push(formatValueList('Attributes', attrNames));
   }
 
   return parts.join('\n\n');
