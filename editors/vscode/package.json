@@ -1,8 +1,8 @@
 {
-  "name": "ds-language-server",
+  "name": "designlasagna-language-server",
   "displayName": "Design System Language Server",
   "description": "Design-system IntelliSense, token schema diagnostics, and lifecycle-aware deprecation guidance.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "DesignLasagna",
   "license": "MIT",
   "icon": "icon.png",
@@ -13,7 +13,10 @@
   "engines": {
     "vscode": "^1.82.0"
   },
-  "categories": ["Programming Languages", "Linters"],
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
   "keywords": [
     "design system",
     "design tokens",
@@ -49,7 +52,11 @@
         },
         "dsLanguageServer.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Trace communication between VS Code and the language server."
         }

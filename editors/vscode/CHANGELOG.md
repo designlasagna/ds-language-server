@@ -2,7 +2,7 @@
 
 All notable changes to the Design Lasagna Language Server VS Code extension are documented here.
 
-## 0.1.0
+## 0.1.1
 
 Initial preview release.
 
