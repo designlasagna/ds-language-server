@@ -3,7 +3,7 @@
   "displayName": "Design System Language Server",
   "description": "Design-system IntelliSense, token schema diagnostics, and lifecycle-aware deprecation guidance.",
   "version": "0.1.0",
-  "publisher": "ds-foundation",
+  "publisher": "DesignLasagna",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
