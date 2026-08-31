@@ -1,14 +1,14 @@
 {
   "name": "ds-language-server",
   "displayName": "Design System Language Server",
-  "description": "IntelliSense for design system components, tokens, and utility classes with lifecycle-aware deprecation diagnostics.",
+  "description": "Design-system IntelliSense, token schema diagnostics, and lifecycle-aware deprecation guidance.",
   "version": "0.1.0",
   "publisher": "ds-foundation",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mmmgnus/ds-foundation"
+    "url": "https://github.com/designlasagna/ds-language-server"
   },
   "engines": {
     "vscode": "^1.82.0"
