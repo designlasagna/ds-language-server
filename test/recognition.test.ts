@@ -44,6 +44,15 @@ describe('hover dispatch', () => {
     }
   });
 
+  it('shows the fixture summary and slot descriptions without the extended examples', () => {
+    const doc = document('<acme-button>');
+    expect(getHover(doc, doc.positionAt(3), store)?.contents).toEqual({
+      kind: 'markdown',
+      value: '### `<acme-button>`\n\nTriggers an action, such as saving changes or opening a dialog.\n\n**Slots:**\n- `default` — Button label\n- `start` — Before the label. Useful for icons.\n- `end` — After the label. Useful for icons.',
+    });
+    expect(store.getComponent('acme-button')?.description).toContain('### Examples');
+  });
+
   it('shows reference hover content for deprecated tokens alongside diagnostics', () => {
     const text = 'color: var(--acme-color-background-button-primary-pressed)';
     const doc = document(text, 'css');

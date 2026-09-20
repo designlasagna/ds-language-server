@@ -6,7 +6,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "",
+          "description": "Provides a compact shortcut with a label and supporting description.\n\nUse shortcuts to present frequently used actions or destinations. Place the label in the default slot and optional supporting text in the description slot.\n\n### Example\n\n```html\n<acme-shortcut>\n  Account settings\n  <span slot=\"description\">Manage your profile and preferences</span>\n</acme-shortcut>\n```",
           "name": "AcmeShortcut",
           "slots": [
             {
@@ -278,7 +278,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "",
+          "description": "Triggers an action, such as saving changes or opening a dialog.\n\nUse the primary variant for the main action and secondary for supporting actions. Provide a clear, action-oriented label in the default slot. The start and end slots accept supporting content such as icons.\n\n### Examples\n\n```html\n<acme-button variant=\"primary\">Save changes</acme-button>\n<acme-button variant=\"secondary\">Cancel</acme-button>\n```\n\nWith a decorative icon before the label:\n\n```html\n<acme-button>\n  <span slot=\"start\" aria-hidden=\"true\">＋</span>\n  Add item\n</acme-button>\n```",
           "name": "AcmeButton",
           "slots": [
             {

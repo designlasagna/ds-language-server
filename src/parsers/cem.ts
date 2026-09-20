@@ -36,6 +36,7 @@ interface CEMDeclaration {
   description?: string;
   deprecated?: boolean | string;
   removal?: string;
+  replacement?: string;
   status?: { name: string; description?: string } | string;
   customElement?: boolean;
   attributes?: CEMAttribute[];
@@ -85,6 +86,9 @@ interface CEMDeprecatedValue {
 interface CEMSlot {
   name: string;
   description?: string;
+  deprecated?: boolean | string;
+  removal?: string;
+  replacement?: string;
 }
 
 interface CEMEvent {
@@ -153,9 +157,12 @@ function parseDeclaration(decl: CEMDeclaration, source: string): DSComponent {
     className: decl.name,
     description: decl.description || '',
     status,
-    deprecated: deprecated.isDeprecated,
+    deprecated: decl.deprecated === undefined
+      ? status === 'deprecated' || status === 'removed'
+      : deprecated.isDeprecated,
     deprecationMessage: deprecated.message,
     removal: decl.removal,
+    replacement: decl.replacement,
     attributes: parseAttributes(decl.attributes || [], membersByAttribute),
     slots: parseSlots(decl.slots || []),
     events: parseEvents(decl.events || []),
@@ -273,10 +280,17 @@ function detectDeprecatedValues(
 }
 
 function parseSlots(slots: CEMSlot[]): DSSlot[] {
-  return slots.map((s) => ({
-    name: s.name,
-    description: s.description,
-  }));
+  return slots.map((s) => {
+    const deprecated = parseDeprecated(s.deprecated);
+    return {
+      name: s.name,
+      description: s.description,
+      deprecated: deprecated.isDeprecated,
+      deprecationMessage: deprecated.message,
+      removal: s.removal,
+      replacement: s.replacement,
+    };
+  });
 }
 
 function parseEvents(events: CEMEvent[]): DSEvent[] {
@@ -317,10 +331,7 @@ function parseStatus(
 ): Status | undefined {
   if (!status) return undefined;
   const name = typeof status === 'string' ? status : status.name;
-  if (['draft', 'beta', 'ready', 'deprecated'].includes(name)) {
-    return name as Status;
-  }
-  return undefined;
+  return name || undefined;
 }
 
 function parseDeprecated(

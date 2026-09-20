@@ -1,5 +1,6 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
+import { buildDeprecationMessage, isDeprecated } from '../../lifecycle.js';
 import { findParentCustomElement } from '../../recognition.js';
 import { findPatternAroundOffset } from './shared.js';
 
@@ -32,6 +33,11 @@ export function trySlotValueHover(text: string, offset: number, store: DSStore):
   const parts: string[] = [];
   parts.push(`### slot=\`"${slotName}"\` — \`<${parentTag}>\``);
   if (slot.description) parts.push(slot.description);
+  if (isDeprecated(slot)) {
+    parts.push('**Deprecated**');
+    const message = buildDeprecationMessage(slot);
+    if (message) parts.push(message);
+  }
 
   const otherSlots = component.slots
     .filter((s) => s.name !== slotName && s.name !== 'default' && s.name !== '')

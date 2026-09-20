@@ -1,21 +1,16 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
-import { findPatternAroundOffset } from './shared.js';
+import { classValueRanges } from '../../class-values.js';
 
 // ─── Class Name Hover ──────────────────────────────────────────────
 
 export function tryClassHover(text: string, offset: number, store: DSStore): Hover | null {
   // Find class="... name ..." where offset is on a class name
-  const classAttrMatch = findPatternAroundOffset(
-    text,
-    offset,
-    /(?:class|className)\s*=\s*"([^"]*)"/g,
-    1,
-  );
+  const classAttrMatch = classValueRanges(text).find(({ start, end }) => offset >= start && offset <= end);
   if (!classAttrMatch) return null;
 
   // Find which class name the cursor is on
-  const classValue = classAttrMatch.value;
+  const classValue = text.slice(classAttrMatch.start, classAttrMatch.end);
   const classStart = classAttrMatch.start;
   const relativeOffset = offset - classStart;
 

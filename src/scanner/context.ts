@@ -1,6 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { findParentCustomElement } from '../recognition.js';
 import type { CursorContext } from './types.js';
+import { classValueRanges } from '../class-values.js';
 
 export function getCursorContext(
   document: TextDocument,
@@ -37,10 +38,10 @@ export function getCursorContext(
   }
 
   // ── Class attribute context ────────────────────────────────────
-  // Match: class="prefix  or  className="prefix
-  const classMatch = before.match(
-    /(?:class|className|classList)\s*=\s*["'](?:[^"']*\s)?([\w-]*)$/,
-  );
+  const classRange = classValueRanges(text).find(({ start, end }) => offset >= start && offset <= end);
+  const classMatch = classRange
+    ? text.slice(classRange.start, offset).match(/(?:^|\s)([\w-]*)$/)
+    : null;
   if (classMatch) {
     return {
       kind: 'class-value',

@@ -1,16 +1,13 @@
 import type { DocumentSymbol } from './types.js';
+import { classValueRanges } from '../class-values.js';
 
 export function scanClassSymbols(
   text: string,
   knownUtilities: Set<string>,
 ): DocumentSymbol[] {
   const symbols: DocumentSymbol[] = [];
-  const classRegex = /(?:class|className)\s*=\s*"([^"]*)"/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = classRegex.exec(text)) !== null) {
-    const classValue = match[1];
-    const classStart = match.index + match[0].indexOf(classValue);
+  for (const { start: classStart, end } of classValueRanges(text)) {
+    const classValue = text.slice(classStart, end);
 
     // Split on whitespace to get individual class names
     const classNames = classValue.split(/\s+/);

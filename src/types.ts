@@ -1,6 +1,7 @@
 // ─── Lifecycle (shared across all items) ───────────────────────────
 
-export type Status = 'draft' | 'beta' | 'ready' | 'deprecated';
+/** Design Lasagna permits arbitrary lifecycle status strings. */
+export type Status = string;
 
 export interface LifecycleInfo {
   status?: Status;
@@ -47,7 +48,7 @@ export interface DSDeprecatedValue {
   replacement?: string;
 }
 
-export interface DSSlot {
+export interface DSSlot extends LifecycleInfo {
   name: string;
   description?: string;
 }

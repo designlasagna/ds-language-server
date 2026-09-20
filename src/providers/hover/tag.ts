@@ -1,7 +1,7 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
 import type { DSComponent } from '../../types.js';
-import { isDeprecated } from '../../lifecycle.js';
+import { buildDeprecationMessage, isDeprecated } from '../../lifecycle.js';
 import { findPatternAroundOffset } from './shared.js';
 
 // ─── HTML Tag Hover ────────────────────────────────────────────────
@@ -28,25 +28,23 @@ export function tryTagHover(text: string, offset: number, store: DSStore): Hover
 function buildComponentHover(component: DSComponent): string {
   const parts: string[] = [];
   parts.push(`### \`<${component.tagName}>\``);
-  if (component.description) parts.push(component.description);
-  if (component.status) {
+  const summary = component.description.trim().split(/\r?\n\s*\r?\n/)[0];
+  if (summary) parts.push(summary);
+  if (isDeprecated(component)) {
+    parts.push(component.status === 'removed' ? '**Removed**' : '**Deprecated**');
+    const message = buildDeprecationMessage(component);
+    if (message) parts.push(message);
+  } else if (component.status && !['ready', 'stable'].includes(component.status)) {
     parts.push(`**Status:** ${component.status}`);
   }
-  parts.push(`**Package:** ${component.source}`);
 
   if (component.slots.length > 0) {
-    const slotNames = component.slots.map((s) => `\`${s.name || 'default'}\``).join(', ');
-    parts.push(`**Slots:** ${slotNames}`);
-  }
-
-  const activeAttrs = component.attributes.filter((a) => !isDeprecated(a));
-  if (activeAttrs.length > 0) {
-    parts.push(`**Attributes:** ${activeAttrs.map((a) => `\`${a.htmlName}\``).join(', ')}`);
-  }
-
-  const deprecatedAttrs = component.attributes.filter((a) => isDeprecated(a));
-  if (deprecatedAttrs.length > 0) {
-    parts.push(`**Deprecated attributes:** ${deprecatedAttrs.map((a) => `~~\`${a.htmlName}\`~~`).join(', ')}`);
+    const slots = component.slots.map((s) => {
+      const description = s.description?.trim();
+      const notice = isDeprecated(s) ? ' **Deprecated**' : '';
+      return `- \`${s.name || 'default'}\`${notice}${description ? ` — ${description}` : ''}`;
+    });
+    parts.push(`**Slots:**\n${slots.join('\n')}`);
   }
 
   return parts.join('\n\n');
