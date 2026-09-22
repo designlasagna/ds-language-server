@@ -5,7 +5,7 @@ import {
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { DSStore } from '../store.js';
-import type { DSConfig } from '../types.js';
+import type { DSConfig, LifecycleInfo, LifecycleIssue } from '../types.js';
 import { scanDocument } from '../scanner.js';
 import {
   isDeprecated,
@@ -42,9 +42,10 @@ export function getDiagnostics(
         const component = store.getComponent(symbol.name) ?? store.getComponentByClassName(symbol.name);
         if (!component) break;
 
+        addLifecycleDiagnostics(diagnostics, document, symbol.start, symbol.end, component);
         // Deprecated component
         if (isDeprecated(component)) {
-          const severity = getDeprecationSeverity(component.removal, severityOverride);
+          const severity = getDeprecationSeverity(component.removal, severityOverride, component.lifecycleState);
           if (severity === undefined) break;
 
           diagnostics.push({
@@ -64,7 +65,8 @@ export function getDiagnostics(
             data: {
               type: 'deprecated-component',
               tagName: component.tagName,
-              replacement: component.replacement,
+              // Component tags are deliberately diagnostic-only: paired-tag edits are unsafe.
+              replacement: undefined,
             },
           });
         }
@@ -97,9 +99,12 @@ export function getDiagnostics(
         const attr = component.attributes.find(
           (a) => a.htmlName === symbol.name || a.name === symbol.name,
         );
-        if (!attr || !isDeprecated(attr)) break;
+        if (!attr) break;
+        addLifecycleDiagnostics(diagnostics, document, symbol.start, symbol.end, attr,
+          replacementIssue(component.attributes.filter(attribute => attribute.htmlName === attr.replacement || attribute.name === attr.replacement), attr.replacement, attr.htmlName));
+        if (!isDeprecated(attr)) break;
 
-        const severity = getDeprecationSeverity(attr.removal, severityOverride);
+        const severity = getDeprecationSeverity(attr.removal, severityOverride, attr.lifecycleState);
         if (severity === undefined) break;
 
         diagnostics.push({
@@ -120,7 +125,7 @@ export function getDiagnostics(
             type: 'deprecated-attribute',
             tagName: symbol.tagName,
             attribute: symbol.name,
-            replacement: attr.replacement,
+            replacement: safeAttributeReplacement(component, attr.htmlName, attr.replacement),
           },
         });
         break;
@@ -163,7 +168,7 @@ export function getDiagnostics(
             tagName: symbol.tagName,
             attribute: symbol.attributeName,
             value: symbol.name,
-            replacement: deprecatedValue.replacement,
+            replacement: safeValueReplacement(attr, deprecatedValue.replacement),
           },
         });
         break;
@@ -171,9 +176,12 @@ export function getDiagnostics(
 
       case 'css-var': {
         const token = store.getToken(symbol.name);
-        if (!token || !isDeprecated(token)) break;
+        if (!token) break;
+        const tokenReplacement = tokenReplacementResult(store, token.name, token.source, token.replacement);
+        addLifecycleDiagnostics(diagnostics, document, symbol.start, symbol.end, token, tokenReplacement.issue);
+        if (!isDeprecated(token)) break;
 
-        const severity = getDeprecationSeverity(token.removal, severityOverride);
+        const severity = getDeprecationSeverity(token.removal, severityOverride, token.lifecycleState);
         if (severity === undefined) break;
 
         diagnostics.push({
@@ -193,7 +201,7 @@ export function getDiagnostics(
           data: {
             type: 'deprecated-token',
             token: token.name,
-            replacement: token.replacement,
+            replacement: tokenReplacement.replacement,
           },
         });
         break;
@@ -201,9 +209,12 @@ export function getDiagnostics(
 
       case 'class': {
         const utility = store.getUtility(symbol.name);
-        if (!utility || !isDeprecated(utility)) break;
+        if (!utility) break;
+        const utilityReplacement = utilityReplacementResult(store, utility.name, utility.source, utility.replacement);
+        addLifecycleDiagnostics(diagnostics, document, symbol.start, symbol.end, utility, utilityReplacement.issue);
+        if (!isDeprecated(utility)) break;
 
-        const severity = getDeprecationSeverity(utility.removal, severityOverride);
+        const severity = getDeprecationSeverity(utility.removal, severityOverride, utility.lifecycleState);
         if (severity === undefined) break;
 
         diagnostics.push({
@@ -223,7 +234,7 @@ export function getDiagnostics(
           data: {
             type: 'deprecated-utility',
             className: utility.name,
-            replacement: utility.replacement,
+            replacement: utilityReplacement.replacement,
           },
         });
         break;
@@ -235,6 +246,80 @@ export function getDiagnostics(
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────
+
+interface ReplacementResult { replacement?: string; issue?: LifecycleIssue; }
+
+function tokenReplacementResult(store: DSStore, current: string, source: string, replacement: string | undefined): ReplacementResult {
+  if (!replacement || replacement === current) return {};
+  const matches = store.getTokens().filter(token => token.source === source && (token.id === replacement || token.name === replacement));
+  const issue = replacementIssue(matches, replacement, current);
+  if (issue || matches[0].lifecycleState === 'removed' || tokenReplacementCycles(store, source, current, matches[0])) return { issue };
+  return { replacement: matches[0].name };
+}
+
+function tokenReplacementCycles(store: DSStore, source: string, current: string, target: { id?: string; name: string; replacement?: string }): boolean {
+  const seen = new Set([current]);
+  let item: { id?: string; name: string; replacement?: string } | undefined = target;
+  while (item) {
+    if (seen.has(item.name) || (item.id !== undefined && seen.has(item.id))) return true;
+    seen.add(item.name);
+    if (item.id) seen.add(item.id);
+    if (!item.replacement) return false;
+    const matches = store.getTokens().filter(token => token.source === source && (token.id === item!.replacement || token.name === item!.replacement));
+    if (matches.length !== 1) return false;
+    item = matches[0];
+  }
+  return false;
+}
+
+function utilityReplacementResult(store: DSStore, current: string, source: string, replacement: string | undefined): ReplacementResult {
+  if (!replacement || replacement === current) return {};
+  const matches = store.getUtilities().filter(utility => utility.source === source && utility.name === replacement);
+  const issue = replacementIssue(matches, replacement, current);
+  return issue || matches[0].lifecycleState === 'removed' ? { issue } : { replacement };
+}
+
+function replacementIssue(matches: readonly { lifecycleState?: string }[], replacement: string | undefined, current: string): LifecycleIssue | undefined {
+  if (!replacement || replacement === current) return undefined;
+  if (matches.length === 0 || (matches.length === 1 && matches[0].lifecycleState === 'removed')) return 'unresolved-replacement';
+  return matches.length > 1 ? 'ambiguous-replacement' : undefined;
+}
+
+function addLifecycleDiagnostics(diagnostics: Diagnostic[], document: TextDocument, start: number, end: number, item: LifecycleInfo, extra?: LifecycleIssue): void {
+  const issues = [...new Set([...(item.lifecycleIssues ?? []), ...(extra ? [extra] : [])])];
+  for (const issue of issues) {
+    diagnostics.push({
+      range: { start: document.positionAt(start), end: document.positionAt(end) },
+      severity: DiagnosticSeverity.Warning,
+      source: SOURCE,
+      message: lifecycleIssueMessage(issue),
+      data: { type: issue },
+    });
+  }
+}
+
+function lifecycleIssueMessage(issue: LifecycleIssue): string {
+  const messages: Record<LifecycleIssue, string> = {
+    'lifecycle-conflict': 'Conflicting lifecycle assertions; the positive lifecycle state is used.',
+    'bare-deprecation': 'Bare deprecation has no authored migration message.',
+    'deprecation-message-mismatch': 'Standard and extension deprecation messages disagree; the extension message is used.',
+    'unresolved-replacement': 'The declared lifecycle replacement cannot be resolved safely; no action is available.',
+    'ambiguous-replacement': 'The declared lifecycle replacement is ambiguous; no action is available.',
+    'unresolved-extends': 'The DTCG $extends target could not be resolved.',
+    'extends-cycle': 'The DTCG $extends chain contains a cycle.',
+  };
+  return messages[issue];
+}
+
+function safeAttributeReplacement(component: ReturnType<DSStore['getComponent']>, current: string, replacement: string | undefined): string | undefined {
+  if (!component || !replacement || replacement === current) return undefined;
+  const matches = component.attributes.filter(attribute => attribute.htmlName === replacement || attribute.name === replacement);
+  return matches.length === 1 && matches[0].lifecycleState !== 'removed' ? replacement : undefined;
+}
+
+function safeValueReplacement(attribute: { values?: string[] }, replacement: string | undefined): string | undefined {
+  return replacement && attribute.values?.includes(replacement) ? replacement : undefined;
+}
 
 function buildDeprecationDiagnostic(
   name: string,

@@ -103,6 +103,16 @@ The server watches configuration candidates, explicit and package-declared manif
 
 This handles source creation, atomic replacement, deletion/recreation, and package installation without restarting. Imported JS config helpers remain cached and require a restart; config entry modules are reloaded. ESM reloads retain module-cache entries, and large-workspace polling performance has not yet been benchmarked. Live VS Code/Zed smoke testing remains separate from the automated LSP tests.
 
+### Lifecycle contract profile
+
+The legacy lifecycle adapter remains the default. To opt CEM and DTCG sources into the unpublished schemas v0.4 lifecycle contract, select it explicitly in `ds.config.*`:
+
+```json
+{ "lifecycle": { "profile": "0.4" } }
+```
+
+Native token and utility manifests use v0.4 rules only when both this profile is selected and `schemaVersion` is `"0.4.0"`. CEM does not use this schema version. The server uses its reproducible local `file:../schemas` dependency until a release is authorized.
+
 ### For local consumers
 
 The language server and its editor integrations are currently used from local checkouts. Build the server, then configure your editor with its local server path as shown below. Auto-discovery handles manifests from installed design-system packages; `ds.config.json` adds local sources.

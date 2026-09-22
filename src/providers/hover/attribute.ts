@@ -1,6 +1,7 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
 import { findWordAroundOffset, findParentTag } from './shared.js';
+import { buildDeprecationMessage, isDeprecated } from '../../lifecycle.js';
 
 // ─── HTML Attribute Hover ──────────────────────────────────────────
 
@@ -29,6 +30,11 @@ export function tryAttrHover(text: string, offset: number, store: DSStore): Hove
   if (attr.default !== undefined) parts.push(`**Default:** \`${attr.default}\``);
   if (attr.values && attr.values.length > 0) {
     parts.push(`**Values:** ${attr.values.map((v) => `\`${v}\``).join(', ')}`);
+  }
+  if (isDeprecated(attr)) {
+    parts.push(attr.lifecycleState === 'removed' ? '**Removed**' : '**Deprecated**');
+    const message = buildDeprecationMessage(attr);
+    if (message) parts.push(message);
   }
 
   return {

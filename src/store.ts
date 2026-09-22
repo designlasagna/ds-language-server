@@ -4,6 +4,7 @@ import type {
   DSToken,
   DSUtilityClass,
   ManifestSources,
+  DSConfig,
 } from './types.js';
 import { parseCEM } from './parsers/cem.js';
 import { parseTokens } from './parsers/tokens.js';
@@ -27,7 +28,7 @@ export class DSStore {
   /**
    * Load all data from discovered manifest files.
    */
-  load(sources: ManifestSources): void {
+  load(sources: ManifestSources, config?: DSConfig): void {
     this.components = [];
     this.tokens = [];
     this.utilities = [];
@@ -37,7 +38,7 @@ export class DSStore {
       try {
         const raw = fs.readFileSync(file.path, 'utf-8');
         const json = JSON.parse(raw);
-        const parsed = parseCEM(json, file.packageName);
+        const parsed = parseCEM(json, file.packageName, config?.lifecycle?.profile);
         this.components.push(...parsed);
       } catch (e) {
         console.error(`[ds-ls] Failed to parse CEM: ${file.path}`, e);
@@ -49,7 +50,7 @@ export class DSStore {
       try {
         const raw = fs.readFileSync(file.path, 'utf-8');
         const json = JSON.parse(raw);
-        const parsed = parseTokens(json, file.packageName);
+        const parsed = parseTokens(json, file.packageName, config?.lifecycle?.profile);
         this.tokens.push(...parsed);
       } catch (e) {
         console.error(`[ds-ls] Failed to parse tokens: ${file.path}`, e);
@@ -61,7 +62,7 @@ export class DSStore {
       try {
         const raw = fs.readFileSync(file.path, 'utf-8');
         const json = JSON.parse(raw);
-        const parsed = parseUtilities(json, file.packageName);
+        const parsed = parseUtilities(json, file.packageName, config?.lifecycle?.profile);
         this.utilities.push(...parsed);
       } catch (e) {
         console.error(`[ds-ls] Failed to parse utilities: ${file.path}`, e);

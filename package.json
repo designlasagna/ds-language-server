@@ -21,7 +21,7 @@
     "test": "vitest run --reporter=dot"
   },
   "dependencies": {
-    "@designlasagna/schemas": "^0.3.3",
+    "@designlasagna/schemas": "file:../schemas",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "glob": "^11.0.0",

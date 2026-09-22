@@ -1,122 +1,25 @@
 import type { DSUtilityClass } from '../types.js';
+import { lifecycleFields, normalizeLifecycle } from '../lifecycle.js';
 
-// ─── Utility manifest structures ───────────────────────────────────
+interface UtilityEntry { name: string; description?: string; category?: string; relatedTokens?: string[]; status?: string; deprecated?: unknown; deprecationMessage?: string; removal?: string; replacement?: string; }
+interface UtilityCategory { name: string; utilities: UtilityEntry[]; }
 
-/**
- * Supported utility manifest structures:
- *
- * 1. Categorized: { categories: [ { name, prefix, utilities: [ { name, description } ] } ] }
- * 2. Flat array:  [ { name, description, category } ]
- */
-
-interface CategorizedManifest {
-  categories: UtilityCategory[];
-}
-
-interface UtilityCategory {
-  name: string;
-  prefix?: string;
-  utilities: UtilityEntry[];
-}
-
-interface UtilityEntry {
-  name: string;
-  description?: string;
-  category?: string;
-  relatedTokens?: string[];
-
-  // Lifecycle fields (optional)
-  status?: string;
-  deprecated?: boolean | string;
-  deprecationMessage?: string;
-  removal?: string;
-  replacement?: string;
-}
-
-// ─── Parser ────────────────────────────────────────────────────────
-
-/**
- * Parse a utility class manifest and return normalized DSUtilityClass[].
- */
-export function parseUtilities(json: unknown, source: string): DSUtilityClass[] {
+export function parseUtilities(json: unknown, source: string, lifecycleProfile?: '0.4'): DSUtilityClass[] {
   if (!json || typeof json !== 'object') return [];
-
-  // Try: { categories: [...] } (Acme format)
-  if ('categories' in (json as Record<string, unknown>)) {
-    const manifest = json as CategorizedManifest;
-    if (Array.isArray(manifest.categories)) {
-      return parseCategorized(manifest, source);
-    }
-  }
-
-  // Try: plain array
-  if (Array.isArray(json)) {
-    return json
-      .map((entry) => parseEntry(entry as UtilityEntry, undefined, source))
-      .filter((u): u is DSUtilityClass => u !== null);
-  }
-
+  const record = json as Record<string, unknown>;
+  const v04 = record.schemaVersion === '0.4.0';
+  if (Array.isArray(record.categories)) return (record.categories as UtilityCategory[]).flatMap(category =>
+    Array.isArray(category.utilities) ? category.utilities.map(entry => parseEntry(entry, category.name, source, v04)).filter((entry): entry is DSUtilityClass => entry !== null) : []);
+  if (Array.isArray(record.utilities)) return record.utilities.map(entry => parseEntry(entry as UtilityEntry, undefined, source, v04)).filter((entry): entry is DSUtilityClass => entry !== null);
+  if (Array.isArray(json)) return json.map(entry => parseEntry(entry as UtilityEntry, undefined, source, false)).filter((entry): entry is DSUtilityClass => entry !== null);
   return [];
 }
 
-function parseCategorized(manifest: CategorizedManifest, source: string): DSUtilityClass[] {
-  const utilities: DSUtilityClass[] = [];
-
-  for (const category of manifest.categories) {
-    if (!Array.isArray(category.utilities)) continue;
-
-    for (const entry of category.utilities) {
-      const utility = parseEntry(entry, category.name, source);
-      if (utility) {
-        utilities.push(utility);
-      }
-    }
-  }
-
-  return utilities;
-}
-
-function parseEntry(
-  entry: UtilityEntry,
-  categoryName: string | undefined,
-  source: string,
-): DSUtilityClass | null {
+function parseEntry(entry: UtilityEntry, category: string | undefined, source: string, v04: boolean): DSUtilityClass | null {
   if (!entry.name) return null;
-
-  const deprecated = parseDeprecated(entry.deprecated);
-
-  return {
-    name: entry.name,
-    description: entry.description,
-    category: entry.category ?? categoryName,
-    relatedTokens: entry.relatedTokens,
-    status: parseStatus(entry.status),
-    deprecated: deprecated.isDeprecated,
-    deprecationMessage: deprecated.message ?? entry.deprecationMessage,
-    removal: entry.removal,
-    replacement: entry.replacement,
-    source,
-  };
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────
-
-function parseStatus(status: string | undefined): DSUtilityClass['status'] {
-  if (!status) return undefined;
-  if (['draft', 'beta', 'ready', 'deprecated'].includes(status)) {
-    return status as DSUtilityClass['status'];
-  }
-  return undefined;
-}
-
-function parseDeprecated(
-  deprecated: boolean | string | undefined,
-): { isDeprecated: boolean; message?: string } {
-  if (deprecated === undefined || deprecated === false) {
-    return { isDeprecated: false };
-  }
-  if (deprecated === true) {
-    return { isDeprecated: true };
-  }
-  return { isDeprecated: true, message: deprecated };
+  const lifecycle = normalizeLifecycle(entry.deprecated, entry.status, { removal: entry.removal, replacement: entry.replacement });
+  if (!v04 && lifecycle.status && !['draft', 'beta', 'ready', 'deprecated'].includes(lifecycle.status)) lifecycle.status = undefined;
+  if (!lifecycle.message) lifecycle.message = entry.deprecationMessage;
+  return { name: entry.name, description: entry.description, category: entry.category ?? category, relatedTokens: entry.relatedTokens,
+    ...lifecycleFields(lifecycle), source };
 }

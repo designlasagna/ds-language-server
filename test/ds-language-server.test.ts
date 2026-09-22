@@ -505,34 +505,35 @@ describe('deprecated hover reference content', () => {
     return (hover!.contents as { value: string }).value;
   }
 
-  it('shows reference content for a deprecated token without lifecycle duplication', () => {
+  it('shows compact lifecycle guidance for a deprecated token', () => {
     const markdown = markdownAt('a { color: var(--acme-color-background-button-primary-pressed); }', 'pressed');
     expect(markdown).toContain('### `--acme-color-background-button-primary-pressed`');
     expect(markdown).toContain('Primary button pressed background.');
-    expect(markdown).not.toContain('**Deprecated**');
-    expect(markdown).not.toContain('**Replacement:**');
+    expect(markdown).toContain('**Deprecated**');
+    expect(markdown).toContain('**Replacement:**');
   });
 
-  it('shows reference content for a deprecated utility without lifecycle duplication', () => {
+  it('shows compact lifecycle guidance for a deprecated utility', () => {
     const markdown = markdownAt('<div class="acme-text-heading-1"></div>', 'heading-1');
     expect(markdown).toContain('### `.acme-text-heading-1`');
     expect(markdown).toContain('**Category:**');
-    expect(markdown).not.toContain('**Deprecated**');
-    expect(markdown).not.toContain('**Replacement:**');
+    expect(markdown).toContain('**Deprecated**');
+    expect(markdown).toContain('**Replacement:**');
   });
 
-  it('shows reference content for a deprecated attribute without lifecycle duplication', () => {
+  it('shows compact lifecycle guidance for a deprecated attribute', () => {
     const markdown = markdownAt('<acme-button label="Old"></acme-button>', 'label');
     expect(markdown).toContain('### `label`');
     expect(markdown).toContain('**Type:**');
-    expect(markdown).not.toContain('**Deprecated**');
+    expect(markdown).toContain('**Deprecated**');
   });
 
-  it('shows reference content for a deprecated attribute value without lifecycle duplication', () => {
+  it('shows compact lifecycle guidance for a deprecated attribute value', () => {
     const markdown = markdownAt('<acme-button variant="tertiary"></acme-button>', 'tertiary');
     expect(markdown).toContain('### `variant="tertiary"`');
     expect(markdown).toContain('**Values:**');
-    expect(markdown).not.toContain('**Deprecated**');
+    expect(markdown).toContain('**Deprecated**');
+    expect(markdown).toContain('**Replacement:** `secondary`');
   });
 });
 
@@ -557,8 +558,9 @@ describe('Diagnostics', () => {
     );
     const diagnostics = getDiagnostics(doc, store);
     expect(diagnostics.length).toBeGreaterThan(0);
-    expect(diagnostics[0].message).toContain('scheduled for removal');
-    expect(diagnostics[0].message).toContain('--acme-color-interactive-primary-pressed');
+    const diagnostic = diagnostics.find((item) => (item.data as { type?: string } | undefined)?.type === 'deprecated-token');
+    expect(diagnostic?.message).toContain('scheduled for removal');
+    expect(diagnostic?.message).toContain('--acme-color-interactive-primary-pressed');
   });
 
   it('diagnoses deprecated attribute values', () => {

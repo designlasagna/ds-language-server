@@ -1,6 +1,7 @@
 import { Hover, MarkupKind } from 'vscode-languageserver';
 import type { DSStore } from '../../store.js';
 import { classValueRanges } from '../../class-values.js';
+import { buildDeprecationMessage, isDeprecated } from '../../lifecycle.js';
 
 // ─── Class Name Hover ──────────────────────────────────────────────
 
@@ -29,7 +30,13 @@ export function tryClassHover(text: string, offset: number, store: DSStore): Hov
       parts.push(`### \`.${utility.name}\``);
       if (utility.description) parts.push(utility.description);
       if (utility.category) parts.push(`**Category:** ${utility.category}`);
-      if (utility.status) parts.push(`**Status:** ${utility.status}`);
+      if (isDeprecated(utility)) {
+        parts.push(utility.lifecycleState === 'removed' ? '**Removed**' : '**Deprecated**');
+        const message = buildDeprecationMessage(utility);
+        if (message) parts.push(message);
+      } else if (utility.status) {
+        parts.push(`**Status:** ${utility.status}`);
+      }
       parts.push(`**Package:** ${utility.source}`);
 
       if (utility.relatedTokens && utility.relatedTokens.length > 0) {

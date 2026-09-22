@@ -1,356 +1,81 @@
-import type {
-  DSComponent,
-  DSAttribute,
-  DSSlot,
-  DSEvent,
-  DSCssProperty,
-  DSCssPart,
-  DSDeprecatedValue,
-  Status,
-} from '../types.js';
+import type { DSAttribute, DSComponent, DSCssPart, DSCssProperty, DSDeprecatedValue, DSEvent, DSSlot } from '../types.js';
+import { lifecycleFields, normalizeLifecycle } from '../lifecycle.js';
 
-// ─── CEM Types (subset we care about) ─────────────────────────────
+interface CEMManifest { modules: CEMModule[]; }
+interface CEMModule { declarations?: CEMDeclaration[]; }
+interface CEMDeclaration { name: string; tagName?: string; description?: string; deprecated?: boolean | string; removal?: string; replacement?: string; status?: { name: string } | string; attributes?: CEMAttribute[]; members?: CEMMember[]; slots?: CEMSlot[]; events?: CEMEvent[]; cssProperties?: CEMCssProperty[]; cssParts?: CEMCssPart[]; }
+interface CEMAttribute { name: string; type?: string | { text: string }; default?: string | boolean | number; description?: string; deprecated?: boolean | string; removal?: string; replacement?: string; fieldName?: string; enum?: string[]; deprecatedValues?: CEMDeprecatedValue[]; }
+interface CEMMember { name: string; type?: string | { text: string } | string[]; default?: string | boolean | number; description?: string; deprecated?: boolean | string; removal?: string; replacement?: string; attribute?: string; enum?: string[]; deprecatedValues?: CEMDeprecatedValue[]; }
+interface CEMDeprecatedValue { value: string; message: string; removal?: string; replacement?: string; }
+interface CEMSlot { name: string; description?: string; deprecated?: boolean | string; removal?: string; replacement?: string; }
+interface CEMEvent { name: string; description?: string; type?: { text: string }; }
+interface CEMCssProperty { name: string; description?: string; default?: string; deprecated?: boolean | string; removal?: string; replacement?: string; syntax?: string; }
+interface CEMCssPart { name: string; description?: string; }
 
-interface CEMManifest {
-  schemaVersion: string;
-  modules: CEMModule[];
-}
-
-interface CEMModule {
-  kind: string;
-  path: string;
-  declarations?: CEMDeclaration[];
-  exports?: CEMExport[];
-}
-
-interface CEMExport {
-  kind: string;
-  name: string;
-  declaration: { name: string; module?: string };
-}
-
-interface CEMDeclaration {
-  kind: string;
-  name: string;
-  tagName?: string;
-  description?: string;
-  deprecated?: boolean | string;
-  removal?: string;
-  replacement?: string;
-  status?: { name: string; description?: string } | string;
-  customElement?: boolean;
-  attributes?: CEMAttribute[];
-  members?: CEMMember[];
-  slots?: CEMSlot[];
-  events?: CEMEvent[];
-  cssProperties?: CEMCssProperty[];
-  cssParts?: CEMCssPart[];
-  superclass?: { name: string; module?: string };
-  mixins?: { name: string; module?: string }[];
-}
-
-interface CEMAttribute {
-  name: string;
-  type?: string | { text: string };
-  default?: string | boolean | number;
-  description?: string;
-  deprecated?: boolean | string;
-  removal?: string;
-  fieldName?: string;
-  attribute?: string;
-  enum?: string[];
-  deprecatedValues?: CEMDeprecatedValue[];
-}
-
-interface CEMMember {
-  kind: string;
-  name: string;
-  type?: string | { text: string } | string[];
-  default?: string | boolean | number;
-  description?: string;
-  deprecated?: boolean | string;
-  removal?: string;
-  attribute?: string;
-  enum?: string[];
-  privacy?: string;
-  deprecatedValues?: CEMDeprecatedValue[];
-}
-
-interface CEMDeprecatedValue {
-  value: string;
-  message: string;
-  removal?: string;
-  replacement?: string;
-}
-
-interface CEMSlot {
-  name: string;
-  description?: string;
-  deprecated?: boolean | string;
-  removal?: string;
-  replacement?: string;
-}
-
-interface CEMEvent {
-  name: string;
-  description?: string;
-  type?: { text: string };
-}
-
-interface CEMCssProperty {
-  name: string;
-  description?: string;
-  default?: string;
-  deprecated?: boolean | string;
-  removal?: string;
-  replacement?: string;
-  syntax?: string;
-}
-
-interface CEMCssPart {
-  name: string;
-  description?: string;
-}
-
-// ─── Parser ────────────────────────────────────────────────────────
-
-/**
- * Parse a Custom Elements Manifest and return normalized DSComponent[].
- */
-export function parseCEM(json: unknown, source: string): DSComponent[] {
+/** CEM v0.4 lifecycle semantics require explicit config profile selection. */
+export function parseCEM(json: unknown, source: string, lifecycleProfile?: '0.4'): DSComponent[] {
   const cem = json as CEMManifest;
-  if (!cem.modules || !Array.isArray(cem.modules)) return [];
-
-  const components: DSComponent[] = [];
-
-  for (const mod of cem.modules) {
-    if (!mod.declarations) continue;
-
-    for (const decl of mod.declarations) {
-      // Only process custom element declarations
-      if (!decl.tagName) continue;
-
-      const component = parseDeclaration(decl, source);
-      components.push(component);
-    }
-  }
-
-  return components;
+  if (!Array.isArray(cem?.modules)) return [];
+  return cem.modules.flatMap(module => (module.declarations ?? []).filter(decl => decl.tagName)
+    .map(decl => parseDeclaration(decl, source, lifecycleProfile === '0.4')));
 }
 
-function parseDeclaration(decl: CEMDeclaration, source: string): DSComponent {
-  const status = parseStatus(decl.status);
-  const deprecated = parseDeprecated(decl.deprecated);
-
-  // Build a map of members by attribute name for enrichment
-  const membersByAttribute = new Map<string, CEMMember>();
-  if (decl.members) {
-    for (const member of decl.members) {
-      if (member.attribute) {
-        membersByAttribute.set(member.attribute, member);
-      }
-    }
-  }
-
-  return {
-    tagName: decl.tagName!,
-    className: decl.name,
-    description: decl.description || '',
-    status,
-    deprecated: decl.deprecated === undefined
-      ? status === 'deprecated' || status === 'removed'
-      : deprecated.isDeprecated,
-    deprecationMessage: deprecated.message,
-    removal: decl.removal,
-    replacement: decl.replacement,
-    attributes: parseAttributes(decl.attributes || [], membersByAttribute),
-    slots: parseSlots(decl.slots || []),
-    events: parseEvents(decl.events || []),
-    cssProperties: parseCssProperties(decl.cssProperties || []),
-    cssParts: parseCssParts(decl.cssParts || []),
-    source,
-  };
+function status(value: CEMDeclaration['status']): string | undefined {
+  const result = typeof value === 'string' ? value : value?.name;
+  return result || undefined;
 }
 
-function parseAttributes(
-  attrs: CEMAttribute[],
-  membersByAttribute: Map<string, CEMMember>,
-): DSAttribute[] {
-  return attrs.map((attr) => {
-    // Enrich from member data (members often have more info than attributes)
-    const member = membersByAttribute.get(attr.name);
+function parseDeclaration(decl: CEMDeclaration, source: string, v04: boolean): DSComponent {
+  const lifecycle = normalizeLifecycle(decl.deprecated, status(decl.status), { removal: decl.removal, replacement: decl.replacement });
+  // Legacy CEM already recognizes status-only components; v0.4 adds the full canonical state details.
+  if (!v04 && decl.deprecated === false) {
+    lifecycle.state = 'active';
+    lifecycle.deprecated = false;
+    lifecycle.message = undefined;
+  } else if (!v04 && decl.deprecated === undefined && lifecycle.state === 'active') {
+    lifecycle.deprecated = false;
+  }
+  // CEM producers use either `attribute` or the matching member name for the
+  // attribute/member duplicate representation; both identify the same axis.
+  const members = new Map((decl.members ?? []).map(member => [member.attribute ?? member.name, member]));
+  return { tagName: decl.tagName!, className: decl.name, description: decl.description || '', ...lifecycleFields(lifecycle),
+    attributes: parseAttributes(decl.attributes ?? [], members, v04), slots: (decl.slots ?? []).map(parseSlot),
+    events: (decl.events ?? []).map(event => ({ name: event.name, description: event.description, type: event.type?.text })),
+    cssProperties: (decl.cssProperties ?? []).map(parseCssProperty), cssParts: (decl.cssParts ?? []).map(part => ({ name: part.name, description: part.description })), source };
+}
 
-    const deprecated = parseDeprecated(attr.deprecated ?? member?.deprecated);
-    const type = resolveType(attr.type ?? member?.type);
-    const defaultVal = attr.default ?? member?.default;
-    const enumValues = attr.enum ?? member?.enum;
-    const removal = attr.removal ?? member?.removal;
-    const deprecatedValues = attr.deprecatedValues ?? member?.deprecatedValues;
-
-    // Detect deprecated values from deprecation message + enum
-    const detectedDeprecatedValues = detectDeprecatedValues(
-      deprecated,
-      enumValues,
-      deprecatedValues,
-      removal,
-    );
-
-    // Determine active values (enum values minus deprecated ones)
-    const deprecatedValueNames = new Set(detectedDeprecatedValues.map((v) => v.value));
-    const activeValues = enumValues?.filter((v) => !deprecatedValueNames.has(v));
-
-    // If we detected deprecated VALUES from the deprecation message,
-    // the attribute itself is NOT deprecated — only specific values are.
-    // e.g. `size` is fine, but `size="medium"` is deprecated.
-    const attrIsDeprecated = detectedDeprecatedValues.length > 0
-      ? false
-      : deprecated.isDeprecated;
-    const attrDeprecationMessage = detectedDeprecatedValues.length > 0
-      ? undefined
-      : deprecated.message;
-
-    return {
-      name: attr.fieldName ?? attr.name,
-      htmlName: attr.name,
-      type,
-      default: defaultVal !== undefined ? String(defaultVal) : undefined,
-      description: attr.description ?? member?.description,
-      deprecated: attrIsDeprecated,
-      deprecationMessage: attrDeprecationMessage,
-      removal: attrIsDeprecated ? removal : undefined,
-      values: activeValues ?? enumValues,
-      deprecatedValues: detectedDeprecatedValues.length > 0 ? detectedDeprecatedValues : undefined,
-    };
+function parseAttributes(attrs: CEMAttribute[], members: Map<string, CEMMember>, v04: boolean): DSAttribute[] {
+  return attrs.map(attr => {
+    const member = members.get(attr.name);
+    const attrLifecycle = normalizeLifecycle(attr.deprecated ?? member?.deprecated, undefined, {
+      removal: attr.removal ?? member?.removal, replacement: attr.replacement ?? member?.replacement,
+    });
+    if (v04 && attr.deprecated !== undefined && member?.deprecated !== undefined && attr.deprecated !== member.deprecated) attrLifecycle.issues.push('lifecycle-conflict');
+    const values = attr.enum ?? member?.enum;
+    const explicitValues = attr.deprecatedValues ?? member?.deprecatedValues;
+    const deprecatedValues = explicitValues?.map(value => ({ value: value.value, message: value.message, removal: value.removal, replacement: value.replacement }));
+    // Legacy compatibility only: old manifests inferred values from prose. v0.4 never does.
+    const inferred = !v04 && !deprecatedValues ? inferLegacyValues(attrLifecycle.message, values, attrLifecycle.removal) : undefined;
+    // Retain the previous legacy adapter's prose behavior without letting it leak into v0.4.
+    if (inferred?.length) {
+      attrLifecycle.state = 'active';
+      attrLifecycle.deprecated = false;
+      attrLifecycle.message = undefined;
+      attrLifecycle.removal = undefined;
+      attrLifecycle.replacement = undefined;
+    }
+    const valueEntries = deprecatedValues ?? inferred;
+    return { name: attr.fieldName ?? attr.name, htmlName: attr.name, type: typeOf(attr.type ?? member?.type),
+      default: (attr.default ?? member?.default) === undefined ? undefined : String(attr.default ?? member?.default), description: attr.description ?? member?.description,
+      ...lifecycleFields(attrLifecycle), values, deprecatedValues: valueEntries };
   });
 }
 
-/**
- * Detect deprecated values by analyzing the deprecation message
- * and cross-referencing with enum values.
- *
- * Example: deprecated="The `tertiary` variant is removed. Use `secondary` instead."
- * with enum=["primary","secondary","tertiary"]
- * → detects "tertiary" as deprecated with replacement "secondary"
- */
-function detectDeprecatedValues(
-  deprecated: { isDeprecated: boolean; message?: string },
-  enumValues: string[] | undefined,
-  explicitDeprecated: CEMDeprecatedValue[] | undefined,
-  removal: string | undefined,
-): DSDeprecatedValue[] {
-  // If there are explicit deprecated values, use those
-  if (explicitDeprecated && explicitDeprecated.length > 0) {
-    return explicitDeprecated.map((dv) => ({
-      value: dv.value,
-      message: dv.message,
-      removal: dv.removal ?? removal,
-      replacement: dv.replacement,
-    }));
-  }
-
-  // Try to detect from deprecation message + enum
-  if (!deprecated.isDeprecated || !deprecated.message || !enumValues) {
-    return [];
-  }
-
-  const msg = deprecated.message;
-  const result: DSDeprecatedValue[] = [];
-
-  // Pattern: "The `VALUE` ... is removed/deprecated. Use `REPLACEMENT` instead."
-  const valuePattern = /[`'"](\w+)[`'"]\s+(?:\w+\s+)?(?:is\s+)?(?:removed|deprecated)/i;
-  const replacementPattern = /[Uu]se\s+[`'"](\w+)[`'"]\s+instead/i;
-
-  const valueMatch = msg.match(valuePattern);
-  const replacementMatch = msg.match(replacementPattern);
-
-  if (valueMatch) {
-    const value = valueMatch[1];
-    // Verify it's actually an enum value
-    if (enumValues.includes(value)) {
-      result.push({
-        value,
-        message: msg,
-        removal,
-        replacement: replacementMatch?.[1],
-      });
-    }
-  }
-
-  return result;
+function inferLegacyValues(message: string | undefined, values: string[] | undefined, removal: string | undefined): DSDeprecatedValue[] | undefined {
+  const match = message?.match(/[`'"](\w+)[`'"]\s+(?:\w+\s+)?(?:is\s+)?(?:removed|deprecated)/i);
+  if (!match || !values?.includes(match[1]) || !message) return undefined;
+  return [{ value: match[1], message, removal, replacement: message.match(/[Uu]se\s+[`'"](\w+)[`'"]\s+instead/i)?.[1] }];
 }
-
-function parseSlots(slots: CEMSlot[]): DSSlot[] {
-  return slots.map((s) => {
-    const deprecated = parseDeprecated(s.deprecated);
-    return {
-      name: s.name,
-      description: s.description,
-      deprecated: deprecated.isDeprecated,
-      deprecationMessage: deprecated.message,
-      removal: s.removal,
-      replacement: s.replacement,
-    };
-  });
-}
-
-function parseEvents(events: CEMEvent[]): DSEvent[] {
-  return events.map((e) => ({
-    name: e.name,
-    description: e.description,
-    type: e.type?.text,
-  }));
-}
-
-function parseCssProperties(props: CEMCssProperty[]): DSCssProperty[] {
-  return props.map((p) => {
-    const deprecated = parseDeprecated(p.deprecated);
-    return {
-      name: p.name,
-      description: p.description,
-      default: p.default,
-      syntax: p.syntax,
-      deprecated: deprecated.isDeprecated,
-      deprecationMessage: deprecated.message,
-      removal: p.removal,
-      replacement: p.replacement,
-    };
-  });
-}
-
-function parseCssParts(parts: CEMCssPart[]): DSCssPart[] {
-  return parts.map((p) => ({
-    name: p.name,
-    description: p.description,
-  }));
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────
-
-function parseStatus(
-  status: { name: string; description?: string } | string | undefined,
-): Status | undefined {
-  if (!status) return undefined;
-  const name = typeof status === 'string' ? status : status.name;
-  return name || undefined;
-}
-
-function parseDeprecated(
-  deprecated: boolean | string | undefined,
-): { isDeprecated: boolean; message?: string } {
-  if (deprecated === undefined || deprecated === false) {
-    return { isDeprecated: false };
-  }
-  if (deprecated === true) {
-    return { isDeprecated: true };
-  }
-  // String — it's the deprecation message
-  return { isDeprecated: true, message: deprecated };
-}
-
-function resolveType(type: string | { text: string } | string[] | undefined): string {
-  if (!type) return 'string';
-  if (typeof type === 'string') return type;
-  if (Array.isArray(type)) return type.join(' | ');
-  if (typeof type === 'object' && 'text' in type) return type.text;
-  return 'string';
-}
+function parseSlot(slot: CEMSlot): DSSlot { return { name: slot.name, description: slot.description, ...lifecycleFields(normalizeLifecycle(slot.deprecated, undefined, { removal: slot.removal, replacement: slot.replacement })) }; }
+function parseCssProperty(prop: CEMCssProperty): DSCssProperty { return { name: prop.name, description: prop.description, default: prop.default, syntax: prop.syntax, ...lifecycleFields(normalizeLifecycle(prop.deprecated, undefined, { removal: prop.removal, replacement: prop.replacement })) }; }
+function typeOf(value: CEMAttribute['type'] | CEMMember['type']): string { if (!value) return 'string'; if (typeof value === 'string') return value; if (Array.isArray(value)) return value.join(' | '); return value.text; }

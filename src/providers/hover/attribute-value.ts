@@ -56,6 +56,13 @@ export function tryAttrValueHover(text: string, offset: number, store: DSStore):
     }
     parts.push(`**Values:** ${formatted.join(', ')}`);
   }
+  const deprecatedValue = attr.deprecatedValues?.find((value) => value.value === attrValue);
+  if (deprecatedValue) {
+    parts.push('**Deprecated**');
+    parts.push(deprecatedValue.message);
+    if (deprecatedValue.replacement) parts.push(`**Replacement:** \`${deprecatedValue.replacement}\``);
+    if (deprecatedValue.removal) parts.push(`**Removal:** ${deprecatedValue.removal}`);
+  }
 
   return {
     contents: { kind: MarkupKind.Markdown, value: parts.join('\n\n') },

@@ -3,14 +3,30 @@
 /** Design Lasagna permits arbitrary lifecycle status strings. */
 export type Status = string;
 
+export type LifecycleState = 'active' | 'deprecated' | 'removed';
+export type LifecycleAssertion = 'absent' | 'explicit-false' | 'positive';
+export type LifecycleIssue =
+  | 'lifecycle-conflict'
+  | 'bare-deprecation'
+  | 'deprecation-message-mismatch'
+  | 'unresolved-replacement'
+  | 'ambiguous-replacement'
+  | 'unresolved-extends'
+  | 'extends-cycle';
+
 export interface LifecycleInfo {
+  /** Raw author status. Only deprecated and removed have lifecycle meaning. */
   status?: Status;
+  /** Compatibility projection for existing providers; use lifecycleState for v0.4 semantics. */
   deprecated?: boolean;
   deprecationMessage?: string;
   /** ISO date (2026-07-30) or semver (v4.0.0) */
   removal?: string;
   /** Name of the replacement (token, class, attribute value) */
   replacement?: string;
+  lifecycleState?: LifecycleState;
+  lifecycleAssertion?: LifecycleAssertion;
+  lifecycleIssues?: LifecycleIssue[];
 }
 
 // ─── Components ────────────────────────────────────────────────────
@@ -74,6 +90,8 @@ export interface DSCssPart {
 // ─── Tokens ────────────────────────────────────────────────────────
 
 export interface DSToken extends LifecycleInfo {
+  /** Canonical manifest identifier, used to resolve v0.4 replacements. */
+  id?: string;
   /** CSS variable name, e.g., --acme-spacing-lg */
   name: string;
   description?: string;
@@ -133,6 +151,8 @@ export interface DSConfig {
      *  If omitted, all packages are scanned. */
     packages?: string[];
   };
+  /** CEM/DTCG require this explicit opt-in; absent preserves legacy parsing. */
+  lifecycle?: { profile?: '0.4' };
   diagnostics?: {
     deprecated?: 'auto' | 'off' | 'information' | 'warning' | 'error';
     draftUsage?: 'off' | 'information' | 'warning';

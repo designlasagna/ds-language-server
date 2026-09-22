@@ -125,7 +125,7 @@ async function reloadConfiguration(): Promise<void> {
 
   const result = discover(workspaceRoot, config);
   tokenDocumentUris = new Set(result.sources.tokens.map((source) => URI.file(source.path).toString()));
-  store.load(result.sources);
+  store.load(result.sources, config);
   manifestsLoaded = true;
 
   const stats = store.stats();

@@ -12,6 +12,7 @@ Editor adapter, packaging, and editor-specific UX changes belong in the changelo
 - Richer component fixtures with descriptions, usage examples, and dedicated lifecycle test coverage.
 - Capability-aware watches for config candidates, resolved manifest paths (including missing files and arbitrary filenames), package metadata, and package-directory changes. Clients without dynamic registration, or rejecting it, use 750 ms metadata polling with debounced reloads.
 - Watcher lifecycle and stdio regression coverage for automatic file/config reloads, package discovery, rejected registrations, reload races, and shutdown.
+- Explicit `lifecycle.profile: "0.4"` selection for CEM/DTCG and native v0.4 manifest dispatch, using the local `@designlasagna/schemas@0.4.0` dependency.
 
 ### Changed
 
@@ -24,6 +25,7 @@ Editor adapter, packaging, and editor-specific UX changes belong in the changelo
 - Use one configuration loader for startup and reloads, supporting `ds.config.json`, `ds.config.js`, and `ds.config.mjs` in that precedence order. Invalid or deleted configuration falls back to discovery defaults instead of retaining stale sources.
 - Reload edited configuration entry modules, ignore superseded asynchronous loads, and correctly decode workspace file URIs. Imported config helpers still require a server restart.
 - Preserve arbitrary CEM lifecycle status strings and component replacement metadata.
+- Compact lifecycle hover callouts for tokens, utilities, attributes, and deprecated attribute values; component replacements remain diagnostic-only while verified attribute replacements retain safe actions.
 - Recognize component `deprecated` and `removed` statuses when no explicit deprecation flag is supplied.
 - Preserve slot deprecation, replacement, and removal metadata; show compact warnings in component hover and migration details in slot hover.
 
