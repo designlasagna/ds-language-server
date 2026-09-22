@@ -91,6 +91,12 @@ which node
 
 ---
 
+## Manifest reloads
+
+Use workspace `ds.config.json`, `ds.config.js`, or `ds.config.mjs` for manifest configuration. Reloading is implemented by the Node server, not the WASM wrapper: it registers targeted watches if the client advertises support, otherwise it polls file/directory metadata every 750 ms with a 100 ms debounce. Rejected registrations also fall back to polling. Missing manifest creation, arbitrary filenames, config changes, and package metadata changes are covered by automated stdio LSP tests.
+
+Rebuild the server to use these unreleased changes. A live Zed smoke test is still needed; no Zed extension compilation or distribution claim is implied. Imported JS config helpers require a server restart. This does not add forwarding of manifest `sources` or `diagnostics` from Zed settings.
+
 ## Settings reference
 
 | Setting | Required | Description |

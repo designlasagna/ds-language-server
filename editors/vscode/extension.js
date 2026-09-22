@@ -34,13 +34,6 @@ function activate(context) {
       { scheme: 'file', language: 'javascriptreact' },
       { scheme: 'file', language: 'typescriptreact' },
     ],
-    synchronize: {
-      fileEvents: [
-        workspace.createFileSystemWatcher('**/ds.config.{json,js,mjs}'),
-        workspace.createFileSystemWatcher('**/custom-elements.json'),
-        workspace.createFileSystemWatcher('**/*.manifest.json'),
-      ],
-    },
   };
 
   client = new LanguageClient(

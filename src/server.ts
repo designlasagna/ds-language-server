@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import {
   createConnection,
   TextDocuments,
@@ -12,10 +10,11 @@ import {
   HoverParams,
   CodeActionParams,
   DidChangeConfigurationNotification,
+  DidChangeWatchedFilesNotification,
 } from 'vscode-languageserver/node.js';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { DSStore } from './store.js';
-import { discoverManifests } from './discovery.js';
+import { discover, loadConfig } from './discovery.js';
 import { getCursorContext } from './scanner.js';
 import { getCompletions } from './providers/completion.js';
 import { getHover } from './providers/hover.js';
@@ -24,6 +23,7 @@ import { getSchemaDiagnostics } from './providers/schema-diagnostics.js';
 import { getCodeActions } from './providers/code-actions.js';
 import { URI } from 'vscode-uri';
 import type { DSConfig } from './types.js';
+import { WatchManager, type WatchRegistrationAdapter } from './watching.js';
 
 // ─── Create connection ─────────────────────────────────────────────
 
@@ -34,16 +34,43 @@ const store = new DSStore();
 let config: DSConfig | undefined;
 let workspaceRoot = '';
 let manifestsLoaded = false;
+let reloadGeneration = 0;
+let shuttingDown = false;
 let tokenDocumentUris = new Set<string>();
 const validationTimers = new Map<string, ReturnType<typeof setTimeout>>();
+let watchManager: WatchManager | undefined;
+let configurationRegistration: { dispose(): void } | undefined;
+let supportsDynamicConfiguration = false;
 const VALIDATION_DEBOUNCE_MS = 300;
 
 // ─── Initialize ────────────────────────────────────────────────────
 
 connection.onInitialize((params: InitializeParams) => {
   workspaceRoot = params.rootUri
-    ? new URL(params.rootUri).pathname
+    ? URI.parse(params.rootUri).fsPath
     : params.rootPath ?? process.cwd();
+
+  const watchedFiles = params.capabilities.workspace?.didChangeWatchedFiles;
+  supportsDynamicConfiguration = params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration === true;
+  const registrationAdapter: WatchRegistrationAdapter | undefined = watchedFiles?.dynamicRegistration
+    ? {
+        relativePatternSupport: watchedFiles.relativePatternSupport,
+        register: async (options) => connection.client.register(
+          DidChangeWatchedFilesNotification.type,
+          options,
+        ),
+      }
+    : undefined;
+  watchManager = new WatchManager(() => {
+    // Polling and client notifications can be coalesced by WatchManager. Always
+    // reload config so an unclassified polling signal cannot be hidden by a
+    // manifest-only client event, and so workspace package.json type changes
+    // are reflected by the JavaScript config loader.
+    void reloadConfiguration().catch(reportAsyncError);
+  }, {
+    registrationAdapter,
+    onError: reportAsyncError,
+  });
 
   console.error(`[ds-ls] Initializing for workspace: ${workspaceRoot}`);
 
@@ -61,30 +88,44 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onInitialized(() => {
-  // Try to load ds.config.json synchronously
-  const configPath = path.join(workspaceRoot, 'ds.config.json');
-  if (fs.existsSync(configPath)) {
-    try {
-      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      console.error('[ds-ls] Loaded ds.config.json');
-    } catch (e) {
-      console.error(`[ds-ls] Failed to parse ds.config.json: ${e}`);
-    }
-  }
-
-  // Discover and load manifests
-  loadManifests();
-
-  // Register for configuration changes
-  connection.client.register(DidChangeConfigurationNotification.type, undefined);
+  void initializeServer().catch(reportAsyncError);
 });
 
-function loadManifests(): void {
+async function initializeServer(): Promise<void> {
+  await reloadConfiguration();
+  if (supportsDynamicConfiguration && !shuttingDown) {
+    try {
+      const registration = await connection.client.register(
+        DidChangeConfigurationNotification.type,
+        undefined,
+      );
+      if (shuttingDown) registration.dispose();
+      else configurationRegistration = registration;
+    } catch (error) {
+      reportAsyncError(error);
+    }
+  }
+}
+
+async function reloadConfiguration(): Promise<void> {
+  // Every request starts a fresh config load. Only config loads advance this
+  // generation, so a later request always preserves the intent to reload and
+  // a slow, older import can never overwrite it.
+  const generation = ++reloadGeneration;
+  const loadedConfig = await loadConfig(workspaceRoot);
+
+  // A slower, older module import must not overwrite a newer reload.
+  if (generation !== reloadGeneration || shuttingDown) {
+    console.error('[ds-ls] Ignoring superseded configuration reload');
+    return;
+  }
+
+  config = loadedConfig;
   console.error(`[ds-ls] Discovering manifests in ${workspaceRoot}`);
 
-  const sources = discoverManifests(workspaceRoot, config);
-  tokenDocumentUris = new Set(sources.tokens.map((source) => URI.file(source.path).toString()));
-  store.load(sources);
+  const result = discover(workspaceRoot, config);
+  tokenDocumentUris = new Set(result.sources.tokens.map((source) => URI.file(source.path).toString()));
+  store.load(result.sources);
   manifestsLoaded = true;
 
   const stats = store.stats();
@@ -97,6 +138,9 @@ function loadManifests(): void {
   for (const doc of documents.all()) {
     scheduleDocumentValidation(doc);
   }
+
+  // The next registration must describe the sources selected by this reload.
+  await watchManager?.update(result.watchTargets);
 }
 
 // ─── Completions ───────────────────────────────────────────────────
@@ -175,21 +219,51 @@ connection.onCodeAction((params: CodeActionParams) => {
 // ─── Configuration changes ─────────────────────────────────────────
 
 connection.onDidChangeConfiguration(() => {
-  const configPath = path.join(workspaceRoot, 'ds.config.json');
-  if (fs.existsSync(configPath)) {
-    try {
-      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    } catch {
-      // ignore
-    }
-  }
-  loadManifests();
+  void reloadConfiguration().catch(reportAsyncError);
 });
 
 // ─── File watching ─────────────────────────────────────────────────
 
 connection.onDidChangeWatchedFiles(() => {
-  loadManifests();
+  watchManager?.notifyChange();
+});
+
+function clearValidationTimers(): void {
+  for (const timer of validationTimers.values()) clearTimeout(timer);
+  validationTimers.clear();
+}
+
+function reportAsyncError(error: unknown): void {
+  const message = error instanceof Error ? error.stack ?? error.message : String(error);
+  console.error(`[ds-ls] Async error: ${message}`);
+}
+
+function disposeConfigurationRegistration(): void {
+  try {
+    configurationRegistration?.dispose();
+  } catch (error) {
+    reportAsyncError(error);
+  }
+  configurationRegistration = undefined;
+}
+
+async function disposeServer(): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  ++reloadGeneration;
+  clearValidationTimers();
+  disposeConfigurationRegistration();
+  await watchManager?.dispose();
+}
+
+connection.onShutdown(disposeServer);
+connection.onExit(() => {
+  void disposeServer().catch(reportAsyncError);
+});
+// The connection API does not expose its transport-close event. Dispose on a
+// stdio disconnect as well, including clients that omit the exit notification.
+process.stdin.on('close', () => {
+  void disposeServer().catch(reportAsyncError);
 });
 
 // ─── Start ─────────────────────────────────────────────────────────

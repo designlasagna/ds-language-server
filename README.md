@@ -95,6 +95,14 @@ To disable auto-discovery entirely and use only explicit paths:
 }
 ```
 
+### Configuration and automatic reload
+
+Configuration is loaded from the workspace root in this order: `ds.config.json`, `ds.config.js`, then `ds.config.mjs` (first existing file wins). Invalid or deleted configuration falls back to discovery defaults. JS configuration runs in the server process; only use trusted configuration files.
+
+The server watches configuration candidates, explicit and package-declared manifest paths (including missing files and arbitrary filenames), package metadata, and shallow package directories. It refreshes watches when sources change. Clients advertising dynamic watched-file registration receive targeted registrations; otherwise, or if registration is rejected, the server polls target metadata every 750 ms. Changes are debounced for 100 ms. The fallback does not recursively scan directories on every tick.
+
+This handles source creation, atomic replacement, deletion/recreation, and package installation without restarting. Imported JS config helpers remain cached and require a restart; config entry modules are reloaded. ESM reloads retain module-cache entries, and large-workspace polling performance has not yet been benchmarked. Live VS Code/Zed smoke testing remains separate from the automated LSP tests.
+
 ### For local consumers
 
 The language server and its editor integrations are currently used from local checkouts. Build the server, then configure your editor with its local server path as shown below. Auto-discovery handles manifests from installed design-system packages; `ds.config.json` adds local sources.
@@ -155,16 +163,16 @@ The language server and its editor integrations are currently used from local ch
 JSON schemas for manifest validation are maintained in a separate repository: [`@designlasagna/schemas`](https://github.com/designlasagna/schemas)
 
 ```
-https://designlasagna.recipes/v0.3/tokens.json
-https://designlasagna.recipes/v0.3/utilities.json
-https://designlasagna.recipes/v0.3/cem-extensions.json
-https://designlasagna.recipes/v0.3/dtcg-extensions.json
+https://designlasagna.recipes/schemas/v0.3/tokens.json
+https://designlasagna.recipes/schemas/v0.3/utilities.json
+https://designlasagna.recipes/schemas/v0.3/cem-extensions.json
+https://designlasagna.recipes/schemas/v0.3/dtcg-extensions.json
 ```
 
 Add `$schema` to your manifests for IDE validation:
 ```json
 {
-  "$schema": "https://designlasagna.recipes/v0.3/tokens.json",
+  "$schema": "https://designlasagna.recipes/schemas/v0.3/tokens.json",
   "schemaVersion": "0.3.0",
   "tokens": [...]
 }

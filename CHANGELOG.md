@@ -1,6 +1,8 @@
-# Changelog
+# Design Lasagna Language Server changelog
 
-Notable changes to this project are documented here.
+Notable changes to the standalone `@designlasagna/ds-language-server` package are documented here. This is the canonical record for server behavior shared by every editor integration.
+
+Editor adapter, packaging, and editor-specific UX changes belong in the changelog under `editors/<editor>/`.
 
 ## [Unreleased]
 
@@ -8,6 +10,8 @@ Notable changes to this project are documented here.
 
 - Utility class completion and hover in JSX template literals, including static classes alongside interpolations such as ``className={`${styles.header} acme-text-heading-1`}``.
 - Richer component fixtures with descriptions, usage examples, and dedicated lifecycle test coverage.
+- Capability-aware watches for config candidates, resolved manifest paths (including missing files and arbitrary filenames), package metadata, and package-directory changes. Clients without dynamic registration, or rejecting it, use 750 ms metadata polling with debounced reloads.
+- Watcher lifecycle and stdio regression coverage for automatic file/config reloads, package discovery, rejected registrations, reload races, and shutdown.
 
 ### Changed
 
@@ -17,6 +21,8 @@ Notable changes to this project are documented here.
 
 ### Fixed
 
+- Use one configuration loader for startup and reloads, supporting `ds.config.json`, `ds.config.js`, and `ds.config.mjs` in that precedence order. Invalid or deleted configuration falls back to discovery defaults instead of retaining stale sources.
+- Reload edited configuration entry modules, ignore superseded asynchronous loads, and correctly decode workspace file URIs. Imported config helpers still require a server restart.
 - Preserve arbitrary CEM lifecycle status strings and component replacement metadata.
 - Recognize component `deprecated` and `removed` statuses when no explicit deprecation flag is supplied.
 - Preserve slot deprecation, replacement, and removal metadata; show compact warnings in component hover and migration details in slot hover.

@@ -205,7 +205,7 @@ The build pipeline merges this with parsed description data.
 
 ```json
 {
-  "$schema": "https://designlasagna.recipes/v0.2/tokens.json",
+  "$schema": "https://designlasagna.recipes/schemas/v0.2/tokens.json",
   "schemaVersion": "0.3.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "tokens": [
@@ -284,7 +284,7 @@ Minimal schema — just `name` and `description`. No deprecation, no values, no 
 
 ```json
 {
-  "$schema": "https://designlasagna.recipes/v0.2/utilities.json",
+  "$schema": "https://designlasagna.recipes/schemas/v0.2/utilities.json",
   "schemaVersion": "1.0.0",
   "generatedAt": "2026-05-06T00:00:00Z",
   "categories": [
@@ -455,9 +455,9 @@ Schemas are hosted at `https://designlasagna.recipes/`.
 
 **URL structure:**
 ```
-https://designlasagna.recipes/v0.2/tokens.json
-https://designlasagna.recipes/v0.2/utilities.json
-https://designlasagna.recipes/v0.2/cem-extensions.json
+https://designlasagna.recipes/schemas/v0.2/tokens.json
+https://designlasagna.recipes/schemas/v0.2/utilities.json
+https://designlasagna.recipes/schemas/v0.2/cem-extensions.json
 ```
 
 **Why this works:**
@@ -468,7 +468,7 @@ https://designlasagna.recipes/v0.2/cem-extensions.json
 
 ### Distribution layers
 
-1. **URL** (`$schema` field): `https://designlasagna.recipes/v0.2/tokens.json`
+1. **URL** (`$schema` field): `https://designlasagna.recipes/schemas/v0.2/tokens.json`
    - Enables IDE JSON validation when opening manifest files
    - Accessible publicly
 
