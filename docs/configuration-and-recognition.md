@@ -1,6 +1,6 @@
 # Configuration transport and recognition
 
-These changes are local, unreleased implementation work. Runtime behavior is covered by unit/provider tests and stdio LSP tests; a live VS Code/Zed session is separate evidence.
+This reference describes the DSLS configuration contract published in `@designlasagna/ds-language-server` 0.2.0. Runtime behavior is covered by unit/provider and stdio LSP tests. Zed auto-install and server startup have also been smoke-tested locally; VS Code live-editor verification remains separate evidence.
 
 ## Configuration precedence
 
@@ -37,7 +37,7 @@ The wrapper forwards `lsp.ds-language-server.settings` as initialization options
 }
 ```
 
-`serverPath`/`nodePath` are wrapper settings, not server overrides. Put manifest `sources` and `lifecycle.profile` in `ds.config.*`. Zed's `extension.toml` language registration still bounds which documents reach the server; changing the server allowlist cannot register an arbitrary new Zed language. The wrapper passes native Rust `cargo check --offline`; WASM-target and live-editor checks must be reported separately.
+`serverPath`/`nodePath` are wrapper settings, not server overrides. Put manifest `sources` and `lifecycle.profile` in `ds.config.*`. Zed's `extension.toml` language registration still bounds which documents reach the server; changing the server allowlist cannot register an arbitrary new Zed language. Local wrapper validation includes native checks, WASM compilation, and a dev-extension smoke test; Zed registry availability remains separate.
 
 ## Recognition
 
@@ -80,4 +80,4 @@ cargo check --offline --manifest-path editors/zed/Cargo.toml
 node scripts/benchmark.mjs
 ```
 
-See [RFC delivery evidence](rfc-0005-delivery-status.md) for measured scale data and outstanding external validation. Local builds/tests do not establish marketplace publication or live-editor compatibility.
+See [RFC delivery evidence](rfc-0005-delivery-status.md) for historical measured scale data and outstanding external validation. Automated checks do not establish Marketplace or Zed registry availability, and VS Code still requires a live-editor smoke test.

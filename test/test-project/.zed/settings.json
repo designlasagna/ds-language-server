@@ -1,10 +1,6 @@
 {
   "lsp": {
     "ds-language-server": {
-      "settings": {
-        "serverPath": "../../dist/server.js",
-        "nodePath": "node"
-      }
     }
   }
 }

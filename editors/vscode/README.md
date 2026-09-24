@@ -1,4 +1,4 @@
-# Design Lasagna Language Server
+# Design Lasagna: Design System Language Server
 
 Design-system IntelliSense for VS Code. The extension reads your Custom Elements Manifest, token manifests, and utility manifests to provide completions, hover information, schema diagnostics, lifecycle warnings, and migration quick fixes.
 
@@ -38,9 +38,9 @@ The extension also discovers manifests published by installed design-system pack
 
 ## Automatic reload
 
-The server registers watches for resolved config, package metadata, and manifest paths, including arbitrary filenames and files not created yet. The extension no longer uses fixed filename-pattern watchers. When a client cannot register watches, the server falls back to 750 ms metadata polling plus a 100 ms debounce. See [configuration and reload details](../../README.md#configuration-and-automatic-reload).
+The server registers watches for resolved config, package metadata, and manifest paths, including arbitrary filenames and files not created yet. The extension does not use fixed filename-pattern watchers. When a client cannot register watches, the server falls back to 750 ms metadata polling plus a 100 ms debounce. See [configuration and reload details](../../README.md#configuration-and-automatic-reload).
 
-Rebuild the bundled server when testing these unreleased changes. Actual VS Code watcher behavior has not yet been manually smoke-tested in this change. The locally built server currently depends on the unpublished sibling schemas package (0.4.0); that local file dependency must be replaced during release preparation.
+Rebuild the bundled server when testing source changes. Live VS Code reload verification remains a release check separate from automated tests.
 
 ## Settings
 
@@ -67,7 +67,7 @@ Then package the extension:
 cd editors/vscode
 npm ci
 npm run package
-code --install-extension design-system-language-server-0.1.4.vsix
+code --install-extension design-system-language-server-<version>.vsix
 ```
 
 See the [repository](https://github.com/designlasagna/ds-language-server) for development setup, supported manifests, and issue tracking.

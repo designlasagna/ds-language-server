@@ -41,11 +41,12 @@ Each file has numbered test scenarios with expected behavior in comments.
 
 ## Setup
 
-Build the server from the repository root:
+Open this project folder in Zed with the DSLS dev extension installed. The default project settings exercise the npm-installed server; `ds.config.json` loads the neutral manifests in `manifests/`.
+
+To test a local server build instead, build from the repository root:
+
 ```bash
 npm run build
 ```
 
-Then open this project folder in Zed. Its `.zed/settings.json` starts the local
-`../../dist/server.js`, and `ds.config.json` loads the neutral manifests in
-`manifests/`. No dependency installation or package discovery is required.
+Then add explicit `serverPath` and `nodePath` overrides under `lsp.ds-language-server.settings` in `.zed/settings.json`. Do not use relative paths for these overrides.

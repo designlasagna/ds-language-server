@@ -1,5 +1,5 @@
 id = "ds-language-server"
-name = "Design System Language Server"
+name = "Design Lasagna: Design System Language Server"
 version = "0.2.0"
 schema_version = 1
 description = "IntelliSense for design system components, tokens, and utility classes with lifecycle-aware deprecation diagnostics. Auto-installs the published @designlasagna/ds-language-server package."
