@@ -18,7 +18,7 @@ This is a local implementation record, not release or marketplace evidence. The 
 | JetBrains integration | Not implemented; decision outstanding | No plugin implementation or approved deferral |
 | External design-system/build-pipeline validation | Externally unverified | Synthetic fixtures do not verify Acme, Shoelace, Spectrum or their pipelines |
 | Documentation site / marketplace / release publication | Externally unverified for these changes | No push, tag, package or extension publication performed; local file dependencies must be replaced during authorized release preparation |
-| Scale/performance | Synthetic evidence only | Reproducible script below; completion tail latency needs attention; watcher polling and editor performance remain unmeasured |
+| Scale/performance | Synthetic evidence only | Reproducible script below; the 2026-09-24 re-measurement on the current tree does not reproduce the previously recorded completion tail (~46 ms p95 vs ~250–492 ms recorded during implementation under load); watcher polling and editor performance remain unmeasured |
 
 No feature deferral is approved by this document. The outstanding distribution/integration items remain open rather than being declared complete.
 
@@ -57,7 +57,7 @@ node scripts/benchmark.mjs
 
 Fixtures: 1,000 components (three attributes each), 10,000 tokens, 5,000 utilities, and a 1,000-line / 68,559-character document. Two warmups and ten timed iterations; fixtures are temporary and cleaned up. All identifiers are active/known, so diagnostic count is zero. The script measures the scan path, not a large volume of emitted diagnostics.
 
-Local machine (original pre-upgrade hardware): Linux x64, Node v25.1.0, Intel Core i7-6700K. The recorded runs below were captured on that machine during implementation; they have not been re-measured on the upgraded 64 GB machine:
+Historical runs, recorded on the original pre-upgrade hardware (Linux x64, Node v25.1.0, Intel Core i7-6700K) during implementation, under then-current machine load and an earlier implementation state:
 
 | Metric | Run 1 | Run 2 |
 |---|---:|---:|
@@ -66,6 +66,18 @@ Local machine (original pre-upgrade hardware): Linux x64, Node v25.1.0, Intel Co
 | Completion median / p95 | 38.80 / 249.73 ms | 61.90 / 492.47 ms |
 | Hover median / p95 | 0.67 / 5.88 ms | 0.68 / 12.67 ms |
 | Heap used snapshot | 29.37 MB | 66.86 MB |
+
+Re-measured 2026-09-24 on the upgraded 64 GB machine (same CPU, Node v25.1.0) against the current committed tree `fda345c`:
+
+| Metric | 2026-09-24 re-run |
+|---|---:|
+| Store load | 37.46 ms |
+| Diagnostics median / p95 | 5.33 / 10.06 ms |
+| Completion median / p95 | 39.67 / 46.40 ms |
+| Hover median / p95 | 1.62 / 11.01 ms |
+| Heap used snapshot | 29.02 MB |
+
+The two sets are not directly comparable: the historical runs predate the final implementation slices and were captured under different machine load (including the OOM incident period). The re-measurement records the current local baseline; it does not establish an acceptance threshold or imply editor responsiveness.
 
 Completion materializes approximately 10,000 matching items. With only ten samples, p95 is near the maximum and sensitive to GC/JIT and machine load. These are observations, not latency guarantees or a performance acceptance threshold. In particular, the ~492 ms completion tail is not evidence that every interaction is fast.
 

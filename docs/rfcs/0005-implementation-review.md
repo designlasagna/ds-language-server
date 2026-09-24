@@ -57,7 +57,7 @@ Precise positive and negative scopes are documented in [`../configuration-and-re
 | JetBrains | No integration exists in this repository. |
 | External systems | Acme build-pipeline integration and validation against Acme, Shoelace, Spectrum, or another external design system are unverified. Synthetic fixtures are not substitutes. |
 | Publication | No docs-site, package, marketplace, release, push, or tag evidence was produced for this work. Existing local file dependencies still require authorized release preparation. |
-| Performance | Synthetic benchmark only: 1,000 components, 10,000 tokens, 5,000 utilities and a 1,000-line document. Completion p95 reached 492.47 ms. Watcher polling and live-editor performance were not measured. |
+| Performance | Synthetic benchmark only: 1,000 components, 10,000 tokens, 5,000 utilities and a 1,000-line document. Completion p95 reached 492.47 ms in runs recorded during implementation under load; a 2026-09-24 re-measurement on the current tree `fda345c` (upgraded 64 GB machine) recorded 46.40 ms p95. No acceptance threshold exists. Watcher polling and live-editor performance were not measured. |
 | Parsing breadth | JS/TS/JSX/framework recognition remains lexical rather than AST-based. Inline-style and inferred `:host` ownership, ambiguous selectors, arbitrary class-producing expressions, computed/spread `classMap` keys, and imported aliases are intentionally not inferred by the current implementation. |
 
 These are open facts, not approved deferrals.
