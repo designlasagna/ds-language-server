@@ -3,7 +3,7 @@ name: Publish VS Code extension
 on:
   push:
     tags:
-      - 'v*'
+      - 'vscode-v*'
 
 permissions:
   contents: read
@@ -29,17 +29,16 @@ jobs:
         working-directory: editors/vscode
         run: npm ci
 
-      - name: Verify release versions match the tag
+      - name: Verify extension version matches the tag
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           node --input-type=module <<'EOF'
-          import root from './package.json' with { type: 'json' };
           import extension from './editors/vscode/package.json' with { type: 'json' };
 
-          const expected = process.env.RELEASE_TAG.slice(1);
-          if (root.version !== expected || extension.version !== expected) {
-            throw new Error(`Tag ${process.env.RELEASE_TAG} must match root and extension version (found ${root.version} and ${extension.version}).`);
+          const expected = process.env.RELEASE_TAG.replace(/^vscode-v/, '');
+          if (extension.version !== expected) {
+            throw new Error(`Tag ${process.env.RELEASE_TAG} must match the VS Code extension version (found ${extension.version}).`);
           }
           EOF
 

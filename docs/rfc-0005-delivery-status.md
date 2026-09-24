@@ -1,6 +1,9 @@
-# RFC 0005 delivery evidence — 2026-09-23, updated 2026-09-24
+# RFC 0005 delivery evidence — historical snapshot (2026-09-23–24)
 
-This is a local implementation record, not release or marketplace evidence. The recognition/component-API work is **committed locally (unpushed), validated locally, and awaiting human review**; the Zed auto-distribution mechanism landed on branch `feat/zed-auto-distribution` (2026-09-24, also unpushed).
+> [!note]
+> This document preserves implementation evidence and open questions as they stood on 2026-09-24. It is not current release or editor-availability guidance. See the [README](../README.md) and editor setup documents for current installation information.
+
+This is a local implementation record, not release or marketplace evidence. Claims below describe the recorded snapshot and are intentionally retained as historical evidence.
 
 ## Delivery matrix
 

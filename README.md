@@ -107,21 +107,27 @@ This handles source creation, atomic replacement, deletion/recreation, and packa
 
 `languages`, `templateTags`, `classAttributes`, and per-package deprecation severity are wired through recognition and editor transport. Explicit editor settings override project values; unset editor defaults do not. Arrays replace (including `[]`), and an empty editor snapshot resets to project settings.
 
-See [configuration and recognition](docs/configuration-and-recognition.md) for VS Code/Zed examples, precise completion scopes and lexical-parser limitations. These changes are local and unreleased; [delivery evidence](docs/rfc-0005-delivery-status.md) distinguishes tested behavior from outstanding editor/distribution checks.
+See [configuration and recognition](docs/configuration-and-recognition.md) for VS Code/Zed examples, precise completion scopes, and lexical-parser limitations. Historical implementation and validation evidence is kept separately in [RFC delivery evidence](docs/rfc-0005-delivery-status.md).
 
 ### Lifecycle contract profile
 
-The legacy lifecycle adapter remains the default. To opt CEM and DTCG sources into the unpublished schemas v0.4 lifecycle contract, select it explicitly in `ds.config.*`:
+The legacy lifecycle adapter remains the default. To opt CEM and DTCG sources into the v0.4 lifecycle contract, select it explicitly in `ds.config.*`:
 
 ```json
 { "lifecycle": { "profile": "0.4" } }
 ```
 
-Native token and utility manifests select v0.4 automatically with `schemaVersion: "0.4.0"`; they do not require the CEM/DTCG profile setting. CEM retains its standard schema version. Token-document schema diagnostics follow the same native-version/DTCG-profile selection. The server uses its reproducible local `file:../schemas` dependency until a release is authorized.
+Native token and utility manifests select v0.4 automatically with `schemaVersion: "0.4.0"`; they do not require the CEM/DTCG profile setting. CEM retains its standard schema version. Token-document schema diagnostics follow the same native-version/DTCG-profile selection.
 
-### For local consumers
+### Install the server
 
-The language server and its editor integrations are currently used from local checkouts. Build the server, then configure your editor with its local server path as shown below. Auto-discovery handles manifests from installed design-system packages; `ds.config.json` adds local sources.
+Install the published server when integrating it with an editor or tool:
+
+```bash
+npm install --save-dev @designlasagna/ds-language-server
+```
+
+The executable is `ds-language-server`; editor integrations configure the `--stdio` transport for you. Auto-discovery handles manifests from installed design-system packages, while `ds.config.json` adds local sources.
 
 ---
 
@@ -200,23 +206,19 @@ Add `$schema` to your manifests for IDE validation:
 
 ### VS Code
 
-See [`editors/vscode/SETUP.md`](editors/vscode/SETUP.md) for installation.
-
-```bash
-cd editors/vscode
-npm install
-npm run bundle-server
-npx vsce package --allow-missing-repository
-code --install-extension ds-language-server-0.1.0.vsix
-```
+Install **Design Lasagna: Design System Language Server** from the Visual Studio Marketplace, or see [`editors/vscode/SETUP.md`](editors/vscode/SETUP.md) for development installation and release guidance.
 
 ### Zed
 
-See [`editors/zed/SETUP.md`](editors/zed/SETUP.md) for installation.
-
-Requires the Zed extension (registers the LSP for file types) + the server built locally.
+The Zed extension installs the npm server automatically. It is ready for development installation; public registry registration is pending. See [`editors/zed/SETUP.md`](editors/zed/SETUP.md).
 
 ---
+
+## Releases
+
+The npm server, VS Code extension, and Zed extension use independent Semantic Versioning. Release the npm package with a `dsls-v<version>` tag that matches the root `package.json`; release the VS Code extension with a `vscode-v<version>` tag that matches `editors/vscode/package.json`. The Zed extension is versioned with its registry submission.
+
+Editor changelogs identify the server version they bundle or install when relevant. An editor-only fix does not require a server release, and a server release does not require an editor release.
 
 ## Development
 

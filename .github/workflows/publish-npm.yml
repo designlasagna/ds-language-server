@@ -3,7 +3,7 @@ name: Publish to npm
 on:
   push:
     tags:
-      - 'v*'
+      - 'dsls-v*'
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
       - name: Install
         run: npm ci
       - name: Verify tag matches package version
-        run: test "${GITHUB_REF_NAME}" = "v$(node -p 'require("./package.json").version')"
+        run: test "${GITHUB_REF_NAME}" = "dsls-v$(node -p 'require("./package.json").version')"
       - name: Build
         run: npm run build
       - name: Check publishable
@@ -31,8 +31,8 @@ jobs:
         run: npm test
       - name: Publish (skip if version already published)
         run: |
-          if npm view "@designlasagna/ds-language-server@${GITHUB_REF_NAME#v}" version >/dev/null 2>&1; then
-            echo "Version ${GITHUB_REF_NAME#v} is already published on npm; skipping publish."
+          if npm view "@designlasagna/ds-language-server@${GITHUB_REF_NAME#dsls-v}" version >/dev/null 2>&1; then
+            echo "Version ${GITHUB_REF_NAME#dsls-v} is already published on npm; skipping publish."
           else
             npm publish --provenance --access public
           fi
