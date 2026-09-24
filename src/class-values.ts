@@ -1,7 +1,11 @@
+import { regexLiteralEnd } from './js-lexical.js';
+
 /** Static portions of class attributes, with source offsets preserved. */
-export function classValueRanges(text: string): { start: number; end: number }[] {
+export function classValueRanges(text: string, attributes: readonly string[] = ['class', 'className', 'classList']): { start: number; end: number }[] {
+  if (attributes.length === 0) return [];
+  const escaped = attributes.map((attribute) => attribute.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const ranges: { start: number; end: number }[] = [];
-  const opener = /\b(?:class|className|classList)\s*=\s*(?:\{\s*)?(["'`])/g;
+  const opener = new RegExp(`(?<![\\w-])(?:${escaped.join('|')})\\s*=\\s*(?:\\{\\s*)?(["'\`])`, 'g');
   let match: RegExpExecArray | null;
   while ((match = opener.exec(text))) {
     const quote = match[1];
@@ -23,7 +27,7 @@ export function classValueRanges(text: string): { start: number; end: number }[]
 }
 
 // Skip nested braces and quoted strings; never treat interpolation contents as classes.
-function skipExpression(text: string, start: number): number {
+export function skipExpression(text: string, start: number): number {
   let depth = 1;
   for (let i = start; i < text.length; i++) {
     const ch = text[i];
@@ -41,6 +45,9 @@ function skipExpression(text: string, start: number): number {
     } else if (text.slice(i, i + 2) === '/*') {
       const end = text.indexOf('*/', i + 2);
       i = end < 0 ? text.length : end + 1;
+    } else if (ch === '/' && text[i + 1] !== '/' && text[i + 1] !== '*') {
+      const end = regexLiteralEnd(text, i);
+      if (end !== undefined) { i = end - 1; continue; }
     } else if (ch === '{') depth++;
     else if (ch === '}' && --depth === 0) return i;
   }

@@ -11,6 +11,7 @@ import {
   CodeActionParams,
   DidChangeConfigurationNotification,
   DidChangeWatchedFilesNotification,
+  DidChangeConfigurationParams,
 } from 'vscode-languageserver/node.js';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { DSStore } from './store.js';
@@ -24,6 +25,13 @@ import { getCodeActions } from './providers/code-actions.js';
 import { URI } from 'vscode-uri';
 import type { DSConfig } from './types.js';
 import { WatchManager, type WatchRegistrationAdapter } from './watching.js';
+import { resolveConfiguration } from './configuration.js';
+import { isLanguageEnabled } from './recognition-settings.js';
+
+// Section name of the contributed editor settings (see editors/vscode/
+// package.json "dsLanguageServer.*" properties). Used to fetch the scoped
+// settings from clients that support workspace/configuration.
+const CONFIG_SECTION = 'dsLanguageServer';
 
 // ─── Create connection ─────────────────────────────────────────────
 
@@ -35,12 +43,20 @@ let config: DSConfig | undefined;
 let workspaceRoot = '';
 let manifestsLoaded = false;
 let reloadGeneration = 0;
+let settingsFetchGeneration = 0;
 let shuttingDown = false;
 let tokenDocumentUris = new Set<string>();
 const validationTimers = new Map<string, ReturnType<typeof setTimeout>>();
 let watchManager: WatchManager | undefined;
 let configurationRegistration: { dispose(): void } | undefined;
 let supportsDynamicConfiguration = false;
+// Only clients that explicitly advertise workspace.configuration support
+// the workspace/configuration request. Other clients are never queried.
+let supportsWorkspaceConfiguration = false;
+// Editor settings snapshot. Seeded from initializationOptions, then replaced
+// wholesale by either a workspace/configuration fetch or a
+// didChangeConfiguration settings payload. Never accumulated.
+let editorSettings: unknown;
 const VALIDATION_DEBOUNCE_MS = 300;
 
 // ─── Initialize ────────────────────────────────────────────────────
@@ -52,6 +68,8 @@ connection.onInitialize((params: InitializeParams) => {
 
   const watchedFiles = params.capabilities.workspace?.didChangeWatchedFiles;
   supportsDynamicConfiguration = params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration === true;
+  supportsWorkspaceConfiguration = params.capabilities.workspace?.configuration === true;
+  editorSettings = settingsFromPayload(params.initializationOptions);
   const registrationAdapter: WatchRegistrationAdapter | undefined = watchedFiles?.dynamicRegistration
     ? {
         relativePatternSupport: watchedFiles.relativePatternSupport,
@@ -78,7 +96,7 @@ connection.onInitialize((params: InitializeParams) => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
-        triggerCharacters: ['<', ' ', '"', "'", '-', '(', '.'],
+        triggerCharacters: ['<', ' ', '"', "'", '-', '(', '.', '@'],
         resolveProvider: false,
       },
       hoverProvider: true,
@@ -92,6 +110,12 @@ connection.onInitialized(() => {
 });
 
 async function initializeServer(): Promise<void> {
+  // Supporting clients are the source of truth for editor settings: the
+  // fetched section replaces the initializationOptions snapshot. A rejected
+  // fetch keeps the initializationOptions snapshot instead.
+  if (supportsWorkspaceConfiguration && !shuttingDown) {
+    await fetchEditorSettings();
+  }
   await reloadConfiguration();
   if (supportsDynamicConfiguration && !shuttingDown) {
     try {
@@ -120,7 +144,11 @@ async function reloadConfiguration(): Promise<void> {
     return;
   }
 
-  config = loadedConfig;
+  // File settings form the base; the current editor settings snapshot
+  // overrides them. Merging after the load (and after the generation check)
+  // means the newest snapshot always wins and every reload — including
+  // file-watcher-triggered ones — preserves the current editor settings.
+  config = resolveConfiguration(loadedConfig, editorSettings);
   console.error(`[ds-ls] Discovering manifests in ${workspaceRoot}`);
 
   const result = discover(workspaceRoot, config);
@@ -150,7 +178,7 @@ connection.onCompletion((params: CompletionParams) => {
   if (!document) return [];
 
   const offset = document.offsetAt(params.position);
-  const context = getCursorContext(document, offset);
+  const context = getCursorContext(document, offset, config);
 
   const items = getCompletions(context, store);
   return items;
@@ -162,7 +190,7 @@ connection.onHover((params: HoverParams) => {
   const document = documents.get(params.textDocument.uri);
   if (!document) return null;
 
-  return getHover(document, params.position, store);
+  return getHover(document, params.position, store, config);
 });
 
 // ─── Diagnostics ───────────────────────────────────────────────────
@@ -170,7 +198,7 @@ connection.onHover((params: HoverParams) => {
 function validateDocument(document: TextDocument): void {
   const diagnostics = [
     ...getDiagnostics(document, store, config),
-    ...(tokenDocumentUris.has(document.uri) ? getSchemaDiagnostics(document) : []),
+    ...(tokenDocumentUris.has(document.uri) ? getSchemaDiagnostics(document, config?.lifecycle?.profile) : []),
   ];
   console.error(`[ds-ls] Validated ${document.uri}: ${diagnostics.length} diagnostics`);
   connection.sendDiagnostics({
@@ -212,15 +240,67 @@ documents.onDidClose((event) => {
 connection.onCodeAction((params: CodeActionParams) => {
   const document = documents.get(params.textDocument.uri);
   if (!document) return [];
+  if (!isLanguageEnabled(document.languageId, config)) return [];
 
   return getCodeActions(document, params.context.diagnostics);
 });
 
 // ─── Configuration changes ─────────────────────────────────────────
 
-connection.onDidChangeConfiguration(() => {
-  void reloadConfiguration().catch(reportAsyncError);
+connection.onDidChangeConfiguration((params) => {
+  void applyConfigurationChange(params).catch(reportAsyncError);
 });
+
+async function applyConfigurationChange(params: DidChangeConfigurationParams): Promise<void> {
+  if (supportsWorkspaceConfiguration) {
+    // Supporting clients are the source of truth: refetch the scoped section.
+    // A rejected fetch reports the error and retains the prior snapshot.
+    await fetchEditorSettings();
+  } else {
+    // Unsupported clients send the settings in the notification itself.
+    // Replacement, not accumulation: an empty `{}` resets to file-only.
+    editorSettings = settingsFromPayload(params.settings);
+  }
+  if (shuttingDown) return;
+  await reloadConfiguration();
+}
+
+/**
+ * Unwrap the editor settings payload. Accepts either the section wrapper
+ * (`{ dsLanguageServer: {...} }`) or the settings object directly. The
+ * result replaces the snapshot wholesale.
+ */
+function settingsFromPayload(payload: unknown): unknown {
+  if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) return undefined;
+  const section = (payload as Record<string, unknown>)[CONFIG_SECTION];
+  if (typeof section === 'object' && section !== null && !Array.isArray(section)) return section;
+  return payload;
+}
+
+/**
+ * Fetch the scoped editor settings section from the client. Never starts a
+ * new request during shutdown. Each fetch advances the generation, so only
+ * the latest in-flight request may assign the snapshot; shutdown
+ * invalidates all in-flight fetches. On rejection the prior snapshot is
+ * retained.
+ */
+async function fetchEditorSettings(): Promise<void> {
+  if (shuttingDown) return;
+  const generation = ++settingsFetchGeneration;
+  let fetched: unknown;
+  try {
+    fetched = await connection.workspace.getConfiguration(CONFIG_SECTION);
+  } catch (error) {
+    reportAsyncError(error);
+    return;
+  }
+  // A slower, older fetch must not overwrite the snapshot once a newer
+  // fetch (or shutdown) has invalidated it.
+  if (generation !== settingsFetchGeneration) return;
+  // Some clients (e.g. Zed) answer workspace/configuration with the section
+  // wrapper `{ dsLanguageServer: {...} }` rather than the section value.
+  editorSettings = settingsFromPayload(fetched);
+}
 
 // ─── File watching ─────────────────────────────────────────────────
 
@@ -251,6 +331,7 @@ async function disposeServer(): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
   ++reloadGeneration;
+  ++settingsFetchGeneration;
   clearValidationTimers();
   disposeConfigurationRegistration();
   await watchManager?.dispose();

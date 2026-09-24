@@ -6,7 +6,9 @@ import { getAttributeCompletions } from './completion/attribute.js';
 import { getAttributeValueCompletions } from './completion/attribute-value.js';
 import { getSlotValueCompletions } from './completion/slot-value.js';
 import { getCssVarCompletions } from './completion/css-variable.js';
+import { getCssPartCompletions } from './completion/css-part.js';
 import { getClassCompletions } from './completion/class.js';
+import { getLitCompletions } from './completion/lit.js';
 
 /**
  * Provide completion items based on cursor context.
@@ -32,9 +34,14 @@ export function getCompletions(
         store,
       );
     case 'css-var':
-      return getCssVarCompletions(context.prefix, store);
+      return getCssVarCompletions(context.prefix, store, context.tagName);
+    case 'css-part':
+      return getCssPartCompletions(context.tagName!, context.prefix, store);
     case 'class-value':
       return getClassCompletions(context.prefix, store);
+    case 'property-name':
+    case 'event-name':
+      return getLitCompletions(context.tagName!, context.prefix, context.kind, store);
     default:
       return [];
   }

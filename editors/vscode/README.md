@@ -40,7 +40,7 @@ The extension also discovers manifests published by installed design-system pack
 
 The server registers watches for resolved config, package metadata, and manifest paths, including arbitrary filenames and files not created yet. The extension no longer uses fixed filename-pattern watchers. When a client cannot register watches, the server falls back to 750 ms metadata polling plus a 100 ms debounce. See [configuration and reload details](../../README.md#configuration-and-automatic-reload).
 
-Rebuild the bundled server when testing these unreleased changes. Actual VS Code watcher behavior has not yet been manually smoke-tested in this change.
+Rebuild the bundled server when testing these unreleased changes. Actual VS Code watcher behavior has not yet been manually smoke-tested in this change. The locally built server currently depends on the unpublished sibling schemas package (0.4.0); that local file dependency must be replaced during release preparation.
 
 ## Settings
 
@@ -49,6 +49,8 @@ Rebuild the bundled server when testing these unreleased changes. Actual VS Code
 | `dsLanguageServer.enable` | `true` | Enable or disable the language server. |
 | `dsLanguageServer.serverPath` | bundled server | Absolute path to a local server for development. |
 | `dsLanguageServer.trace.server` | `off` | LSP trace level: `off`, `messages`, or `verbose`. |
+
+Recognition settings (`dsLanguageServer.languages`, `.templateTags`, `.classAttributes`, and `.diagnostics`) can also be set in editor settings. Only explicitly set values are forwarded to the server, so extension defaults cannot override project settings. See [configuration and recognition](../../docs/configuration-and-recognition.md) for supported fields and precedence.
 
 ## Development
 

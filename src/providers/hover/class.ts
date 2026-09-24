@@ -5,9 +5,9 @@ import { buildDeprecationMessage, isDeprecated } from '../../lifecycle.js';
 
 // ─── Class Name Hover ──────────────────────────────────────────────
 
-export function tryClassHover(text: string, offset: number, store: DSStore): Hover | null {
+export function tryClassHover(text: string, offset: number, store: DSStore, attributes?: readonly string[], ranges?: { start: number; end: number }[]): Hover | null {
   // Find class="... name ..." where offset is on a class name
-  const classAttrMatch = classValueRanges(text).find(({ start, end }) => offset >= start && offset <= end);
+  const classAttrMatch = (ranges ?? classValueRanges(text, attributes)).find(({ start, end }) => offset >= start && offset <= end);
   if (!classAttrMatch) return null;
 
   // Find which class name the cursor is on

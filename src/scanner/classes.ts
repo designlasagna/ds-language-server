@@ -4,9 +4,12 @@ import { classValueRanges } from '../class-values.js';
 export function scanClassSymbols(
   text: string,
   knownUtilities: Set<string>,
+  attributes?: readonly string[],
+  ranges?: { start: number; end: number }[],
 ): DocumentSymbol[] {
   const symbols: DocumentSymbol[] = [];
-  for (const { start: classStart, end } of classValueRanges(text)) {
+  const seen = new Set<string>();
+  for (const { start: classStart, end } of ranges ?? classValueRanges(text, attributes)) {
     const classValue = text.slice(classStart, end);
 
     // Split on whitespace to get individual class names
@@ -21,12 +24,17 @@ export function scanClassSymbols(
 
       const idx = classValue.indexOf(className, pos);
       if (knownUtilities.has(className)) {
-        symbols.push({
-          kind: 'class',
-          name: className,
-          start: classStart + idx,
-          end: classStart + idx + className.length,
-        });
+        const start = classStart + idx;
+        const key = `class:${start}:${start + className.length}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          symbols.push({
+            kind: 'class',
+            name: className,
+            start,
+            end: start + className.length,
+          });
+        }
       }
       pos = idx + className.length;
     }

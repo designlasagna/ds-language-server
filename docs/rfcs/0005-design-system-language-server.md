@@ -4,13 +4,16 @@
 **Date:** 2026-05-06
 **Author:** Magnus Fredlundh
 
+> [!NOTE] Delivery reconciliation — 2026-09-23
+> This document began as a proposal. Checklist markers and status labels below now describe the local implementation, not release/publication status. The current work is uncommitted and awaiting human review. See the [implementation review](0005-implementation-review.md) and [delivery evidence](../rfc-0005-delivery-status.md) for tested boundaries and open work.
+
 ---
 
 ## Summary
 
 Build a generic **Design System Language Server** (DSLS) that discovers and reads existing design system files — Custom Elements Manifest, token manifests, and utility class manifests — and provides unified IntelliSense with first-class support for deprecation, removal dates, status lifecycle, and replacements.
 
-The language server is editor-agnostic (LSP). The first delivery target is a **Zed extension**, followed by VS Code and JetBrains.
+The language server is editor-agnostic (LSP). Delivery did not follow the originally proposed Zed-first sequence: a VS Code adapter and a local-server Zed wrapper exist, while Zed automatic binary distribution and JetBrains integration remain unimplemented.
 
 **Key principle:** The LSP adapts to design system files that already exist. No new unified manifest format. Design systems keep their existing build pipelines and file formats — the LSP reads them all and merges the data internally.
 
@@ -100,7 +103,7 @@ These optional fields can appear on any entry in any supported format. They are 
 
 | Field | Type | Description |
 |---|---|---|
-| `status` | `"draft" \| "beta" \| "ready" \| "deprecated"` | Lifecycle stage of the item |
+| `status` | `string` | Authored lifecycle stage. Arbitrary strings are preserved; statuses with defined lifecycle meaning, such as `deprecated` and `removed`, affect diagnostics. |
 | `deprecated` | `boolean \| string` | Whether this item is deprecated. String value is the deprecation message. |
 | `deprecationMessage` | `string` | Human-readable reason + migration guidance (used when `deprecated` is `boolean`) |
 | `removal` | `string` | ISO date (`2026-07-30`) or semver version (`v4.0.0`) when it will be removed |
@@ -180,7 +183,7 @@ This is already a standard field — wc-language-server, Storybook, and other to
 | `cssParts[]` | `::part()` completions |
 | `status` | Status badge in completions/hover |
 
-**Deprecated attribute values** are detected by cross-referencing `deprecated` on a member with its `enum` values. When a member has `deprecated: "The tertiary variant..."` and `enum: ["primary", "secondary", "tertiary"]`, the LSP infers that `tertiary` is the deprecated value. Alternatively, the CEM can include a `deprecatedValues` array for explicit value-level deprecation:
+**Deprecated attribute values** are detected by cross-referencing `deprecated` on a member with its `enum` values. When a member has `deprecated: "The tertiary variant..."` and `enum: ["primary", "secondary", "tertiary"]`, the legacy profile infers that `tertiary` is the deprecated value. Prose inference is **legacy-only**: under the v0.4 lifecycle profile, value-level deprecation requires an explicit `deprecatedValues` array, and prose `deprecated` messages are never mined for enum values:
 
 ```jsonc
 {
@@ -467,17 +470,19 @@ Category: Color
 
 #### Component hover
 
+Component hover is intentionally compact rather than an exhaustive API inventory:
+
 ```
 <acme-button>
 
 A button or link component.
 
-Status: ready
-Package: @lansforsakringar/core-components
-
-Slots: default, start, end
-Attributes: variant, size, disabled, href
+Slots:
+- default — Button content.
+- start — Leading icon or media.
 ```
+
+Non-routine lifecycle status and actionable deprecation/replacement guidance are added when relevant. Routine package/status fields and exhaustive attribute lists are deliberately omitted.
 
 #### Deprecated attribute value hover
 
@@ -524,13 +529,13 @@ When a `replacement` is specified, the LSP offers quick-fix code actions:
 
 ## 3. Configuration: `ds.config.js`
 
-Consumers can override default behavior with an optional `ds.config.js` (or `ds.config.json`) in the workspace root:
+Consumers can configure project behavior with `ds.config.json`, `ds.config.js`, or `ds.config.mjs` in the workspace root. The first existing file wins in that order. Explicit sources are additive to package discovery; set `discovery.enabled: false` for explicit-only loading. Editor settings form a restricted higher-precedence layer as described after the example:
 
 ```js
 // ds.config.js
 export default {
   /**
-   * Override auto-discovery with explicit file paths.
+   * Add explicit file paths alongside auto-discovery.
    * Useful for monorepos or non-npm setups.
    */
   sources: {
@@ -561,7 +566,7 @@ export default {
     }
   },
 
-  /** File types where the LSP activates */
+  /** Language IDs the server recognizes (editor registration is a separate bound) */
   languages: ["html", "css", "scss", "javascript", "typescript", "vue", "svelte"],
 
   /** Tagged template literals to analyze (in JS/TS files) */
@@ -575,54 +580,30 @@ export default {
 }
 ```
 
+Effective precedence is built-in defaults → project file → explicit editor overrides. Arrays replace rather than concatenate, and `[]` disables that recognition list. Editors may override only `languages`, `templateTags.html`, `templateTags.css`, `classAttributes`, `diagnostics.deprecated`, and `diagnostics.packages.*.deprecated`. `sources`, `discovery`, `lifecycle`, and `diagnostics.draftUsage` are file-only; this prevents an editor setting from changing manifest trust boundaries or lifecycle interpretation. An empty editor snapshot resets the editor layer to project settings.
+
+Recognition is lexical. Configured tagged-template filtering currently applies to JavaScript/TypeScript, while JSX/TSX and framework-file handling have narrower documented behavior. See [configuration and recognition](../configuration-and-recognition.md) for exact forwarding, reset, and scope rules.
+
 ---
 
 ## 4. Editor Extensions
 
-### Zed extension (first target)
+### Zed extension — partial
 
-```
-ds-language-server-zed/
-├── extension.toml
-├── Cargo.toml
-├── src/
-│   └── lib.rs            # Downloads + starts ds-language-server binary
-└── languages/            # (empty — no grammar, only LSP)
-```
+A Rust/WASM wrapper exists and forwards recognition/deprecation settings, but it currently starts a configured local Node server (or a `ds-language-server` executable on `PATH`). It does **not** download/cache platform binaries, and marketplace installation has not been evidenced. Native Rust `cargo check --offline` passes; the `wasm32-wasip1` target was unavailable and was not installed during validation.
 
-**`extension.toml`:**
-```toml
-id = "ds-language-server"
-name = "Design System Language Server"
-description = "IntelliSense for design tokens, components, and utility classes."
-version = "0.1.0"
-schema_version = 1
-authors = ["Magnus Fredlundh"]
-repository = "https://github.com/example/ds-language-server"
-
-[language_servers.ds-language-server]
-languages = ["HTML", "CSS", "JavaScript", "TypeScript"]
-```
-
-**`src/lib.rs`:** Downloads the pre-built `ds-language-server` binary from GitHub Releases (platform-specific: macOS arm64/x64, Linux x64/arm64), caches it, and returns the command to Zed.
-
-**Consumer setup in Zed:**
-
-1. Install the extension from Zed's marketplace
-2. Done — auto-discovery finds manifests from `node_modules`
-
-Optional override in `.zed/settings.json`:
+Current development settings:
 
 ```json
 {
   "lsp": {
     "ds-language-server": {
       "settings": {
-        "sources": {
-          "tokens": ["node_modules/@acme/tokens/dist/tokens.json"]
-        },
+        "serverPath": "/absolute/path/to/ds-language-server/dist/server.js",
+        "nodePath": "/absolute/path/to/node",
+        "templateTags": { "html": ["html", "view"], "css": ["css"] },
         "diagnostics": {
-          "deprecated": "warning"
+          "packages": { "@example/legacy": { "deprecated": "error" } }
         }
       }
     }
@@ -630,21 +611,23 @@ Optional override in `.zed/settings.json`:
 }
 ```
 
-### VS Code extension (later)
+`serverPath` and `nodePath` belong to the wrapper. Manifest sources and lifecycle profile remain in `ds.config.*`. Zed's registered languages bound which documents reach the server even if the server allowlist is wider.
 
-Standard VS Code language client wrapping the same `ds-language-server` binary.
+### VS Code extension — implemented locally
 
-### JetBrains plugin (later)
+A VS Code language client and bundled server build exist. The adapter forwards only explicit recognition/deprecation settings so extension defaults do not overwrite project configuration. Automated transport and syntax checks pass, but this change has not had a live VS Code acceptance session and has not been published by this work.
 
-LSP client plugin. Design systems that also generate `web-types.json` get basic support for free — the LSP adds lifecycle features on top.
+### JetBrains plugin — not implemented
+
+No JetBrains integration exists in this repository, and no deferral has been approved.
 
 ---
 
-## 5. What Changes for Acme
+## 5. Proposed External Acme Changes
 
-The key benefit of this approach: **almost nothing changes in the build pipeline.**
+The original proposal expected only small build-pipeline changes. This repository does not establish their current state: no Acme checkout/build evidence was gathered in this work. The table therefore remains a proposed integration plan, not a delivered claim.
 
-### Changes needed
+### Proposed changes
 
 | Package | Change | Effort |
 |---|---|---|
@@ -654,7 +637,7 @@ The key benefit of this approach: **almost nothing changes in the build pipeline
 | `core-css` | Add lifecycle fields (`deprecated`, `removal`, `status`) to `utilities.manifest.json` when deprecating utilities | Per-item, when needed |
 | `core-tokens` | Add lifecycle fields to `acme-tokens.json` when deprecating tokens | Per-item, when needed |
 
-### `core-css/package.json` — the only structural change
+### Proposed `core-css/package.json` change
 
 ```jsonc
 {
@@ -667,7 +650,7 @@ The key benefit of this approach: **almost nothing changes in the build pipeline
 }
 ```
 
-### What stays the same
+### Expected unchanged outputs (externally unverified)
 
 - `custom-elements.json` generation — unchanged
 - `acme-tokens.json` generation — unchanged

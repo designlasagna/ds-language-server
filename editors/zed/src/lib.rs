@@ -1,4 +1,4 @@
-use zed_extension_api::{self as zed, settings::LspSettings, LanguageServerId, Result};
+use zed_extension_api::{self as zed, serde_json, settings::LspSettings, LanguageServerId, Result};
 
 struct DsLanguageServerExtension;
 
@@ -49,6 +49,32 @@ impl zed::Extension for DsLanguageServerExtension {
                 env: Default::default(),
             })
         }
+    }
+
+    fn language_server_initialization_options(
+        &mut self,
+        language_server_id: &LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> Result<Option<serde_json::Value>> {
+        let settings = LspSettings::for_worktree(language_server_id.as_ref(), worktree)
+            .map_err(|e| format!("Failed to get settings: {e}"))?;
+
+        // Forward the user's `settings` block as initialize options.
+        Ok(settings.settings)
+    }
+
+    fn language_server_workspace_configuration(
+        &mut self,
+        language_server_id: &LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> Result<Option<serde_json::Value>> {
+        let settings = LspSettings::for_worktree(language_server_id.as_ref(), worktree)
+            .map_err(|e| format!("Failed to get settings: {e}"))?;
+
+        // The server requests the `dsLanguageServer` configuration section.
+        Ok(Some(serde_json::json!({
+            "dsLanguageServer": settings.settings.unwrap_or_default(),
+        })))
     }
 }
 

@@ -33,7 +33,8 @@
     "onLanguage:javascript",
     "onLanguage:typescript",
     "onLanguage:javascriptreact",
-    "onLanguage:typescriptreact"
+    "onLanguage:typescriptreact",
+    "onStartupFinished"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -59,6 +60,72 @@
           ],
           "default": "off",
           "description": "Trace communication between VS Code and the language server."
+        },
+        "dsLanguageServer.languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Custom file languages to activate the language server for. An explicit editor value replaces project configuration values, and an empty array [] disables custom language activation. Unset falls back to project configuration."
+        },
+        "dsLanguageServer.templateTags": {
+          "type": "object",
+          "properties": {
+            "html": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "css": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Template tag names recognized for html and css. An explicit editor value replaces project configuration values, and an empty array [] disables that language's tags. Unset falls back to project configuration."
+        },
+        "dsLanguageServer.classAttributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Class attribute names recognized by the language server. An explicit editor value replaces project configuration values, and an empty array [] disables class attribute recognition. Unset falls back to project configuration."
+        },
+        "dsLanguageServer.diagnostics": {
+          "type": "object",
+          "properties": {
+            "deprecated": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "off",
+                "information",
+                "warning",
+                "error"
+              ]
+            },
+            "packages": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "deprecated": {
+                    "type": "string",
+                    "enum": [
+                      "auto",
+                      "off",
+                      "information",
+                      "warning",
+                      "error"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "description": "Deprecation diagnostics severity. A package value overrides the global deprecated value. Unset falls back to project configuration."
         }
       }
     }
@@ -68,7 +135,7 @@
     "package": "npm run bundle-server && vsce package"
   },
   "dependencies": {
-    "@designlasagna/schemas": "^0.3.4",
+    "@designlasagna/schemas": "file:../../../schemas",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "jsonc-parser": "^3.3.1",

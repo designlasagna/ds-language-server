@@ -1,8 +1,15 @@
 import { Hover, Position } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { DSStore } from '../store.js';
+import type { DSConfig } from '../types.js';
+import {
+  isLanguageEnabled,
+  maskRecognizedText,
+  classAttributes,
+} from '../recognition-settings.js';
 import { tryVarHover } from './hover/variable.js';
 import { tryClassHover } from './hover/class.js';
+import { classMapRanges } from '../class-map.js';
 import { tryTagHover } from './hover/tag.js';
 import { tryAttrValueHover } from './hover/attribute-value.js';
 import { trySlotValueHover } from './hover/slot-value.js';
@@ -15,17 +22,24 @@ export function getHover(
   document: TextDocument,
   position: Position,
   store: DSStore,
+  config?: DSConfig,
 ): Hover | null {
+  if (!isLanguageEnabled(document.languageId, config)) return null;
+
   const offset = document.offsetAt(position);
-  const text = document.getText();
+  const text = maskRecognizedText(document.getText(), document.languageId, config);
 
   // ── Try CSS var() hover ────────────────────────────────────────
   const varHover = tryVarHover(text, offset, store);
   if (varHover) return varHover;
 
   // ── Try class name hover ───────────────────────────────────────
-  const classHover = tryClassHover(text, offset, store);
+  const classHover = tryClassHover(text, offset, store, classAttributes(config));
   if (classHover) return classHover;
+
+  // ── Try mapped class name hover ────────────────────────────────
+  const mappedHover = tryClassHover(document.getText(), offset, store, classAttributes(config), classMapRanges(document.getText(), classAttributes(config), text));
+  if (mappedHover) return mappedHover;
 
   // ── Try HTML tag hover ─────────────────────────────────────────
   const tagHover = tryTagHover(text, offset, store);

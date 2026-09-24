@@ -1,84 +1,99 @@
 # RFC 0005 implementation review
 
-Reviewed against commit `ea42de7`. This is an implementation audit, not a proposal to restore every original presentation detail.
-
-## Implementation progress — 2026-09-20
-
-The audit below is the original baseline. The first follow-up slice now centralizes JSON/JS/MJS loading across startup and reload notifications, clears stale config on deletion/load failure, protects overlapping async reloads, and decodes workspace URIs. Loader and stdio LSP tests cover these paths. Configuration precedence is JSON → JS → MJS; invalid highest-precedence configuration uses discovery defaults rather than falling through. Config entry modules reload, but imported helpers remain cached and require a server restart. ESM reloads retain unique module-cache entries.
-
-The second slice adds capability-aware dynamic watch registration for resolved and missing sources, config candidates, package metadata, and shallow package directories, with a 750 ms metadata-polling fallback for unsupported/rejected registration and 100 ms debounce. VS Code's fixed-name watches were removed. Automated stdio tests cover actual fallback filesystem changes as well as client registration refresh/disposal, reload races, and shutdown. Live VS Code/Zed smoke tests and large-workspace performance remain externally unverified. LSP settings transport and the remaining lifecycle/provider/distribution findings are unchanged. Work is tracked in the vault parent task `task-2026-09-20-implement-dsls-rfc-0005-review` and six linked implementation tasks; no deferrals have been approved.
+Originally reviewed against commit `ea42de7`; reconciled with the uncommitted RFC follow-up work on 2026-09-23 and re-reconciled on 2026-09-24 after the Zed settings-forwarding regression fix and the CEM nested-status, lifecycle-profile, member-kind, and attribute/member-correlation corrections. This is an implementation audit, not a proposal to restore every original presentation detail.
 
 ## Verdict
 
-The core language-server MVP is implemented, but RFC 0005 is not fully delivered. Its unchecked phase list is stale, and some configuration and component capabilities are still missing. Passing tests do not establish coverage of every RFC requirement.
+The language-server feature set described by the RFC is substantially implemented locally, including the configuration/recognition and component-API gaps identified by the original audit. RFC 0005 is **not fully delivered**: the current work is uncommitted and awaiting human review, live editor acceptance has not been performed, Zed still launches a local Node server rather than downloading a binary, JetBrains integration is absent, and external design-system/publication claims have no evidence from this repository.
 
-## Implemented
+No feature deferral is approved. Open distribution and external work must remain open until implemented or explicitly approved for deferral.
 
-- TypeScript stdio LSP with completion, hover, diagnostics, and replacement code actions.
-- Package discovery through `customElements` and `designSystem`, plus explicit manifest sources.
-- CEM tag/attribute/value and slot completion; token and utility completion and hover.
-- Token manifest, DTCG-style token input, and categorized/flat utility parsing.
-- Deprecated completion tags, time-aware diagnostic severity, draft-component diagnostics.
-- Replacement fixes for token names, utility classes, attribute values, and attribute names when replacement metadata reaches diagnostics.
-- VS Code client and local-server Zed wrapper.
-- Additional capabilities beyond the original RFC: token-document schema diagnostics, compact slot descriptions, JSX static template-literal class recognition.
+## Baseline and current boundaries
 
-## Remaining gaps
+- Baseline before this review: `ea42de7` (107 tests).
+- Previously approved implementation checkpoints: automatic reload/watchers at `95da37a`; lifecycle integration at `5469338`.
+- Recognition and component-API work described below is uncommitted.
+- Lifecycle handling is schema-first: the legacy adapter is the default; CEM/DTCG use the local, unpublished schemas v0.4 contract only with `lifecycle.profile: "0.4"`; native token/utility manifests select it through `schemaVersion: "0.4.0"`.
+- Lifecycle `status` is an arbitrary authored string. Only statuses with defined lifecycle meaning affect deprecation/removal behavior.
+- Explicit `sources` are additive to package discovery unless `discovery.enabled` is false.
+- Component hover intentionally stays compact: description, useful slot details, and actionable lifecycle guidance. Exhaustive attribute/package lists are not part of the current contract.
+- Component replacement is diagnostic-only under the approved lifecycle contract; paired opening/closing tag rename actions are not promised.
 
-### P1: Configuration and reload behavior
+## Implemented and validated locally
 
-- **JS config is not wired into server startup.** `src/discovery.ts` has a JS-capable `loadConfig`, but `src/server.ts` directly loads only `ds.config.json`.
-- **Config file changes reload manifests using stale config.** `onDidChangeWatchedFiles` calls `loadManifests` without rereading configuration. Creating/deleting/changing config does not reliably update sources.
-- **Manifest watching is incomplete.** VS Code watches fixed filename patterns, not every discovered manifest path. Arbitrary CEM filenames and common token filenames can be missed. The server does not register watched files itself; Zed has no equivalent watcher wiring here.
-- **Declared settings are not implemented end-to-end:** `languages`, `templateTags`, `classAttributes`, and diagnostic per-package overrides. The Zed RFC example passing `sources` and `diagnostics` via LSP settings is not consumed by the wrapper/server path.
+### Core server and lifecycle
 
-Evidence: `src/server.ts`, `src/discovery.ts`, `src/types.ts`, `src/providers/diagnostics.ts`, `editors/vscode/extension.js`, `editors/zed/src/lib.rs`.
+- TypeScript stdio LSP with completion, hover, diagnostics, token-document schema diagnostics, and replacement code actions.
+- Package discovery through `customElements` and `designSystem`, plus additive explicit component/token/utility sources.
+- JSON, JS, and MJS workspace configuration with deterministic precedence, stale-source clearing, entry-module reload, overlap protection, and decoded workspace URIs. Imported JS helpers remain cached until restart.
+- Capability-aware watches for config candidates, resolved/missing manifests, package metadata, and shallow package directories, with debouncing and metadata-polling fallback.
+- CEM component/tag/attribute/value/slot support, token and utility formats, lifecycle propagation, status-only deprecation, time-aware severity, compact migration hovers, and safe token/utility/attribute replacement actions.
 
-### P1: Lifecycle information is inconsistent across entity types
+### Settings and recognition
 
-- Token, utility, and attribute hovers retain reference information but omit the RFC's actionable replacement/removal callout. Attribute-value hover marks deprecated alternatives but does not show the selected value's migration message/removal details.
-- CEM attribute/member `replacement`, `status`, and separate `deprecationMessage` fields are not fully propagated. Consequently, a supported attribute quick-fix handler cannot offer fixes for ordinary CEM attribute replacements lost in parsing.
-- Tokens/utilities with only `status: "deprecated"` are normalized with `deprecated: false`; the shared `isDeprecated` helper respects that false flag, masking status-only deprecation. CEM components now handle this case, but the other parsers do not.
-- Component replacements now reach diagnostics, but code actions have no deprecated-component handler. Any future component rename fix must handle matching opening/closing tags safely.
+- Effective precedence is built-in defaults → first workspace config (`ds.config.json`, `.js`, `.mjs`) → explicit editor overrides.
+- Editor-overridable fields are `languages`, `templateTags.html`, `templateTags.css`, `classAttributes`, `diagnostics.deprecated`, and `diagnostics.packages.*.deprecated`. Arrays replace; `[]` disables that recognition list; nested settings merge; an empty editor snapshot resets the editor layer.
+- `sources`, `discovery`, `lifecycle`, and `diagnostics.draftUsage` are file-only. Editor settings cannot opt a project into a lifecycle profile or alter manifests.
+- VS Code forwards only explicitly configured values; Zed forwards settings through initialization options and workspace configuration, and the server unwraps the `dsLanguageServer` section from initialization and configuration responses (settings-forwarding regression, regression-tested). Server-side language gating is shared by completion, hover, and lifecycle diagnostics.
+- JavaScript/TypeScript template recognition is lexical and limited to configured static tagged-template regions. JSX/TSX keeps static markup/class-template support; `templateTags` filtering does not currently govern JSX/TSX or framework script sections.
+- Configurable class attributes and exact-source per-package severity are implemented, including safe handling of package names such as `__proto__` and `constructor`.
 
-Evidence: `src/parsers/cem.ts`, `src/parsers/tokens.ts`, `src/parsers/utilities.ts`, `src/lifecycle.ts`, `src/providers/hover/{variable,class,attribute,attribute-value}.ts`, `src/providers/code-actions.ts`.
+### Component APIs
 
-### P2: Component API completion coverage
+- Lit `.property` and `@event` completion from eligible CEM fields/events.
+- CEM nested `status` fields on attributes, members, slots, events, and CSS properties/parts participate in lifecycle normalization under the `0.4` profile; member `kind`, privacy, static, and readonly markers gate writable property suggestions (legacy members omitting `kind` are accepted).
+- Static keys in direct Lit `classMap({...})` class-attribute interpolations participate in completion, hover, diagnostics, and safe replacement ranges.
+- `::part()` completion for a single explicit custom-element selector in deliberately unambiguous CSS contexts.
+- Component-scoped CSS custom properties merge with global token suggestions only when an explicit component rule establishes ownership; scoped entries win name collisions.
 
-These explicit RFC promises are not implemented:
+Precise positive and negative scopes are documented in [`../configuration-and-recognition.md`](../configuration-and-recognition.md).
 
-- Lit `.property=` completion from CEM members (members currently enrich attributes only).
-- Lit `@event` completion.
-- `::part()` completion.
-- Component-scoped CSS custom-property completion. CEM properties are parsed but CSS-variable completion iterates tokens only.
-- Lit `classMap` recognition. Class strings and static JSX template segments work, not arbitrary class-producing expressions.
+## Partial, unimplemented, or externally unverified
 
-Events, CSS parts, and CSS properties being stored is not equivalent to exposing them through providers.
+| Area | Status |
+|---|---|
+| Live VS Code and Zed acceptance | Not performed. Automated stdio/client tests do not establish interactive editor behavior. |
+| Zed wrapper | Native `cargo check --offline` passed. `wasm32-wasip1` is unavailable and was not installed. The wrapper launches a configured/local Node server; automatic binary download/cache is not implemented. |
+| JetBrains | No integration exists in this repository. |
+| External systems | Acme build-pipeline integration and validation against Acme, Shoelace, Spectrum, or another external design system are unverified. Synthetic fixtures are not substitutes. |
+| Publication | No docs-site, package, marketplace, release, push, or tag evidence was produced for this work. Existing local file dependencies still require authorized release preparation. |
+| Performance | Synthetic benchmark only: 1,000 components, 10,000 tokens, 5,000 utilities and a 1,000-line document. Completion p95 reached 492.47 ms. Watcher polling and live-editor performance were not measured. |
+| Parsing breadth | JS/TS/JSX/framework recognition remains lexical rather than AST-based. Inline-style and inferred `:host` ownership, ambiguous selectors, arbitrary class-producing expressions, computed/spread `classMap` keys, and imported aliases are intentionally not inferred by the current implementation. |
 
-Evidence: `src/parsers/cem.ts`, `src/providers/completion.ts`, `src/providers/completion/css-variable.ts`, `src/scanner/context.ts`, `src/class-values.ts`.
+These are open facts, not approved deferrals.
 
-### P2: Distribution and ecosystem validation
+## Validation — 2026-09-23
 
-- Zed wrapper runs a local/configured Node server; it does not download/cache platform-specific binaries as proposed.
-- No JetBrains integration in this repository (explicitly a later RFC target).
-- Marketplace/release publication, the documentation site, changes to Acme's external build pipelines, and testing against external design systems cannot be established from this checkout alone. VS Code Marketplace availability was reported by the user; that does not verify every distribution goal.
-- No demonstrated performance benchmark for the RFC's large-design-system scenario in this audit.
+After recovery from the earlier systemd-oomd interruption:
 
-## Intentional drift: update the RFC, not the implementation
+- Focused component/recognition tests: **31 passed**.
+- Focused configuration/severity tests: **36 passed**.
+- Full suite: **269 passed across 19 files**.
+- `npm run build`: passed.
+- VS Code bundle build: passed.
+- `node --check` for the VS Code extension and bundled server: passed.
+- `cargo check --offline --manifest-path editors/zed/Cargo.toml`: passed natively.
+- `git diff --check`: clean at validation time.
 
-- Component hover is deliberately compact: opening description paragraph, slot descriptions, actionable lifecycle notices. Do not restore the old exhaustive attribute lists or routine status/package fields simply to match its example.
-- Explicit sources merge with discovery rather than overriding it. This is documented behavior, with `discovery.enabled: false` available for explicit-only sources.
-- Design Lasagna now permits arbitrary lifecycle status strings; the RFC's four-value union is outdated. CEM now preserves them; token/utility parsers still filter status values.
-- The delivery sequence changed: VS Code is available while Zed's proposed automatic binary distribution remains unfinished.
+No live editor session, external design-system run, WASM build, release, or publication was part of that validation. See [`../rfc-0005-delivery-status.md`](../rfc-0005-delivery-status.md) for the evidence matrix and benchmark measurements.
 
-## Suggested next work
+## Revalidation — 2026-09-24 (current working tree)
 
-1. Centralize config loading and fix config/manifest watch registration with server-level integration tests.
-2. Complete lifecycle propagation and consistent compact hover callouts; test status-only deprecation through parser → store → diagnostics/actions.
-3. Explicitly implement or defer configurable recognition and per-package severities.
-4. Implement or defer Lit properties/events, parts, scoped custom properties, and `classMap` separately.
-5. Refresh RFC phase checkboxes with implemented, partial, deferred, and externally unverified statuses.
+After the 2026-09-24 memory upgrade, the Zed settings-forwarding regression fix, and the CEM nested-status, lifecycle-profile, member-kind, and attribute/member-correlation corrections:
 
-## Validation
+- Full suite: **274/274 passed across 19 files**, including the final CEM attribute/member-correlation regression (kebab-case attributes ↔ camelCase members under the v0.4 profile).
+- `npm run build`: passed.
+- `node --check` for the VS Code extension and built server: passed.
+- `cargo check --offline --manifest-path editors/zed/Cargo.toml`: passed natively.
+- `git diff --check`: clean.
 
-Independent review reran `npm test` (107 passing tests) and `npm run build` successfully. Zed compilation could not be checked because the local `wasm32-wasip1` Rust target is missing. This review does not change runtime code or the original RFC.
+The 2026-09-23 numbers above remain the record of that specific post-recovery run; an intermediate 2026-09-24 run recorded 272/272 before the final CEM correlation regression was added. No live editor session, external design-system run, WASM build, release, or publication was part of this validation either.
+
+## Outstanding decisions and work
+
+1. Implement Zed automatic server distribution, or obtain explicit approval for a linked deferral.
+2. Implement JetBrains integration, or obtain explicit approval for a linked deferral.
+3. Perform live VS Code/Zed smoke tests and, if authorized, install/build the Zed WASM target.
+4. Gather actual Acme/build-pipeline and third-party design-system evidence.
+5. Prepare docs/package/editor publication separately and only with authorization.
+6. Review completion tail latency and add polling/live-editor performance evidence if a threshold is required.

@@ -40,6 +40,8 @@ export interface DSComponent extends LifecycleInfo {
   events: DSEvent[];
   cssProperties: DSCssProperty[];
   cssParts: DSCssPart[];
+  /** JS members parsed from CEM `members`; optional for fixture compatibility */
+  properties?: DSProperty[];
   /** Package this component was discovered from */
   source: string;
 }
@@ -57,6 +59,13 @@ export interface DSAttribute extends LifecycleInfo {
   deprecatedValues?: DSDeprecatedValue[];
 }
 
+export interface DSProperty extends LifecycleInfo {
+  name: string;
+  type: string;
+  description?: string;
+  default?: string;
+}
+
 export interface DSDeprecatedValue {
   value: string;
   message: string;
@@ -69,7 +78,7 @@ export interface DSSlot extends LifecycleInfo {
   description?: string;
 }
 
-export interface DSEvent {
+export interface DSEvent extends LifecycleInfo {
   name: string;
   description?: string;
   type?: string;
@@ -82,7 +91,7 @@ export interface DSCssProperty extends LifecycleInfo {
   syntax?: string;
 }
 
-export interface DSCssPart {
+export interface DSCssPart extends LifecycleInfo {
   name: string;
   description?: string;
 }

@@ -8,7 +8,7 @@ export interface DocumentSymbol {
 }
 
 export interface CursorContext {
-  kind: 'tag-open' | 'attribute-name' | 'attribute-value' | 'css-var' | 'class-value' | 'none';
+  kind: 'tag-open' | 'attribute-name' | 'attribute-value' | 'css-var' | 'css-part' | 'class-value' | 'property-name' | 'event-name' | 'none';
   prefix: string;
   tagName?: string;
   attributeName?: string;

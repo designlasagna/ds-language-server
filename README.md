@@ -10,9 +10,9 @@ Point the server at Custom Elements, token, and utility manifests to get complet
 
 A single Language Server that reads your design system manifests and provides:
 
-- **Component completions** — tag names, attributes, attribute values, slots (from [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest))
+- **Component completions** — tags, attributes, values, slots, Lit properties/events, scoped CSS properties and `::part()` (from [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest))
 - **Token completions** — CSS `var()` autocomplete with resolved values (from your token manifest)
-- **Utility class completions** — `class=""` / `className=""` autocomplete with descriptions (from your utility manifest)
+- **Utility class completions** — configurable class attributes and static Lit `classMap` keys, with descriptions (from your utility manifest)
 - **Deprecation diagnostics** — native editor deprecation styling and time-aware severity escalation
 - **Code actions** — one-click replacements for deprecated tokens, attribute values, and classes
 - **Value-level deprecation** — flag specific attribute values without marking the whole attribute
@@ -103,6 +103,12 @@ The server watches configuration candidates, explicit and package-declared manif
 
 This handles source creation, atomic replacement, deletion/recreation, and package installation without restarting. Imported JS config helpers remain cached and require a restart; config entry modules are reloaded. ESM reloads retain module-cache entries, and large-workspace polling performance has not yet been benchmarked. Live VS Code/Zed smoke testing remains separate from the automated LSP tests.
 
+### Recognition and editor settings
+
+`languages`, `templateTags`, `classAttributes`, and per-package deprecation severity are wired through recognition and editor transport. Explicit editor settings override project values; unset editor defaults do not. Arrays replace (including `[]`), and an empty editor snapshot resets to project settings.
+
+See [configuration and recognition](docs/configuration-and-recognition.md) for VS Code/Zed examples, precise completion scopes and lexical-parser limitations. These changes are local and unreleased; [delivery evidence](docs/rfc-0005-delivery-status.md) distinguishes tested behavior from outstanding editor/distribution checks.
+
 ### Lifecycle contract profile
 
 The legacy lifecycle adapter remains the default. To opt CEM and DTCG sources into the unpublished schemas v0.4 lifecycle contract, select it explicitly in `ds.config.*`:
@@ -111,7 +117,7 @@ The legacy lifecycle adapter remains the default. To opt CEM and DTCG sources in
 { "lifecycle": { "profile": "0.4" } }
 ```
 
-Native token and utility manifests use v0.4 rules only when both this profile is selected and `schemaVersion` is `"0.4.0"`. CEM does not use this schema version. The server uses its reproducible local `file:../schemas` dependency until a release is authorized.
+Native token and utility manifests select v0.4 automatically with `schemaVersion: "0.4.0"`; they do not require the CEM/DTCG profile setting. CEM retains its standard schema version. Token-document schema diagnostics follow the same native-version/DTCG-profile selection. The server uses its reproducible local `file:../schemas` dependency until a release is authorized.
 
 ### For local consumers
 
@@ -219,6 +225,8 @@ npm install
 npm run build    # tsc → dist/
 npm test         # vitest
 ```
+
+For synthetic scale measurements, run `node scripts/benchmark.mjs` after building. [Recorded results and limitations](docs/rfc-0005-delivery-status.md) are not live-editor performance guarantees.
 
 ### Run the server
 

@@ -20,7 +20,7 @@ const SOURCE = 'designlasagna-schema';
  * Convert JSON/JSONC parse and schema errors into precise LSP diagnostics.
  * Call this only for a file declared as `designSystem.tokens`.
  */
-export function getSchemaDiagnostics(document: TextDocument): Diagnostic[] {
+export function getSchemaDiagnostics(document: TextDocument, lifecycleProfile?: '0.4'): Diagnostic[] {
   const text = document.getText();
   const parseErrors: ParseError[] = [];
   const value = parse(text, parseErrors, { allowTrailingComma: true, disallowComments: false });
@@ -46,7 +46,7 @@ export function getSchemaDiagnostics(document: TextDocument): Diagnostic[] {
     }];
   }
 
-  return validateTokenDocument(value).map((error) => ({
+  return validateTokenDocument(value, lifecycleProfile).map((error) => ({
     range: schemaErrorRange(document, root, error.instancePath, error.keyword, error.params),
     severity: DiagnosticSeverity.Error,
     source: SOURCE,

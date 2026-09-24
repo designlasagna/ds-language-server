@@ -8,6 +8,9 @@ Editor adapter, packaging, and editor-specific UX changes belong in the changelo
 
 ### Added
 
+- Explicit editor-over-project recognition settings, reset semantics and race-safe LSP settings transport; configurable languages, template tags, class attributes and per-package deprecation severity.
+- Lit public-property/event completion, component-scoped CSS custom properties and `::part()` suggestions, and static `classMap` key completion/hover/diagnostics with source-safe replacement ranges.
+- Synthetic scale benchmark and RFC delivery evidence separating local verification from outstanding external checks.
 - Utility class completion and hover in JSX template literals, including static classes alongside interpolations such as ``className={`${styles.header} acme-text-heading-1`}``.
 - Richer component fixtures with descriptions, usage examples, and dedicated lifecycle test coverage.
 - Capability-aware watches for config candidates, resolved manifest paths (including missing files and arbitrary filenames), package metadata, and package-directory changes. Clients without dynamic registration, or rejecting it, use 750 ms metadata polling with debounced reloads.
@@ -22,6 +25,9 @@ Editor adapter, packaging, and editor-specific UX changes belong in the changelo
 
 ### Fixed
 
+- Select the native v0.4 token schema by manifest version and the DTCG extension schema by explicit lifecycle profile in token-document diagnostics.
+- Preserve authored nested `status` on CEM attributes, members, slots, events, and CSS properties/parts under the 0.4 lifecycle profile; exclude non-field, private, static, and read-only members from writable Lit property suggestions.
+- Fix the Zed settings-forwarding regression by unwrapping `dsLanguageServer` section-wrapped initialization options and workspace/configuration responses before merging editor settings.
 - Use one configuration loader for startup and reloads, supporting `ds.config.json`, `ds.config.js`, and `ds.config.mjs` in that precedence order. Invalid or deleted configuration falls back to discovery defaults instead of retaining stale sources.
 - Reload edited configuration entry modules, ignore superseded asynchronous loads, and correctly decode workspace file URIs. Imported config helpers still require a server restart.
 - Preserve arbitrary CEM lifecycle status strings and component replacement metadata.

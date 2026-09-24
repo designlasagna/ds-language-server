@@ -33,8 +33,7 @@ export function getDiagnostics(
   const knownTokens = new Set(store.getTokens().map((t) => t.name));
   const knownUtilities = new Set(store.getUtilities().map((u) => u.name));
 
-  const symbols = scanDocument(document, knownTags, knownTokens, knownUtilities, knownClassNames);
-  const severityOverride = config?.diagnostics?.deprecated;
+  const symbols = scanDocument(document, knownTags, knownTokens, knownUtilities, knownClassNames, config);
 
   for (const symbol of symbols) {
     switch (symbol.kind) {
@@ -45,7 +44,7 @@ export function getDiagnostics(
         addLifecycleDiagnostics(diagnostics, document, symbol.start, symbol.end, component);
         // Deprecated component
         if (isDeprecated(component)) {
-          const severity = getDeprecationSeverity(component.removal, severityOverride, component.lifecycleState);
+          const severity = getDeprecationSeverity(component.removal, deprecatedSeverityForSource(config, component.source), component.lifecycleState);
           if (severity === undefined) break;
 
           diagnostics.push({
@@ -104,7 +103,7 @@ export function getDiagnostics(
           replacementIssue(component.attributes.filter(attribute => attribute.htmlName === attr.replacement || attribute.name === attr.replacement), attr.replacement, attr.htmlName));
         if (!isDeprecated(attr)) break;
 
-        const severity = getDeprecationSeverity(attr.removal, severityOverride, attr.lifecycleState);
+        const severity = getDeprecationSeverity(attr.removal, deprecatedSeverityForSource(config, component.source), attr.lifecycleState);
         if (severity === undefined) break;
 
         diagnostics.push({
@@ -146,7 +145,7 @@ export function getDiagnostics(
         );
         if (!deprecatedValue) break;
 
-        const severity = getDeprecationSeverity(deprecatedValue.removal, severityOverride);
+        const severity = getDeprecationSeverity(deprecatedValue.removal, deprecatedSeverityForSource(config, component.source));
         if (severity === undefined) break;
 
         diagnostics.push({
@@ -181,7 +180,7 @@ export function getDiagnostics(
         addLifecycleDiagnostics(diagnostics, document, symbol.start, symbol.end, token, tokenReplacement.issue);
         if (!isDeprecated(token)) break;
 
-        const severity = getDeprecationSeverity(token.removal, severityOverride, token.lifecycleState);
+        const severity = getDeprecationSeverity(token.removal, deprecatedSeverityForSource(config, token.source), token.lifecycleState);
         if (severity === undefined) break;
 
         diagnostics.push({
@@ -214,7 +213,7 @@ export function getDiagnostics(
         addLifecycleDiagnostics(diagnostics, document, symbol.start, symbol.end, utility, utilityReplacement.issue);
         if (!isDeprecated(utility)) break;
 
-        const severity = getDeprecationSeverity(utility.removal, severityOverride, utility.lifecycleState);
+        const severity = getDeprecationSeverity(utility.removal, deprecatedSeverityForSource(config, utility.source), utility.lifecycleState);
         if (severity === undefined) break;
 
         diagnostics.push({
@@ -246,6 +245,26 @@ export function getDiagnostics(
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────
+
+const DEPRECATION_SEVERITY_MODES = new Set(['auto', 'off', 'information', 'warning', 'error']);
+
+function isDeprecationSeverityMode(value: unknown): value is 'auto' | 'off' | 'information' | 'warning' | 'error' {
+  return typeof value === 'string' && DEPRECATION_SEVERITY_MODES.has(value);
+}
+
+/**
+ * Deprecated severity for one package source: the per-package setting
+ * (`diagnostics.packages[<source>].deprecated`) takes precedence over the
+ * global setting; unsupported runtime values fall back.
+ */
+function deprecatedSeverityForSource(
+  config: DSConfig | undefined,
+  source: string,
+): 'auto' | 'off' | 'information' | 'warning' | 'error' | undefined {
+  const mode = (value: unknown) => (isDeprecationSeverityMode(value) ? value : undefined);
+  return mode(config?.diagnostics?.packages?.[source]?.deprecated)
+    ?? mode(config?.diagnostics?.deprecated);
+}
 
 interface ReplacementResult { replacement?: string; issue?: LifecycleIssue; }
 
