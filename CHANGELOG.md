@@ -8,6 +8,8 @@ Editor adapter, packaging, and editor-specific UX changes belong in the changelo
 
 ### Added
 
+- Zed wrapper auto-installs the published `@designlasagna/ds-language-server` npm package into the extension's working directory and runs it with the Node runtime bundled with Zed, so no user-installed Node is required. The latest published version is tracked by default; a new `serverVersion` language-server setting pins an exact version, and the existing `serverPath`/`nodePath` settings remain available as development overrides.
+- Publish guard (`npm run check:publishable`) that fails when the package still carries local `file:` runtime dependencies or a missing `bin` entry, and a `publish-npm.yml` workflow that publishes on `v*` tags with provenance once the `@designlasagna/schemas` dependency points at the npm registry.
 - Explicit editor-over-project recognition settings, reset semantics and race-safe LSP settings transport; configurable languages, template tags, class attributes and per-package deprecation severity.
 - Lit public-property/event completion, component-scoped CSS custom properties and `::part()` suggestions, and static `classMap` key completion/hover/diagnostics with source-safe replacement ranges.
 - Synthetic scale benchmark and RFC delivery evidence separating local verification from outstanding external checks.
@@ -19,6 +21,7 @@ Editor adapter, packaging, and editor-specific UX changes belong in the changelo
 
 ### Changed
 
+- Zed extension and root package versions moved to 0.2.0 in preparation for the first npm publication (the publication itself is blocked until `@designlasagna/schemas@0.4.0` is published and the local `file:../schemas` dependency is switched to a registry range).
 - Component hover now shows the opening description paragraph and individual slots with descriptions instead of package details and exhaustive attribute lists.
 - Component hover hides routine `ready` and `stable` statuses while retaining other lifecycle statuses and actionable deprecation notices.
 - Static utility classes in JSX template literals are included in document scanning; interpolation expressions are excluded from class recognition.

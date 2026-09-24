@@ -1,10 +1,10 @@
 # RFC 0005 implementation review
 
-Originally reviewed against commit `ea42de7`; reconciled with the uncommitted RFC follow-up work on 2026-09-23 and re-reconciled on 2026-09-24 after the Zed settings-forwarding regression fix and the CEM nested-status, lifecycle-profile, member-kind, and attribute/member-correlation corrections. This is an implementation audit, not a proposal to restore every original presentation detail.
+Originally reviewed against commit `ea42de7`; reconciled with the uncommitted RFC follow-up work on 2026-09-23 and re-reconciled on 2026-09-24 after the Zed settings-forwarding regression fix, the CEM nested-status, lifecycle-profile, member-kind, and attribute/member-correlation corrections, and the Zed auto-distribution mechanism (branch `feat/zed-auto-distribution`). This is an implementation audit, not a proposal to restore every original presentation detail.
 
 ## Verdict
 
-The language-server feature set described by the RFC is substantially implemented locally, including the configuration/recognition and component-API gaps identified by the original audit. RFC 0005 is **not fully delivered**: the current work is uncommitted and awaiting human review, live editor acceptance has not been performed, Zed still launches a local Node server rather than downloading a binary, JetBrains integration is absent, and external design-system/publication claims have no evidence from this repository.
+The language-server feature set described by the RFC is substantially implemented locally, including the configuration/recognition and component-API gaps identified by the original audit. RFC 0005 is **not fully delivered**: the current work is committed locally (unpushed) and awaiting human review, live editor acceptance has not been performed, Zed auto-distribution is implemented but gated on the release chain because the server package is unpublished, JetBrains integration is absent, and external design-system/publication claims have no evidence from this repository.
 
 No feature deferral is approved. Open distribution and external work must remain open until implemented or explicitly approved for deferral.
 
@@ -53,7 +53,7 @@ Precise positive and negative scopes are documented in [`../configuration-and-re
 | Area | Status |
 |---|---|
 | Live VS Code and Zed acceptance | Not performed. Automated stdio/client tests do not establish interactive editor behavior. |
-| Zed wrapper | Native `cargo check --offline` passed. `wasm32-wasip1` is unavailable and was not installed. The wrapper launches a configured/local Node server; automatic binary download/cache is not implemented. |
+| Zed wrapper | Native `cargo check --offline` passed. Automatic package installation is implemented on branch `feat/zed-auto-distribution` via Zed's native npm API (`npm_install_package`, `npm_package_latest_version`, `npm_package_installed_version`, `node_binary_path`), tracking the latest published server version by default with an optional `serverVersion` pin; `serverPath`/`nodePath` remain development overrides. `wasm32-wasip1` is unavailable and was not installed, and no live Zed session was performed. Until `@designlasagna/ds-language-server` is published on npm, the wrapper reports a clear installation failure instead of guessing. |
 | JetBrains | No integration exists in this repository. |
 | External systems | Acme build-pipeline integration and validation against Acme, Shoelace, Spectrum, or another external design system are unverified. Synthetic fixtures are not substitutes. |
 | Publication | No docs-site, package, marketplace, release, push, or tag evidence was produced for this work. Existing local file dependencies still require authorized release preparation. |
@@ -91,7 +91,7 @@ The 2026-09-23 numbers above remain the record of that specific post-recovery ru
 
 ## Outstanding decisions and work
 
-1. Implement Zed automatic server distribution, or obtain explicit approval for a linked deferral.
+1. Execute the Zed distribution release chain — publish `@designlasagna/schemas@0.4.0`, switch the DSLS `file:../schemas` dependency to `^0.4.0`, publish `@designlasagna/ds-language-server`, then register the extension in `zed-industries/extensions` (monorepo pin with `path = "editors/zed"`) — and verify live behavior in Zed. The wrapper mechanism is implemented on branch `feat/zed-auto-distribution`; if the chain is not approved, obtain explicit approval for a linked deferral.
 2. Implement JetBrains integration, or obtain explicit approval for a linked deferral.
 3. Perform live VS Code/Zed smoke tests and, if authorized, install/build the Zed WASM target.
 4. Gather actual Acme/build-pipeline and third-party design-system evidence.

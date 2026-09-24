@@ -1,6 +1,6 @@
 # RFC 0005 delivery evidence — 2026-09-23, updated 2026-09-24
 
-This is a local implementation record, not release or marketplace evidence. The current recognition/component-API work is **uncommitted, validated locally, and awaiting human review**.
+This is a local implementation record, not release or marketplace evidence. The recognition/component-API work is **committed locally (unpushed), validated locally, and awaiting human review**; the Zed auto-distribution mechanism landed on branch `feat/zed-auto-distribution` (2026-09-24, also unpushed).
 
 ## Delivery matrix
 
@@ -12,12 +12,12 @@ This is a local implementation record, not release or marketplace evidence. The 
 | Lit member/event, parts, scoped CSS properties, classMap | Implemented locally; final review pending | Parser/provider tests and negative scope tests; exact supported contexts in `configuration-and-recognition.md` |
 | Token-document v0.4 schema diagnostics | Integration correction implemented locally | Native version dispatch and explicit DTCG profile now reach schema validation; regression tests added |
 | VS Code adapter build | Locally verified | Local bundle built; initialize/shutdown/exit smoke test succeeded with sibling schemas 0.4.0; mock adapter tests verify actual configuration middleware signature |
-| Zed wrapper | Partially verified | Native `cargo check --offline` passed (re-verified 2026-09-24 after removing the unused SHA-256 experiment and fixing the settings-forwarding regression); WASM check failed because no `wasm32-wasip*` target is installed; no target installed by this work |
+| Zed wrapper | Partially verified | Native `cargo check --offline` passed; automatic package installation implemented on branch `feat/zed-auto-distribution` (2026-09-24, host-side `cargo check` re-run after the change); WASM build remains blocked because no `wasm32-wasip*` target is installed (installation requires authorization); no live Zed session performed |
 | Live VS Code/Zed behavior | Externally unverified | No interactive editor acceptance session performed; automated transport tests are not a substitute |
-| Zed automatic binary distribution | Not implemented; blocked on release metadata (verified 2026-09-24) | npm package `@designlasagna/ds-language-server` is unpublished (registry 404); GitHub repository has 0 releases/assets (tags `v0.1.0`–`v0.1.4` only, newest tag predates the working tree); no integrity digest is published for any runnable artifact; `file:../schemas` blocks npm publication and standalone source builds. Unused SHA-256 experiment removed from `editors/zed`; wrapper still launches configured/local Node server (`serverPath`/PATH) only |
+| Zed automatic distribution | Mechanism implemented; gated on the release chain (2026-09-24) | Wrapper now uses Zed's native npm API — `npm_package_latest_version`, `npm_package_installed_version`, `npm_install_package`, plus `node_binary_path` (Zed's bundled Node), following Zed's own HTML extension pattern; installation state is surfaced with `set_language_server_installation_status`; `serverPath`/`nodePath` remain development overrides and `serverVersion` pins an exact version. Remaining gates: publish `@designlasagna/schemas@0.4.0` (schemas `main` is one commit ahead of `origin/main`, push requires approval), switch `file:../schemas` → `^0.4.0` (guarded by `npm run check:publishable`), publish `@designlasagna/ds-language-server` (`publish-npm.yml`, provenance), then a registry PR to `zed-industries/extensions` pinning this monorepo with `path = "editors/zed"`. Integrity comes from npm's per-tarball integrity hashes plus Zed's bundled Node; GitHub Releases are no longer a prerequisite for Zed distribution |
 | JetBrains integration | Not implemented; decision outstanding | No plugin implementation or approved deferral |
 | External design-system/build-pipeline validation | Externally unverified | Synthetic fixtures do not verify Acme, Shoelace, Spectrum or their pipelines |
-| Documentation site / marketplace / release publication | Externally unverified for these changes | No push, tag, package or extension publication performed; local file dependencies must be replaced during authorized release preparation |
+| Documentation site / marketplace / release publication | Externally unverified for these changes | No push, tag, package or extension publication performed; `publish-npm.yml` and the publish guard are in place but inert until the local `file:../schemas` dependency is replaced during authorized release preparation |
 | Scale/performance | Synthetic evidence only | Reproducible script below; the 2026-09-24 re-measurement on the current tree does not reproduce the previously recorded completion tail (~46 ms p95 vs ~250–492 ms recorded during implementation under load); watcher polling and editor performance remain unmeasured |
 
 No feature deferral is approved by this document. The outstanding distribution/integration items remain open rather than being declared complete.
@@ -85,7 +85,7 @@ Completion materializes approximately 10,000 matching items. With only ten sampl
 
 1. Finish human review of recognition and component API slices (tasks remain `doing`, ready for review).
 2. Perform live VS Code/Zed smoke tests; install/build the WASM target only with authorization.
-3. Resolve the Zed automatic-distribution blockers (authorized server release with integrity metadata, plus a version/checksum policy decision — see delivery matrix) and JetBrains integration, or explicitly approve linked deferrals; neither is deferred today.
+3. Execute the Zed distribution release chain (schemas publish → dependency switch → DSLS npm publish → registry PR) and then perform live Zed verification; resolve JetBrains integration or explicitly approve a linked deferral. The Zed auto-install mechanism itself is implemented; the release chain remains the gate, and nothing is deferred without approval.
 4. Gather actual Acme/build-pipeline and external design-system validation rather than inferring it from fixtures.
 5. Prepare docs/package/editor publication separately, replacing local dependencies only after schemas publication is authorized.
 6. Decide whether completion tail latency, watcher polling, and live-editor performance need acceptance thresholds and further measurement.

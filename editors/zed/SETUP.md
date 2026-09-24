@@ -1,142 +1,108 @@
-# Zed Extension Setup
+# Zed editor setup
 
-## How it works
+This folder contains the Zed extension for the Design Language Server (DSLS).
 
-Zed requires an extension to register any custom Language Server. The extension is a thin WASM shim (~263KB) that tells Zed:
+## Current status
 
-1. "A language server called `ds-language-server` exists"
-2. "Activate it for HTML, CSS, TS, TSX, JSX files"
-3. "Start it by running this command"
+- **Automatic distribution is implemented.** The wrapper installs the
+  published `@designlasagna/ds-language-server` npm package into the
+  extension's working directory via Zed's native npm API and runs
+  `dist/server.js` with the Node runtime bundled with Zed. No user-installed
+  Node, manual download, or separate download host is needed.
+- **It is gated on the release chain.** Until `@designlasagna/ds-language-server`
+  exists on npm, Zed shows an installation failure with a clear message. The
+  chain is:
+  1. Publish `@designlasagna/schemas@0.4.0` (schemas repo is code-complete at
+     `0.4.0`; push/tag requires approval).
+  2. Switch this repo's dependency from `file:../schemas` to `^0.4.0` and
+     regenerate the lockfile (`npm run check:publishable` gates this).
+  3. Publish `@designlasagna/ds-language-server` via the `v*` tag
+     (`publish-npm.yml`, provenance publishing).
+- **Registry registration is a separate PR.** Zed's extension registry
+  (`zed-industries/extensions`) pins public repos as git submodules with a
+  per-extension `path`, so the DSLS monorepo can host the extension in place:
+  the registry entry pins this repository and points `path = "editors/zed"`
+  at this folder (the same layout the registry uses for Zed's own in-tree
+  extensions). One extension per PR; review typically takes a few weeks.
 
-You **always need the extension installed** — the LSP binary alone does nothing without it.
+## Version policy
 
----
+- By default the wrapper tracks the **latest published** version of
+  `@designlasagna/ds-language-server` (the same pattern Zed's own HTML
+  extension uses).
+- Pin an exact version per project or globally with the
+  `serverVersion` setting under `language_servers.ds-language-server`.
+- Integrity comes from the npm registry itself (integrity hashes on every
+  published tarball) plus Zed's bundled, Zed-updated Node runtime — no
+  hand-rolled download host or checksum manifest is needed.
 
-## End goal (once published to Zed marketplace)
+## Settings
 
-Users will just:
-1. Open Zed's extension panel → search "Design System" → click Install
-2. Done. The extension downloads the LSP binary automatically.
-
-We're not there yet, and automatic distribution is currently **blocked on a release decision** (verified 2026-09-24):
-
-- `@designlasagna/ds-language-server` is **not published on npm** (registry returns 404), so the extension host's `npm_install_package` and registry integrity metadata are unavailable.
-- The GitHub repository has **zero releases and zero release assets** (only tags `v0.1.0`–`v0.1.4`, and the newest tag predates the current working tree), so there is no fetchable prebuilt server artifact.
-- No SHA-256 or other integrity digest is published for any runnable artifact, so secure "download and verify" cannot be implemented today.
-- The server package still declares `@designlasagna/schemas` as `file:../schemas` (a sibling directory outside this repository), which blocks npm publication and standalone source-tarball builds until release preparation is authorized.
-
-An earlier experiment left an unused dependency-free SHA-256 helper in the wrapper; it has been removed rather than shipped as dead code. Automatic distribution will be implemented once an authorized server release with integrity metadata exists and the version/checksum policy is decided (for example: pin server version + SHA-256 digest per extension release, or trust registry-provided integrity).
-
-For now, follow the dev setup below.
-
----
-
-## Dev setup (current)
-
-### Prerequisites
-- Node.js ≥ 20
-- Rust toolchain with the `wasm32-wasip2` target (for compiling the extension, per the `zed_extension_api` 0.7.0 README)
-
-### 1. Clone and build the LSP
-
-```bash
-git clone https://github.com/designlasagna/ds-language-server.git
-cd ds-language-server
-npm install
-npm run build
-```
-
-### 2. Install Rust WASM target (one-time)
-
-```bash
-rustup target add wasm32-wasip2
-```
-
-### 3. Fix macOS GUI PATH issue
-
-Zed (as a macOS GUI app) doesn't inherit your shell PATH. It can't find `cargo` or `rustc` without this:
-
-```bash
-sudo launchctl setenv PATH "$HOME/.cargo/bin:$(dirname $(which node)):/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-```
-
-Then **fully quit and reopen Zed** (Cmd+Q, not just close window).
-
-### 4. Install the dev extension in Zed
-
-1. `Cmd+Shift+P` → "zed: install dev extension"
-2. Select the `editors/zed/` directory from the cloned repo
-3. Zed compiles the Rust → WASM and registers the extension
-
-### 5. Configure Zed settings
-
-Add to `~/.config/zed/settings.json`:
+Under `language_servers.ds-language-server` in `settings.json`:
 
 ```json
 {
-  "lsp": {
+  "language_servers": {
     "ds-language-server": {
-      "settings": {
-        "serverPath": "/absolute/path/to/ds-language-server/dist/server.js",
-        "nodePath": "/absolute/path/to/node"
-      }
+      "serverVersion": "0.2.0",
+      "serverPath": "/absolute/path/to/dist/server.js",
+      "nodePath": "/absolute/path/to/node",
+      "lifecycle": { "profile": "0.4" }
     }
   }
 }
 ```
 
-Find your paths:
-```bash
-echo "$(pwd)/dist/server.js"   # from the ds-language-server directory
-which node
+- `serverVersion` — pin an exact published server version (default: track
+  latest).
+- `serverPath` — development override: launch a local build directly instead
+  of the installed package.
+- `nodePath` — override the Node binary (default: Zed's bundled Node).
+- Other settings (e.g. `lifecycle`, `diagnostics`) are forwarded to the
+  server unchanged.
+
+## Development
+
+### Building the wrapper (requires the wasm32-wasip2 target)
+
+```sh
+cd editors/zed
+rustup target add wasm32-wasip2
+cargo build --target wasm32-wasip2 -O
 ```
 
-### 6. Verify
+The build output is `debug/ds_language_server_zed.wasm` or
+`release/ds_language_server_zed.wasm` in this folder.
 
-1. Open a project with a `ds.config.json` or a design system package in `node_modules`
-2. Open an HTML/TSX/CSS file
-3. `Cmd+Shift+P` → "debug: open language server logs"
-4. Look for "DS Language Server initialized"
+Host-side type checking works without the wasm target:
 
----
+```sh
+cargo check --offline --manifest-path editors/zed/Cargo.toml
+```
 
-## Manifest reloads
+### Testing the server locally
 
-Use workspace `ds.config.json`, `ds.config.js`, or `ds.config.mjs` for manifest configuration. Reloading is implemented by the Node server, not the WASM wrapper: it registers targeted watches if the client advertises support, otherwise it polls file/directory metadata every 750 ms with a 100 ms debounce. Rejected registrations also fall back to polling. Missing manifest creation, arbitrary filenames, config changes, and package metadata changes are covered by automated stdio LSP tests.
+```sh
+# From the repository root
+npm run build
+node dist/server.js --stdio
+```
 
-Rebuild the server and wrapper to use these unreleased changes. A live Zed smoke test is still needed. Native `cargo check --offline` passed; the WASM check remains blocked because no `wasm32-wasip*` target is installed on this machine. Imported JS config helpers require a server restart.
+To point the extension at a local build, set `serverPath` to
+`dist/server.js` (absolute path) in the settings above.
 
-The wrapper now forwards recognition and deprecation-diagnostic settings through initialization and workspace configuration. Project config is the base; explicitly supplied `languages`, `templateTags`, `classAttributes`, `diagnostics.deprecated`, and `diagnostics.packages` override it. Manifest `sources`, discovery, and lifecycle profile remain in `ds.config.*`. See [configuration transport](../../docs/configuration-and-recognition.md) for the full example and reset rules. Zed's registered languages still bound which documents reach the server.
+## Publishing to the Zed registry
 
-## Settings reference
+1. Make sure the server package is published to npm (see release chain above).
+2. Open a pull request against `zed-industries/extensions` that adds this
+   repository as a git submodule and adds an `extensions.toml` entry such as:
 
-| Setting | Required | Description |
-|---------|----------|-------------|
-| `serverPath` | No* | Absolute path to `dist/server.js`. Falls back to `ds-language-server` in PATH. |
-| `nodePath` | No* | Absolute path to `node` binary. Falls back to `node` in PATH. |
+   ```toml
+   [ds-language-server]
+   submodule = "extensions/ds-language-server"
+   path = "editors/zed"
+   version = "0.2.0"
+   ```
 
-\* Required for dev setup since Zed GUI apps don't reliably find binaries in PATH.
-
----
-
-## Troubleshooting
-
-### "Failed to compile extension"
-- Ensure `launchctl setenv PATH` includes `~/.cargo/bin`
-- Fully restart Zed (Cmd+Q, reopen)
-- Verify: `rustup target list --installed` should show `wasm32-wasip2`
-
-### LSP not starting
-- Check logs: `Cmd+Shift+P` → "debug: open language server logs"
-- Verify `serverPath` points to an existing `dist/server.js`
-- Verify `nodePath` points to a working node ≥ 20
-- Try running manually: `node /path/to/dist/server.js --stdio` (should hang waiting for input)
-
-### No completions appearing
-- Ensure a `ds.config.json` exists in workspace root, OR
-- Ensure `node_modules` contains a package with `customElements` or `designSystem` in its `package.json`
-- Check LSP logs for "Discovered manifests" messages
-
-### Extension installed but no LSP activity
-- The extension only activates for: HTML, CSS, SCSS, JavaScript, TypeScript, TSX, JSX
-- Open a file of one of those types and check logs again
+3. Subsequent server or extension updates are new PRs that bump the pinned
+   commit (and version), following the registry's one-extension-per-PR rule.
