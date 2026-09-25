@@ -49,4 +49,4 @@ To test a local server build instead, build from the repository root:
 npm run build
 ```
 
-Then add explicit `serverPath` and `nodePath` overrides under `lsp.ds-language-server.settings` in `.zed/settings.json`. Do not use relative paths for these overrides.
+Then configure Zed's built-in `lsp.ds-language-server.binary.path` and `arguments` in `.zed/settings.json`, pointing to Node and the absolute local `dist/server.js` path followed by `--stdio`. Do not use relative paths.

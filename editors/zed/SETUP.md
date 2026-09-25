@@ -24,8 +24,6 @@ Configure the extension under `lsp.ds-language-server.settings` in Zed's `settin
 ```
 
 - `serverVersion` pins an exact npm server version. Omit it to follow the latest published version.
-- `serverPath` is a development override that launches a local server build instead of the npm-installed package.
-- `nodePath` overrides the Node executable. Omit it to use Zed's bundled Node runtime.
 - Other settings, such as `templateTags` and `diagnostics`, are forwarded to DSLS. Put manifest sources and lifecycle policy in `ds.config.json`, `ds.config.js`, or `ds.config.mjs`.
 
 For the complete settings and precedence reference, see [configuration and recognition](../../docs/configuration-and-recognition.md).
@@ -71,30 +69,31 @@ cargo test --offline --manifest-path editors/zed/Cargo.toml
 
 ## Test against a local server build
 
-Use explicit overrides only when developing the server itself:
+Build the local server first with `npm run build` from the repository root. Then use Zed's built-in language-server binary override:
 
 ```json
 {
   "lsp": {
     "ds-language-server": {
-      "settings": {
-        "serverPath": "/absolute/path/to/ds-language-server/dist/server.js",
-        "nodePath": "/absolute/path/to/node"
+      "binary": {
+        "path": "/absolute/path/to/node",
+        "arguments": [
+          "/absolute/path/to/ds-language-server/dist/server.js",
+          "--stdio"
+        ]
       }
     }
   }
 }
 ```
 
-Build the local server first with `npm run build` from the repository root.
-
 ## Zed registry publication
 
 The Zed registry is published separately from the npm server. A registry pull request pins this repository as a submodule and points to this extension directory:
 
 ```toml
-[ds-language-server]
-submodule = "extensions/ds-language-server"
+[design-lasagna-design-system-language-server]
+submodule = "extensions/design-lasagna-design-system-language-server"
 path = "editors/zed"
 version = "0.2.0"
 ```

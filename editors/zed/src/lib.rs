@@ -56,7 +56,8 @@ impl DsLanguageServerExtension {
                 Err(message)?
             }
             Some(version) => {
-                if !Self::server_exists() || installed_version.as_deref() != Some(version.as_str()) {
+                if !Self::server_exists() || installed_version.as_deref() != Some(version.as_str())
+                {
                     zed::set_language_server_installation_status(
                         language_server_id,
                         &if Self::server_exists() {
@@ -120,28 +121,6 @@ impl zed::Extension for DsLanguageServerExtension {
 
         let settings = settings.settings.unwrap_or_default();
 
-        // Development override: point at a local server build directly.
-        if let Some(server_path) = settings.get("serverPath").and_then(|v| v.as_str()) {
-            let node_path = settings
-                .get("nodePath")
-                .and_then(|v| v.as_str())
-                .unwrap_or("node")
-                .to_string();
-            return if server_path.ends_with(".js") || server_path.ends_with(".mjs") {
-                Ok(zed::Command {
-                    command: node_path,
-                    args: vec![server_path.to_string(), "--stdio".to_string()],
-                    env: Default::default(),
-                })
-            } else {
-                Ok(zed::Command {
-                    command: server_path.to_string(),
-                    args: vec!["--stdio".to_string()],
-                    env: Default::default(),
-                })
-            };
-        }
-
         // Automatic distribution: install the published package into the
         // extension's working directory and run it with the Node runtime
         // bundled with Zed (no user-installed Node required).
@@ -150,16 +129,8 @@ impl zed::Extension for DsLanguageServerExtension {
             .and_then(|v| v.as_str())
             .map(str::to_string);
         let server_path = self.server_entry_path(language_server_id, pinned_version.as_deref())?;
-        let node_path = settings
-            .get("nodePath")
-            .and_then(|v| v.as_str())
-            .unwrap_or("node")
-            .to_string();
-        let node_path = if node_path == "node" {
-            zed::node_binary_path().map_err(|e| format!("Failed to get Node binary path: {e}"))?
-        } else {
-            node_path
-        };
+        let node_path =
+            zed::node_binary_path().map_err(|e| format!("Failed to get Node binary path: {e}"))?;
 
         Ok(zed::Command {
             command: node_path,

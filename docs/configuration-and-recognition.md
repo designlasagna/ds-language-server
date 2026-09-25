@@ -27,8 +27,6 @@ The wrapper forwards `lsp.ds-language-server.settings` as initialization options
   "lsp": {
     "ds-language-server": {
       "settings": {
-        "serverPath": "/absolute/path/to/ds-language-server/dist/server.js",
-        "nodePath": "/absolute/path/to/node",
         "templateTags": { "html": ["html", "view"], "css": ["css"] },
         "diagnostics": { "packages": { "@example/legacy": { "deprecated": "error" } } }
       }
@@ -37,7 +35,7 @@ The wrapper forwards `lsp.ds-language-server.settings` as initialization options
 }
 ```
 
-`serverPath`/`nodePath` are wrapper settings, not server overrides. Put manifest `sources` and `lifecycle.profile` in `ds.config.*`. Zed's `extension.toml` language registration still bounds which documents reach the server; changing the server allowlist cannot register an arbitrary new Zed language. Local wrapper validation includes native checks, WASM compilation, and a dev-extension smoke test; Zed registry availability remains separate.
+For local server development, use Zed's built-in `lsp.ds-language-server.binary.path` and `arguments` override rather than DSLS-specific settings. Put manifest `sources` and `lifecycle.profile` in `ds.config.*`. Zed's `extension.toml` language registration still bounds which documents reach the server; changing the server allowlist cannot register an arbitrary new Zed language. Local wrapper validation includes native checks, WASM compilation, and a dev-extension smoke test; Zed registry availability remains separate.
 
 ## Recognition
 
