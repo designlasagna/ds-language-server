@@ -2,7 +2,7 @@
   "name": "design-system-language-server",
   "displayName": "Design Lasagna: Design System Language Server",
   "description": "Design-system IntelliSense, token schema diagnostics, and lifecycle-aware deprecation guidance.",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "publisher": "DesignLasagna",
   "license": "MIT",
   "icon": "icon.png",
@@ -11,7 +11,7 @@
     "url": "https://github.com/designlasagna/ds-language-server"
   },
   "engines": {
-    "vscode": "^1.82.0"
+    "vscode": "^1.90.0"
   },
   "categories": [
     "Programming Languages",
@@ -131,11 +131,14 @@
     }
   },
   "scripts": {
-    "bundle-server": "esbuild ../../src/server.ts --bundle --outfile=server/server.js --format=cjs --platform=node --minify --define:import.meta.url=__filename --external:ajv --external:ajv-formats --external:jsonc-parser --external:@designlasagna/schemas",
-    "package": "npm run bundle-server && vsce package"
+    "bundle-server": "esbuild ../../src/server.ts --bundle --outfile=server/server.js --format=cjs --platform=node --target=node20 --minify --define:import.meta.url=__filename --external:ajv --external:ajv-formats --external:jsonc-parser --external:@designlasagna/schemas",
+    "test:package": "node --test scripts/validate-package.test.mjs",
+    "validate:package": "node scripts/validate-package.mjs",
+    "smoke:vsix": "node scripts/smoke-vsix.mjs",
+    "package": "npm run bundle-server && npm run test:package && npm run validate:package && vsce package --pre-release --out design-system-language-server.vsix && npm run validate:package -- design-system-language-server.vsix"
   },
   "dependencies": {
-    "@designlasagna/schemas": "file:../../../schemas",
+    "@designlasagna/schemas": "^0.4.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "jsonc-parser": "^3.3.1",

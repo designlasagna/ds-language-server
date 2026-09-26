@@ -15,4 +15,7 @@ node_modules/**/CHANGELOG.md
 node_modules/**/README.md
 node_modules/.package-lock.json
 package-lock.json
+scripts/**
 SETUP.md
+icon.svg
+*.vsix

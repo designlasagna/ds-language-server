@@ -42,12 +42,16 @@ jobs:
           }
           EOF
 
-      - name: Package preview VSIX
+      - name: Package and validate pre-release VSIX
         working-directory: editors/vscode
         run: npm run package
 
-      - name: Publish Marketplace pre-release
+      - name: Smoke-test packaged VSIX protocol
+        working-directory: editors/vscode
+        run: npm run smoke:vsix -- --skip-vscode
+
+      - name: Publish validated Marketplace pre-release
         working-directory: editors/vscode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx vsce publish --pre-release --pat "$VSCE_PAT"
+        run: npx vsce publish --pre-release --packagePath design-system-language-server.vsix --pat "$VSCE_PAT"
