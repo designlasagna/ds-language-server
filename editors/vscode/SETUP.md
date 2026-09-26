@@ -2,8 +2,9 @@
 
 ## Requirements
 
-- VS Code `^1.90.0` (declared in `engines.vscode` of `editors/vscode/package.json`)
-- The bundled server is an esbuild bundle targeting Node 20 (`--target=node20`) and runs inside VS Code's Node runtime
+- Node 22 or newer to install dependencies, build, package, and publish the extension (`@vscode/vsce` requires Node 22+)
+- VS Code `^1.90.0` at runtime (declared in `engines.vscode` of `editors/vscode/package.json`)
+- The bundled server remains an esbuild bundle targeting Node 20 (`--target=node20`) and runs inside VS Code's Node runtime; the Node 22 packaging requirement does not change extension runtime compatibility
 
 ## Install from source (dev)
 
@@ -41,7 +42,7 @@ Only explicitly configured values are forwarded to the server; if none are set, 
 
 ## Automated smoke checks
 
-Requires `unzip` and Node 20+. Run from `editors/vscode`:
+Requires `unzip` and Node 22+. Run from `editors/vscode`:
 
 ```bash
 npm run smoke:vsix

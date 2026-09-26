@@ -70,6 +70,8 @@ Recognition settings (`dsLanguageServer.languages`, `.templateTags`, `.classAttr
 
 ## Development
 
+Packaging and building the extension requires Node 22 or newer (the `@vscode/vsce` packaging tool's minimum). This build-time requirement is separate from extension runtime compatibility: the extension still supports VS Code `^1.90.0`, and its bundled server still targets the host's Node 20 runtime.
+
 From the repository root, build and test the server:
 
 ```bash

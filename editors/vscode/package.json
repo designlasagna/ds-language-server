@@ -145,7 +145,7 @@
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
-    "esbuild": "^0.21.0",
-    "@vscode/vsce": "^2.26.0"
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2"
   }
 }
