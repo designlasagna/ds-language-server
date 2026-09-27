@@ -11,7 +11,7 @@
 ```bash
 cd editors/vscode
 npm ci
-npm run package    # esbuild bundle + packaging guards + vsce package
+npm run package    # client + server esbuild bundles + packaging guards + vsce package
 code --install-extension design-system-language-server.vsix
 ```
 
@@ -19,12 +19,13 @@ code --install-extension design-system-language-server.vsix
 
 ```
 editors/vscode/
-├── extension.js      ← plain JS client: starts the LSP and forwards explicit settings
-├── server/server.js  ← bundled LSP (esbuild from src/server.ts)
-└── package.json      ← VS Code extension manifest
+├── extension.js         ← plain JS client source (editable, not shipped)
+├── client/extension.cjs ← generated client bundle (esbuild; the manifest entry point)
+├── server/server.js     ← bundled LSP (esbuild from src/server.ts)
+└── package.json         ← VS Code extension manifest
 ```
 
-No TypeScript, no build step for the client. The server is bundled with esbuild. The client forwards only explicitly configured `dsLanguageServer` recognition and diagnostic settings (initialization options, `workspace/configuration` responses, and `workspace/didChangeConfiguration`); defaults are omitted so they cannot override project configuration.
+Both entry points are esbuild bundles; the client bundles `vscode-languageclient` and keeps `vscode` external, and the server bundles Ajv, ajv-formats, and jsonc-parser, keeping only the published schema package external. The archive ships the generated entry points, manifest, docs, icon, and licenses — including the generated `licenses/THIRD-PARTY-NOTICES.md` retaining the license notices for the bundled dependencies — plus that single external schema package. The packaging guards derive and verify those closures from the build scripts and lockfile. The client forwards only explicitly configured `dsLanguageServer` recognition and diagnostic settings (initialization options, `workspace/configuration` responses, and `workspace/didChangeConfiguration`); defaults are omitted so they cannot override project configuration.
 
 ## Configuration
 

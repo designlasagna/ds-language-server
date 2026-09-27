@@ -1,21 +1,36 @@
+# VS Code packaging policy for this extension.
+#
+# Shipped: the generated entry points (client/extension.cjs, server/server.js),
+# the manifest, docs, icon, and licenses (including the generated
+# licenses/THIRD-PARTY-NOTICES.md), and only the server bundle's external
+# runtime dependency closure (@designlasagna/schemas). ajv, ajv-formats,
+# jsonc-parser, and the client's vscode-languageclient closure are compiled
+# into the generated bundles, so nothing of theirs ships from node_modules.
+#
+# scripts/validate-package.mjs derives that closure from the bundle-server
+# build script and the lockfile and verifies the packaged archive against it,
+# so nothing here is keyed off a package's name alone.
+#
+# Everything under node_modules is excluded by default; each retained file
+# below is negated explicitly.
+
+node_modules/
+
+# @designlasagna/schemas (MIT): only the six documents the server loads
+# (including the lifecycle schema the v0.4 documents $ref) plus its license
+# and manifest.
+!node_modules/@designlasagna/schemas/package.json
+!node_modules/@designlasagna/schemas/LICENSE
+!node_modules/@designlasagna/schemas/v0.3/tokens.json
+!node_modules/@designlasagna/schemas/v0.3/dtcg-extensions.json
+!node_modules/@designlasagna/schemas/v0.4/tokens.json
+!node_modules/@designlasagna/schemas/v0.4/lifecycle.json
+!node_modules/@designlasagna/schemas/v0.4/dtcg-extensions.json
+!node_modules/@designlasagna/schemas/dtcg/2025.10/format.json
+
+# Editable client source, tooling, and docs that are never shipped.
 .gitignore
-.npmrc
-node_modules/**/.github/
-node_modules/**/benchmark/
-node_modules/**/docs/
-node_modules/**/examples/
-node_modules/**/spec/
-node_modules/**/src/
-node_modules/**/test/
-node_modules/**/tests/
-node_modules/**/*.d.ts
-node_modules/**/*.d.ts.map
-node_modules/**/*.map
-node_modules/**/CHANGELOG.md
-node_modules/**/README.md
-node_modules/.package-lock.json
-package-lock.json
+extension.js
 scripts/**
 SETUP.md
 icon.svg
-*.vsix

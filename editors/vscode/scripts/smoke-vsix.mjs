@@ -50,7 +50,10 @@ function writeFixture() {
   mkdirSync(path.join(workspace, '.vscode'), { recursive: true });
   writeFileSync(path.join(workspace, 'ds.config.json'), JSON.stringify({
     discovery: { enabled: false },
-    sources: { components: ['old.cem.json'], tokens: ['tokens.json'] },
+    sources: {
+      components: ['old.cem.json'],
+      tokens: ['tokens.json', 'legacy.tokens.json', 'dtcg.tokens.json'],
+    },
     diagnostics: { deprecated: 'off' },
     lifecycle: { profile: '0.4' },
   }, null, 2));
@@ -70,6 +73,21 @@ function writeFixture() {
   writeFileSync(path.join(workspace, 'tokens.json'), JSON.stringify({
     schemaVersion: '0.4.0',
     tokens: [{ id: 'color.bad', resolved: { base: false } }],
+  }, null, 2));
+  // A v0.3 manifest with a boolean `deprecated`: valid v0.3 shape rules are
+  // enforced by the packaged v0.3 schema (not the v0.4 one).
+  writeFileSync(path.join(workspace, 'legacy.tokens.json'), JSON.stringify({
+    schemaVersion: '0.3.0',
+    tokens: [{ id: 'space.legacy', resolved: { base: '4px' }, deprecated: false }],
+  }, null, 2));
+  // A DTCG-format document whose Design Lasagna extension is invalid under
+  // the profiled (0.4) extension/lifecycle schemas.
+  writeFileSync(path.join(workspace, 'dtcg.tokens.json'), JSON.stringify({
+    group: {
+      $type: 'number',
+      $extensions: { 'recipes.designlasagna': { unexpected: true } },
+      current: { $value: 1 },
+    },
   }, null, 2));
   writeFileSync(path.join(workspace, 'test.html'), '<old-button></old-button>\n<');
   writeFileSync(path.join(workspace, '.vscode', 'settings.json'), JSON.stringify({
@@ -208,8 +226,12 @@ async function protocolSmoke(serverPath) {
   const rootUri = pathToFileURL(`${workspace}${path.sep}`).href;
   const htmlUri = pathToFileURL(path.join(workspace, 'test.html')).href;
   const tokenUri = pathToFileURL(path.join(workspace, 'tokens.json')).href;
+  const legacyUri = pathToFileURL(path.join(workspace, 'legacy.tokens.json')).href;
+  const dtcgUri = pathToFileURL(path.join(workspace, 'dtcg.tokens.json')).href;
   const htmlText = readFileSync(path.join(workspace, 'test.html'), 'utf8');
   const tokenText = readFileSync(path.join(workspace, 'tokens.json'), 'utf8');
+  const legacyText = readFileSync(path.join(workspace, 'legacy.tokens.json'), 'utf8');
+  const dtcgText = readFileSync(path.join(workspace, 'dtcg.tokens.json'), 'utf8');
 
   const initialized = await client.request('initialize', {
     processId: process.pid,
@@ -226,6 +248,12 @@ async function protocolSmoke(serverPath) {
   });
   client.notify('textDocument/didOpen', {
     textDocument: { uri: tokenUri, languageId: 'json', version: 1, text: tokenText },
+  });
+  client.notify('textDocument/didOpen', {
+    textDocument: { uri: legacyUri, languageId: 'json', version: 1, text: legacyText },
+  });
+  client.notify('textDocument/didOpen', {
+    textDocument: { uri: dtcgUri, languageId: 'json', version: 1, text: dtcgText },
   });
 
   let labels = [];
@@ -252,6 +280,16 @@ async function protocolSmoke(serverPath) {
     params.uri === tokenUri && params.diagnostics.some((item) =>
       item.source === 'designlasagna-schema' && item.code === 'schema-manifest'));
   log('PASS protocol schema diagnostic proves packaged schemas/Ajv load');
+
+  await client.waitForNotification('textDocument/publishDiagnostics', (params) =>
+    params.uri === legacyUri && params.diagnostics.some((item) =>
+      item.source === 'designlasagna-schema' && item.code === 'schema-manifest'));
+  log('PASS protocol v0.3 token manifest is validated by the packaged v0.3 schema');
+
+  await client.waitForNotification('textDocument/publishDiagnostics', (params) =>
+    params.uri === dtcgUri && params.diagnostics.some((item) =>
+      item.source === 'designlasagna-schema' && item.code === 'schema-designlasagna-extension'));
+  log('PASS protocol DTCG document is validated by the packaged v0.4 extension/lifecycle schemas');
 
   client.notify('workspace/didChangeConfiguration', {
     settings: { dsLanguageServer: { diagnostics: { deprecated: 'error' } } },

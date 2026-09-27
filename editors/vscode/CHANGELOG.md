@@ -9,6 +9,7 @@ This changelog records VS Code-specific integration changes. Shared language-ser
 - Improve configuration and manifest change watching.
 - Replace the local schema dependency with the published package.
 - Update packaging tools to resolve reported security vulnerabilities.
+- Bundle the extension client into a single generated `client/extension.cjs`; the VSIX now ships only the generated entry points, docs, icon, and licenses — including generated third-party license notices for the bundled dependencies — plus the published schema package as the only external runtime dependency, instead of the full `node_modules` tree.
 - **Requires VS Code 1.90 or newer.**
 
 CEM and DTCG v0.4 lifecycle support remains opt-in; see the [setup guide](https://github.com/designlasagna/ds-language-server/blob/main/editors/vscode/README.md#lifecycle-profile).

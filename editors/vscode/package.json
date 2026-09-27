@@ -36,7 +36,7 @@
     "onLanguage:typescriptreact",
     "onStartupFinished"
   ],
-  "main": "./extension.js",
+  "main": "./client/extension.cjs",
   "contributes": {
     "configuration": {
       "title": "Design System Language Server",
@@ -131,11 +131,13 @@
     }
   },
   "scripts": {
-    "bundle-server": "esbuild ../../src/server.ts --bundle --outfile=server/server.js --format=cjs --platform=node --target=node20 --minify --define:import.meta.url=__filename --external:ajv --external:ajv-formats --external:jsonc-parser --external:@designlasagna/schemas",
+    "bundle-client": "esbuild extension.js --bundle --outfile=client/extension.cjs --format=cjs --platform=node --target=node20 --minify --external:vscode",
+    "bundle-server": "esbuild ../../src/server.ts --bundle --outfile=server/server.js --format=cjs --platform=node --target=node20 --minify --define:import.meta.url=__filename --external:@designlasagna/schemas --alias:jsonc-parser=jsonc-parser/lib/esm/main.js",
+    "generate:notices": "node scripts/generate-notices.mjs",
     "test:package": "node --test scripts/validate-package.test.mjs",
     "validate:package": "node scripts/validate-package.mjs",
     "smoke:vsix": "node scripts/smoke-vsix.mjs",
-    "package": "npm run bundle-server && npm run test:package && npm run validate:package && vsce package --pre-release --out design-system-language-server.vsix && npm run validate:package -- design-system-language-server.vsix"
+    "package": "npm run bundle-client && npm run bundle-server && npm run generate:notices && npm run test:package && npm run validate:package && vsce package --pre-release --out design-system-language-server.vsix && npm run validate:package -- design-system-language-server.vsix"
   },
   "dependencies": {
     "@designlasagna/schemas": "^0.4.0",
