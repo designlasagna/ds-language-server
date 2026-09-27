@@ -1,6 +1,6 @@
 # VS Code extension bundling plan
 
-Status: slices 1 and 2 implemented on the bundling branch (not yet merged or published).
+Status: slices 1 and 2 implemented and fast-forwarded locally into `release/vscode-0.2.0` with human approval (2026-09-27). Not pushed, tagged, or published.
 
 Slice 2 note: Ajv, ajv-formats, and jsonc-parser are fully bundled. jsonc-parser 3.3.1
 ships no `exports` map and its `main` is a UMD build whose internal
