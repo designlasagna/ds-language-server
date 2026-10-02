@@ -2,7 +2,7 @@
 
 This changelog records VS Code-specific integration changes. Shared language-server behavior is documented in the [server changelog](https://github.com/designlasagna/ds-language-server/blob/main/CHANGELOG.md).
 
-## [0.2.0] — planned, not yet published
+## [0.2.0] — 2026-10-02 (pre-release)
 
 - Bundle language server 0.2.0 with configurable recognition and v0.4 manifest support.
 - Preserve project configuration unless explicitly overridden in editor settings.

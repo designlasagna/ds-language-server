@@ -54,7 +54,7 @@ npm run smoke:vsix -- --skip-vscode
 
 ## Validate a local VSIX candidate (0.2.0)
 
-The 0.2.0 VSIX is a local release candidate, not a Marketplace release. Validate it in an isolated environment so your user settings and installed extensions stay untouched:
+Validate locally built VSIX files in an isolated environment so your user settings and installed extensions stay untouched. A local package does not establish Marketplace publication:
 
 1. Build the candidate:
 
@@ -83,7 +83,7 @@ The 0.2.0 VSIX is a local release candidate, not a Marketplace release. Validate
 
 ## Publishing
 
-Marketplace releases are pre-releases (preview channel) and use independent Semantic Versioning. The VS Code extension version in `editors/vscode/package.json` must match the `vscode-v<version>` release tag; it does not need to match the npm server version. The publisher (`DesignLasagna`) and extension ID (`design-system-language-server`) are stable across releases. No 0.2.0 release has been published yet. Pushing the `vscode-v0.2.0` tag triggers the release workflow, which publishes through the gated `vscode-marketplace` environment; the run can be blocked or fail, so a tag does not guarantee publication.
+Marketplace releases are pre-releases (preview channel) and use independent Semantic Versioning. The VS Code extension version in `editors/vscode/package.json` must match the `vscode-v<version>` release tag; it does not need to match the npm server version. The publisher (`DesignLasagna`) and extension ID (`design-system-language-server`) are stable across releases. Pushing the approved `vscode-v0.2.0` tag triggers the release workflow through the `vscode-marketplace` environment. Environment protection rules must be configured separately if required; do not assume a manual approval gate exists. The run can fail, so verify workflow success and the Marketplace-delivered version before claiming publication.
 
 1. Create a Visual Studio Marketplace publishing token for the `DesignLasagna` publisher.
 2. Add it as the `VSCE_PAT` secret in GitHub's `vscode-marketplace` environment.

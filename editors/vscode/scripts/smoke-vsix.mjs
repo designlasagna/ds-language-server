@@ -66,7 +66,13 @@ function writeFixture() {
         name: 'OldButton',
         tagName: 'old-button',
         customElement: true,
-        deprecated: { message: 'Use current-button.', removal: 'v2.0.0' },
+        description: 'Archived smoke component.',
+        deprecated: { message: 'Use current-button.', replacement: 'current-button', removal: 'v2.0.0' },
+        attributes: [{
+          name: 'tone',
+          enum: ['legacy', 'modern'],
+          deprecatedValues: [{ value: 'legacy', message: 'Use modern.', replacement: 'modern', removal: 'v2.0.0' }],
+        }],
       }],
     }],
   }, null, 2));
@@ -90,6 +96,7 @@ function writeFixture() {
     },
   }, null, 2));
   writeFileSync(path.join(workspace, 'test.html'), '<old-button></old-button>\n<');
+  writeFileSync(path.join(workspace, 'quick-fix.html'), '<old-button tone="legacy"></old-button>\n');
   writeFileSync(path.join(workspace, '.vscode', 'settings.json'), JSON.stringify({
     'dsLanguageServer.diagnostics': { deprecated: 'information' },
   }, null, 2));
@@ -225,10 +232,12 @@ async function protocolSmoke(serverPath) {
   const client = new LspClient(server);
   const rootUri = pathToFileURL(`${workspace}${path.sep}`).href;
   const htmlUri = pathToFileURL(path.join(workspace, 'test.html')).href;
+  const quickFixUri = pathToFileURL(path.join(workspace, 'quick-fix.html')).href;
   const tokenUri = pathToFileURL(path.join(workspace, 'tokens.json')).href;
   const legacyUri = pathToFileURL(path.join(workspace, 'legacy.tokens.json')).href;
   const dtcgUri = pathToFileURL(path.join(workspace, 'dtcg.tokens.json')).href;
   const htmlText = readFileSync(path.join(workspace, 'test.html'), 'utf8');
+  const quickFixText = readFileSync(path.join(workspace, 'quick-fix.html'), 'utf8');
   const tokenText = readFileSync(path.join(workspace, 'tokens.json'), 'utf8');
   const legacyText = readFileSync(path.join(workspace, 'legacy.tokens.json'), 'utf8');
   const dtcgText = readFileSync(path.join(workspace, 'dtcg.tokens.json'), 'utf8');
@@ -245,6 +254,9 @@ async function protocolSmoke(serverPath) {
   client.notify('initialized', {});
   client.notify('textDocument/didOpen', {
     textDocument: { uri: htmlUri, languageId: 'html', version: 1, text: htmlText },
+  });
+  client.notify('textDocument/didOpen', {
+    textDocument: { uri: quickFixUri, languageId: 'html', version: 1, text: quickFixText },
   });
   client.notify('textDocument/didOpen', {
     textDocument: { uri: tokenUri, languageId: 'json', version: 1, text: tokenText },
@@ -271,10 +283,35 @@ async function protocolSmoke(serverPath) {
   assert(labels.includes('OldButton'), `completion labels did not include OldButton: ${labels.join(', ')}`);
   log('PASS protocol completion includes fixture component OldButton');
 
+  const hover = await client.request('textDocument/hover', {
+    textDocument: { uri: htmlUri },
+    position: { line: 0, character: 2 },
+  });
+  assert.equal(hover?.contents?.kind, 'markdown');
+  assert.match(hover?.contents?.value ?? '', /### `\<old-button\>`/);
+  assert.match(hover.contents.value, /Archived smoke component\./);
+  assert.match(hover.contents.value, /\*\*Deprecated\*\*/);
+  assert.match(hover.contents.value, /\*\*Replacement:\*\* `current-button`/);
+  log('PASS protocol hover returns archived component and deprecation content');
+
   const lifecycle = await client.waitForNotification('textDocument/publishDiagnostics', (params) =>
     params.uri === htmlUri && params.diagnostics.some((item) =>
       item.data?.type === 'deprecated-component' && item.severity === 3));
   log('PASS protocol lifecycle diagnostic honors initializationOptions (Information)');
+
+  const quickFixDiagnostic = await client.waitForNotification('textDocument/publishDiagnostics', (params) =>
+    params.uri === quickFixUri && params.diagnostics.some((item) =>
+      item.data?.type === 'deprecated-value' && item.data?.replacement === 'modern'));
+  const diagnostic = quickFixDiagnostic.message.params.diagnostics.find((item) =>
+    item.data?.type === 'deprecated-value' && item.data?.replacement === 'modern');
+  const codeActions = await client.request('textDocument/codeAction', {
+    textDocument: { uri: quickFixUri },
+    range: diagnostic.range,
+    context: { diagnostics: [diagnostic] },
+  });
+  const quickFix = codeActions.find((action) => action.kind === 'quickfix' && action.title === 'Replace "legacy" with "modern"');
+  assert.deepEqual(quickFix?.edit?.changes?.[quickFixUri], [{ range: diagnostic.range, newText: 'modern' }]);
+  log('PASS protocol quick fix replaces only the safe deprecated attribute value');
 
   await client.waitForNotification('textDocument/publishDiagnostics', (params) =>
     params.uri === tokenUri && params.diagnostics.some((item) =>

@@ -4,7 +4,7 @@ Design-system IntelliSense for VS Code. The extension reads your Custom Elements
 
 ## Release status
 
-The 0.2.0 extension is a local release candidate and has not been published to the Visual Studio Marketplace. Pushing a matching `vscode-v<version>` tag triggers the release workflow, which publishes to the pre-release (preview) channel through a gated environment — a tag does not guarantee publication. See [SETUP.md](https://github.com/designlasagna/ds-language-server/blob/main/editors/vscode/SETUP.md#publishing).
+Version 0.2.0 targets the pre-release (preview) channel. Select the pre-release version when installing from the Visual Studio Marketplace. Pushing a matching `vscode-v<version>` tag triggers the release workflow through the `vscode-marketplace` environment; verify the workflow and Marketplace listing before claiming publication. See [SETUP.md](https://github.com/designlasagna/ds-language-server/blob/main/editors/vscode/SETUP.md#publishing).
 
 ## Features
 

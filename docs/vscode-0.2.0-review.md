@@ -1,59 +1,32 @@
-# VS Code 0.2.0 review handoff
+# VS Code 0.2.0 release handoff
 
-## Bundling candidate — 2026-09-27 (latest; local only)
+## Approved release validation — 2026-10-02
 
-Branch: `release/vscode-0.2.0`, locally fast-forwarded to `c462677` from `feat/vscode-bundling` with human approval (2026-09-27). Nothing pushed, tagged, or published. The previous candidate results below describe the pre-bundling baseline, not this artifact.
+Magnus approved integrating and publishing VS Code 0.2.0 to the **pre-release** channel, with manual visual/platform limitations disclosed. Changelog dated 2026-10-02; packaged release-status text updated. Manager reran clean root and extension installs, 274 server tests, build, 7 packaging tests, full extension audit (0), and actual isolated VSIX protocol/extension-host checks on VS Code 1.90.2 and 1.138.0; all passed, including hover and applied Quick Fix. Updated VSIX SHA-256: `f4530cfcfc1fd147efaab94f80642781b440e92d292a2436c09bb4647be89b4c`. The workflow rebuilds and validates from the approved tag; ZIP metadata can change archive hashes without changing payloads. Marketplace verification remains a post-publication gate. No npm server or Zed release authorized.
 
-- Editable `extension.js` now builds to `client/extension.cjs`, the manifest entry point; the server build also bundles Ajv, ajv-formats and jsonc-parser. Only `@designlasagna/schemas` remains external. The JSON schema package's six loaded documents and license are retained; its other files, Ajv TypeScript sources and the entire client dependency tree are excluded. A generated third-party notices file covers all production dependencies, including bundled code.
-- Packaging guards derive the server's external closure from build flags and lockfile, reject missing bundles, stray archive files/TypeScript sources, stale notices, local dependencies and symlinks; 7/7 regression tests pass. The `jsonc-parser` ESM-entry alias avoids unresolved internal UMD requires. Shared source statically imports Ajv/ajv-formats while loading external schema JSON with `createRequire`; the published npm server's Node >=20.0 floor and Node16 tsconfig remain unchanged.
-- Clean `npm ci` in root and extension, root `npm test` (274/274), `npm run build`, `node scripts/check-publishable.mjs`, full extension `npm audit` (0 findings), and `npm run package` all passed. Isolated VSIX protocol **and actual VS Code extension-host** smoke passed: activation, completion, v0.3/v0.4/DTCG schema diagnostics, initial settings and reload. An npm tarball was installed into a disposable consumer outside the repository and its compiled `dist/schema-validation.js` loaded and validated v0.3/v0.4/DTCG fixtures. `git diff --check` passed. No normal editor profile was modified.
-- Before (baseline rebuilt from `release/vscode-0.2.0` with clean installs): **515 files, 299 JS files, 2,424,599 unpacked bytes, 728,907 archive bytes**. After: **18 files, 2 JS/CJS files, 900,766 unpacked bytes, 235,828 archive bytes**. File count/size only; activation speed was not benchmarked. VSIX SHA-256: `04d3577c2ff7c4145939b27ca43f9d0d54261be27057865a5dc5d1b8a3692d96` (`editors/vscode/design-system-language-server.vsix`, ignored output). Packaged metadata reports 0.2.0, `./client/extension.cjs`, and `^1.90.0`; docs links remain repository URLs. VSCE reported no packaging warnings requiring suppression.
-- Zed compatibility follow-up: Zed 1.18.1 on this machine chooses **system Node 25.1.0 from PATH**, not a fixed bundled Node (confirmed in its own `[node_runtime]` log). The final isolated npm tarball's `dist/schema-validation.js` loads and validates v0.4 manifest/DTCG fixtures under **Node 20.0.0**, with no import-attribute requirement. A disposable Zed profile loaded the local wrapper and launched its LSP using Node 25; its first run auto-installed the **already-published npm 0.2.0** (old `createRequire` build), which logged server startup. On a follow-up isolated Zed 1.18.1 session, the locally installed tarball's `dist/server.js` matched the tarball SHA-256; a temporary probe placed **only in the disposable install** recorded Zed's `initialize`, the server's capability response, `didOpen`, a `textDocument/completion` request for the fixture `<`, and a response containing `OldButton`. Thus local-tarball initialization and completion are **verified**. The original server file was restored and the disposable editor stopped. With Node 20.0 placed first on `PATH` for another disposable session, Zed rejected it (`want: 22.0.0, got: 20.0.0`), downloaded its own Node **24.11.0** into the disposable profile, and launched the local server with that Node. Zed's runtime choice therefore prefers a sufficiently new PATH Node and falls back to managed Node when the PATH Node is too old; the npm package's >=20.0 floor was separately verified at 20.0. The normal Zed profile was not modified, and nothing was published. Since npm 0.2.0 is already published, distributing the changed shared server later requires a separately approved **new npm-server version** (not a republish of 0.2.0); no version change was made here.
-- Review correction: reverted the unnecessary Node 20.10 floor and updated the final VSIX after re-running root build/tests, npm-tarball Node 20.0 smoke, extension packaging/protocol and actual disposable VS Code extension-host smoke (all passed). `^1.90.0` was already declared on `release/vscode-0.2.0`, not introduced by this branch. The release workflow builds from the tag; before any tag, verify that its commit contains the notices generator and packaging policy, and rebuild the artifact from that commit.
-- Commit validation (2026-09-27): clean archive checkout of `4550660`, fresh root/editor `npm ci`, 274/274 tests, root build, publishability guard, full editor audit (0 findings), `npm run package`, isolated protocol and real extension-host smoke all passed. Rebuilt VSIX has **the same 18 paths and byte-for-byte identical file payloads** as the candidate above; ZIP-level SHA differs due to archive metadata/timestamps. A downloaded VS Code **1.90.2** was run only from `/tmp` with disposable user-data and extensions directories: activation, completion, packaged schema diagnostics and settings reload all passed. Existing VS Code 1.138 smoke also passed. No normal editor profile was modified.
-- Release-readiness audit (read-only, 2026-09-27): `.github/workflows/publish-vscode-extension.yml` triggers **only on pushed `vscode-v*` tags**, verifies the manifest version against the tag, rebuilds the server/VSIX on Node 24, runs isolated protocol smoke, and publishes the **validated archive** as a pre-release. No tag/push occurred, so no release workflow or Marketplace action ran. The `vscode-marketplace` environment's PAT/approval state cannot be established from local tests; verify before any authorized release. The separate npm workflow triggers only on `dsls-v*`, and npm 0.2.0 is already published, so any future shared-server release needs its own human-approved new version (suggested patch 0.2.1) and tag. This audit made no release automation changes.
-- Remaining before any VS Code release: manual visual/platform checks and explicit approval to push/tag/publish. No installation into the normal editor profile or publication was performed.
+The earlier local evidence below is historical; its uncommitted-state and artifact hash describe the earlier validation, not the final release.
 
+## Earlier isolated validation — 2026-10-01
 
-Branch: `release/vscode-0.2.0`. Local candidate only; nothing published, tagged, pushed, or merged.
+Candidate base: `c76200220729712d64457a12087db8c0c2b4d822` plus the uncommitted harness/documentation delta on `feat/vscode-release-final-checks`. This is **local validation**, not committed release provenance: no commit, merge, push, tag, publication, Marketplace download, or normal-profile installation occurred.
 
-## Changes
+Artifact: `editors/vscode/design-system-language-server.vsix` (local ignored output), SHA-256 `1be2a0da658b166745b62732f05402064b445475fc37b33be5d64ee6c7e07090`.
 
-- Extension 0.2.0 bundles current server source; replaces local schemas dependency with published `^0.4.0` and registry lockfile.
-- Packaging tools upgraded to `@vscode/vsce` `^4.0.0` and esbuild `^0.28.2`; the full extension dependency audit is now clean.
-- Packaging/building requires Node 22+, while runtime compatibility is unchanged: VS Code `^1.90.0` with the bundled server targeting Node 20. Extension/server versions remain independent.
-- Packaging guards reject local/linked dependencies and verify required server/schema/runtime files, with three regression tests.
-- Release workflow smoke-tests and publishes the exact validated pre-release VSIX rather than repackaging.
-- Added isolated protocol and real VS Code extension-host smoke harnesses. Normal user settings/extensions are untouched.
-- Updated candidate documentation, lifecycle caveats, installation instructions and packaged repository links.
+- Fresh root `npm ci`, `npm test` (**274/274**), `npm run build`, and `npm run check:publishable` passed.
+- Fresh `editors/vscode` `npm ci`, `npm run package` (including **7/7** package-policy tests and archive validation), and full `npm audit` (**0 vulnerabilities**) passed. The rebuilt candidate has 18 files.
+- The current rebuilt VSIX passed the disposable protocol and extension-host smoke in installed VS Code **1.138.0** (`7debcd0e2acdea1c52de81bf9ee1620444407dda`). The run used harness-created `/tmp` user-data, extension, workspace, and extraction directories and installed only the VSIX.
+- That run requests hover through the packaged server and VS Code's `vscode.executeHoverProvider`, then asserts the component, description, deprecation, and replacement content. It also awaits a disposable deprecated attribute-value diagnostic, requests `vscode.executeCodeActionProvider`, asserts the `quickfix` edit is exactly `legacy` → `modern`, applies its `WorkspaceEdit`, and asserts the disposable document changes. The protocol smoke independently asserts the corresponding LSP hover and code-action payloads.
+- A single bounded retry with downloaded VS Code **1.90.2** (`5437499feb04f7a586f677b155b039bc2b3669eb`) passed all isolated protocol and extension-host assertions, including the current hover and Quick Fix assertions. It used the distribution's CLI launcher for install/list (`CODE_BINARY=/tmp/dsls-release-validation-c762002-20261001T221023Z/vscode-1.90.2/bin/code`) and its Electron executable for the extension host (`CODE_HOST_BINARY=/tmp/dsls-release-validation-c762002-20261001T221023Z/vscode-1.90.2/code`), with no existing process from that distribution and low system load before launch. Log: `/tmp/dsls-release-validation-c762002-20261001T221023Z/vscode-1.90.2-smoke-retry.log`.
+- Root `npm audit` reports **5 pre-existing dev-only advisories** (3 moderate, 1 high, 1 critical) through Vitest/Vite. They are not shipped in the VSIX; no broad dependency upgrade was made in this focused validation.
 
-## Final validation — 2026-09-26
+## Release gates and limitations
 
-- `npm test`: **274/274 passed** across 19 files.
-- `npm run build`: passed.
-- `cd editors/vscode && npm ci && npm run package`: passed, including **3/3 packaging tests** and archive validation.
-- `npm run smoke:vsix`: passed against the final archive in VS Code **1.138.0**. Verified isolated installation/activation, component completion, packaged schema diagnostics, initial explicit settings and severity reload. Protocol checks also verify clean shutdown.
-- `git diff --check`: passed. Inspected packaged README/changelog for malformed repository links: none.
-- Full `cd editors/vscode && npm audit`: **0 vulnerabilities** (0 low, 0 moderate, 0 high, 0 critical).
-- Inspected the packaged manifest and contents after the vsce major upgrade: identity/version, VS Code `^1.90.0` engine, runtime dependencies, entry point, 515-file payload, and packaged documentation links remain intact; no packaging-tool modules are shipped.
+This is functional provider evidence, **not visual acceptance**: hover or Quick Fix rendering/menu presentation was not manually accepted. Manual isolated VS Code rendering, additional platform coverage, multi-root workflow checks, and Marketplace installation/download remain unverified in this local record. Approval to tag/push/publish was granted on 2026-10-02.
 
-Artifact: `editors/vscode/design-system-language-server.vsix` (ignored build output; 515 files, 729,577 bytes / approximately 712 KiB).
+The release workflow is **pre-release only**: its `vscode-v*` tag path packages and publishes with `--pre-release`; it has no stable-publication path. Manager rechecked GitHub directly: environment secret **`VSCE_PAT`** exists in **`vscode-marketplace`** (updated 2026-08-31); the earlier absence report was incorrect. Credential presence does not establish authentication validity. Magnus approved the 0.2.0 pre-release integration/tag/publication on 2026-10-02 with manual visual checks outstanding. The workflow must succeed and the Marketplace-delivered artifact must be verified before delivery is complete.
 
-SHA-256: `5edc15a0dbea32e2943192184c1a8127873479f18724278730fbd3a90c51a022`
+The final approved commit must be built and smoke-tested by the release workflow before publication. Record its tag/workflow and the Marketplace verification in the release task; local artifacts alone are not delivery evidence.
 
-Reproduce from repository root:
+## Historical evidence (not current claims)
 
-```sh
-npm ci && npm test && npm run build
-cd editors/vscode
-npm ci && npm run package
-npm run smoke:vsix                 # isolated desktop test; requires VS Code
-npm run smoke:vsix -- --skip-vscode # protocol-only, also used in CI
-```
-
-## Review / release gates
-
-- Review minimum VS Code version and candidate docs. The minimum 1.90 host was not directly smoke-tested; the installed 1.138 host was.
-- Manual visual hover/quick-fix checks and broader platform/multi-root workflows are not covered by the focused smoke suite.
-- Human approval is required before publishing. After publication, verify the actual Marketplace download and then update website release claims. Current Marketplace 0.1.4 is not changed by this local candidate.
-- Candidate-status wording in release docs should be updated when publication is approved; website changes were deliberately left untouched.
+Earlier local validation and bundling notes, including prior hashes, baseline size comparisons, Zed experiments, and 2026-09-27 release-workflow observations, described earlier artifacts and runs. They are intentionally not evidence for this worktree's rebuilt VSIX; the current evidence is the 2026-10-01 section above.

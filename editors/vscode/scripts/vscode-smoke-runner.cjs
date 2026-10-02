@@ -30,6 +30,15 @@ function lifecycleDiagnostic(items, severity) {
       && /deprecated/i.test(item.message));
 }
 
+function hoverText(hover) {
+  return hover.contents.map((content) =>
+    typeof content === 'string' ? content : content.value).join('\n');
+}
+
+function isQuickFix(action) {
+  return (action.kind?.value ?? action.kind) === vscode.CodeActionKind.QuickFix.value;
+}
+
 async function run() {
   const extensionsDir = path.resolve(process.env.DSLS_SMOKE_EXTENSIONS_DIR);
   const repositoryRoot = path.resolve(process.env.DSLS_SMOKE_REPOSITORY_ROOT);
@@ -62,6 +71,21 @@ async function run() {
   assert(completion.items.some((item) => item.label === 'OldButton'));
   log('PASS archived extension client/server returns fixture component completion OldButton');
 
+  const hovers = await waitFor(
+    'archived component hover',
+    () => vscode.commands.executeCommand(
+      'vscode.executeHoverProvider',
+      htmlUri,
+      new vscode.Position(0, 2),
+    ),
+    (result) => result?.some((hover) => /### `<old-button>`/.test(hoverText(hover))),
+  );
+  const hover = hovers.find((item) => /### `<old-button>`/.test(hoverText(item)));
+  assert.match(hoverText(hover), /Archived smoke component\./);
+  assert.match(hoverText(hover), /\*\*Deprecated\*\*/);
+  assert.match(hoverText(hover), /\*\*Replacement:\*\* `current-button`/);
+  log('PASS archived extension host returns component hover and deprecation content');
+
   const initialDiagnostics = await waitFor(
     'Information lifecycle diagnostic from workspace setting',
     () => Promise.resolve(vscode.languages.getDiagnostics(htmlUri)),
@@ -69,6 +93,37 @@ async function run() {
   );
   assert(lifecycleDiagnostic(initialDiagnostics, vscode.DiagnosticSeverity.Information));
   log('PASS workspace setting was forwarded at activation (Information diagnostic overrides file off)');
+
+  const quickFixUri = vscode.Uri.joinPath(workspaceFolder.uri, 'quick-fix.html');
+  const quickFixDocument = await vscode.workspace.openTextDocument(quickFixUri);
+  const quickFixDiagnostics = await waitFor(
+    'safe deprecated attribute-value diagnostic',
+    () => Promise.resolve(vscode.languages.getDiagnostics(quickFixUri)),
+    (items) => items.some((item) => item.source === 'ds-language-server' && /tone="legacy"/.test(item.message)),
+  );
+  const quickFixDiagnostic = quickFixDiagnostics.find((item) =>
+    item.source === 'ds-language-server' && /tone="legacy"/.test(item.message));
+  const codeActions = await waitFor(
+    'safe deprecated attribute-value quick fix',
+    () => vscode.commands.executeCommand(
+      'vscode.executeCodeActionProvider',
+      quickFixUri,
+      quickFixDiagnostic.range,
+      vscode.CodeActionKind.QuickFix.value,
+    ),
+    (result) => result?.some((action) => isQuickFix(action)
+      && action.title === 'Replace "legacy" with "modern"' && action.edit),
+  );
+  const quickFix = codeActions.find((action) => isQuickFix(action)
+    && action.title === 'Replace "legacy" with "modern"' && action.edit);
+  const edits = quickFix.edit.get(quickFixUri);
+  assert.deepEqual(edits.map((edit) => ({ range: edit.range, newText: edit.newText })), [{
+    range: quickFixDiagnostic.range,
+    newText: 'modern',
+  }]);
+  assert.equal(await vscode.workspace.applyEdit(quickFix.edit), true);
+  assert.equal(quickFixDocument.getText(), '<old-button tone="modern"></old-button>\n');
+  log('PASS archived extension host requested and applied safe attribute-value quick fix');
 
   await vscode.workspace.openTextDocument(tokenUri);
   const schemaDiagnostics = await waitFor(
