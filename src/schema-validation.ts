@@ -2,20 +2,24 @@ import type { ErrorObject, ValidateFunction } from 'ajv';
 import { createRequire } from 'node:module';
 import { detectTokenDocumentFormat, type TokenDocumentFormat } from './token-document.js';
 
-const require = createRequire(import.meta.url);
-const Ajv = require('ajv') as typeof import('ajv').default;
-const addFormats = require('ajv-formats') as typeof import('ajv-formats').default;
+// ajv and ajv-formats are CommonJS packages whose runtime module.exports is
+// the class/function itself (set in their build footer); Node and the
+// esbuild/Vitest interop layers expose it as the ESM `default` export. The
+// assertions bridge TypeScript's CJS namespace typing to that runtime shape.
+import * as AjvModule from 'ajv';
+import * as AjvFormatsModule from 'ajv-formats';
+const Ajv = AjvModule.default as unknown as typeof import('ajv').default;
+const addFormats = AjvFormatsModule.default as unknown as typeof import('ajv-formats').default;
 
+// Schemas remain external to the VSIX bundle. Keep their JSON loading on
+// createRequire so the separately published ESM server supports Node 20.0+.
+const require = createRequire(import.meta.url);
 const manifestSchema = require('@designlasagna/schemas/v0.3/tokens.json') as object;
 const manifestV04Schema = require('@designlasagna/schemas/v0.4/tokens.json') as object;
 const lifecycleSchema = require('@designlasagna/schemas/v0.4/lifecycle.json') as object;
 const dtcgSchema = require('@designlasagna/schemas/dtcg/2025.10/format.json') as object;
-const extensionSchema = require('@designlasagna/schemas/v0.3/dtcg-extensions.json') as {
-  $id: string;
-};
-const extensionV04Schema = require('@designlasagna/schemas/v0.4/dtcg-extensions.json') as {
-  $id: string;
-};
+const extensionSchema = require('@designlasagna/schemas/v0.3/dtcg-extensions.json') as { $id: string };
+const extensionV04Schema = require('@designlasagna/schemas/v0.4/dtcg-extensions.json') as { $id: string };
 const extensionNamespace = 'recipes.designlasagna';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
