@@ -3,7 +3,7 @@ import { lifecycleFields, normalizeLifecycle, type NormalizedLifecycle } from '.
 
 interface TokenEntry {
   id?: string; path?: string[]; group?: string; category?: string; type?: string;
-  description?: string; resolved?: Record<string, string>; cssVariable?: string;
+  description?: string; resolved?: Record<string, unknown>; cssVariable?: string;
   platforms?: { web?: { reference?: string } };
   status?: string; deprecated?: unknown; deprecationMessage?: string; removal?: string; replacement?: string;
 }
@@ -31,9 +31,44 @@ function parseTokenEntry(entry: TokenEntry, source: string, v04: boolean): DSTok
   const lifecycle = v04
     ? normalizeLifecycle(entry.deprecated, entry.status)
     : legacyLifecycle(entry.deprecated, entry.status, entry.deprecationMessage, entry.removal, entry.replacement);
-  const value = entry.resolved?.base ?? entry.resolved?.light ?? (entry.resolved ? Object.values(entry.resolved)[0] : undefined);
+  const resolved = displayResolved(entry.resolved);
+  const value = resolved?.base ?? resolved?.light ?? (resolved ? Object.values(resolved)[0] : undefined);
   return { id: entry.id, name, description: entry.description, group: entry.group, category: entry.category, type: entry.type,
-    resolved: entry.resolved, value, ...lifecycleFields(lifecycle), source };
+    resolved, value, ...lifecycleFields(lifecycle), source };
+}
+
+/** Resolved values as display text; values that cannot be shown are dropped. */
+function displayResolved(resolved: Record<string, unknown> | undefined): Record<string, string> | undefined {
+  if (!isRecord(resolved)) return undefined;
+  const out: Record<string, string> = {};
+  for (const [mode, value] of Object.entries(resolved)) {
+    const text = displayValue(value);
+    if (text !== undefined) out[mode] = text;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/**
+ * One line of text for a resolved manifest value. v0.4 allows strings,
+ * numbers, composite objects (typography, single shadow, border) and string
+ * arrays (multi-layer shadows, gradient stops).
+ */
+export function displayValue(value: unknown, nested = false): string | undefined {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    const items = value.map(item => displayValue(item, true));
+    return items.length && items.every(item => item !== undefined) ? items.join(', ') : undefined;
+  }
+  if (isRecord(value)) {
+    const fields = Object.entries(value).flatMap(([key, field]) => {
+      const text = displayValue(field, true);
+      return text === undefined ? [] : [`${key}: ${text}`];
+    });
+    if (!fields.length) return undefined;
+    return nested ? `{ ${fields.join('; ')} }` : fields.join('; ');
+  }
+  return undefined;
 }
 
 function legacyLifecycle(deprecated: unknown, status: unknown, message?: string, removal?: string, replacement?: string): NormalizedLifecycle {

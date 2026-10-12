@@ -4,6 +4,12 @@ Notable changes to the npm server package, [`@designlasagna/ds-language-server`]
 
 The server, VS Code extension, and Zed extension are independently versioned. Editor changelogs identify the server version they bundle or install when that matters.
 
+## [Unreleased]
+
+### Fixed
+
+- Hovers and completions show composite token values (border, typography, single shadow) and layered values (multi-layer shadows, gradient stops) as readable text instead of `[object Object]`.
+
 ## [0.2.0]
 
 ### Added
