@@ -10,6 +10,10 @@ The server, VS Code extension, and Zed extension are independently versioned. Ed
 
 - Hovers and completions show composite token values (border, typography, single shadow) and layered values (multi-layer shadows, gradient stops) as readable text instead of `[object Object]`.
 
+### Changed
+
+- Requires `@designlasagna/schemas` 0.4.4, so v0.4 manifests with string-array `resolved` values validate.
+
 ## [0.2.0]
 
 ### Added
