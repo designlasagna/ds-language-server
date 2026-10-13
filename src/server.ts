@@ -21,6 +21,7 @@ import { getCompletions } from './providers/completion.js';
 import { getHover } from './providers/hover.js';
 import { getDiagnostics } from './providers/diagnostics.js';
 import { getSchemaDiagnostics } from './providers/schema-diagnostics.js';
+import { getManifestWarnings } from './providers/manifest-warnings.js';
 import { getCodeActions } from './providers/code-actions.js';
 import { URI } from 'vscode-uri';
 import type { DSConfig } from './types.js';
@@ -46,6 +47,7 @@ let reloadGeneration = 0;
 let settingsFetchGeneration = 0;
 let shuttingDown = false;
 let tokenDocumentUris = new Set<string>();
+let utilityDocumentUris = new Set<string>();
 const validationTimers = new Map<string, ReturnType<typeof setTimeout>>();
 let watchManager: WatchManager | undefined;
 let configurationRegistration: { dispose(): void } | undefined;
@@ -153,6 +155,7 @@ async function reloadConfiguration(): Promise<void> {
 
   const result = discover(workspaceRoot, config);
   tokenDocumentUris = new Set(result.sources.tokens.map((source) => URI.file(source.path).toString()));
+  utilityDocumentUris = new Set(result.sources.utilities.map((source) => URI.file(source.path).toString()));
   store.load(result.sources, config);
   manifestsLoaded = true;
 
@@ -199,6 +202,7 @@ function validateDocument(document: TextDocument): void {
   const diagnostics = [
     ...getDiagnostics(document, store, config),
     ...(tokenDocumentUris.has(document.uri) ? getSchemaDiagnostics(document, config?.lifecycle?.profile) : []),
+    ...(utilityDocumentUris.has(document.uri) ? getManifestWarnings(document, 'utilities') : []),
   ];
   console.error(`[ds-ls] Validated ${document.uri}: ${diagnostics.length} diagnostics`);
   connection.sendDiagnostics({

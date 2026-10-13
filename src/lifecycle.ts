@@ -72,13 +72,30 @@ export function lifecycleFields(value: NormalizedLifecycle): Pick<LifecycleInfo,
 
 /** Returns calendar-day distance only for a real YYYY-MM-DD UTC date. */
 export function daysUntilRemoval(removal: string | undefined, now = new Date()): number | undefined {
-  if (!removal || !/^\d{4}-\d{2}-\d{2}$/.test(removal)) return undefined;
-  const [year, month, day] = removal.split('-').map(Number);
+  const timestamp = parseIsoDate(removal);
+  if (timestamp === undefined) return undefined;
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Math.round((timestamp - today) / DAY_MS);
+}
+
+/** UTC timestamp of a real YYYY-MM-DD calendar date; rejects impossible dates such as 2026-02-30. */
+function parseIsoDate(value: string | undefined): number | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const [year, month, day] = value.split('-').map(Number);
   const timestamp = Date.UTC(year, month - 1, day);
   const parsed = new Date(timestamp);
   if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) return undefined;
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return Math.round((timestamp - today) / DAY_MS);
+  return timestamp;
+}
+
+const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
+
+/** True for a real date, SemVer, `YYYY-Qn` or the legacy `Qn-YYYY` removal target. */
+export function isRecognisedRemoval(removal: string): boolean {
+  return parseIsoDate(removal) !== undefined
+    || SEMVER.test(removal)
+    || /^\d{4}-Q[1-4]$/.test(removal)
+    || /^Q[1-4]-\d{4}$/.test(removal);
 }
 
 export function formatRemovalDate(removal: string | undefined): string | undefined {

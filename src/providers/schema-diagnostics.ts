@@ -13,6 +13,8 @@ import {
   type Node as JsonNode,
 } from 'jsonc-parser';
 import { validateTokenDocument } from '../schema-validation.js';
+import { detectTokenDocumentFormat } from '../token-document.js';
+import { collectManifestWarnings } from './manifest-warnings.js';
 
 const SOURCE = 'designlasagna-schema';
 
@@ -46,13 +48,18 @@ export function getSchemaDiagnostics(document: TextDocument, lifecycleProfile?: 
     }];
   }
 
-  return validateTokenDocument(value, lifecycleProfile).map((error) => ({
+  const errors: Diagnostic[] = validateTokenDocument(value, lifecycleProfile).map((error) => ({
     range: schemaErrorRange(document, root, error.instancePath, error.keyword, error.params),
     severity: DiagnosticSeverity.Error,
     source: SOURCE,
     code: `schema-${error.schema}`,
     message: formatSchemaError(error.keyword, error.message, error.params),
   }));
+  // Open-schema policy: unknown fields and likely mistakes are warnings only.
+  const warnings = detectTokenDocumentFormat(value) === 'manifest'
+    ? collectManifestWarnings(document, root, value, 'tokens')
+    : [];
+  return [...errors, ...warnings];
 }
 
 function schemaErrorRange(

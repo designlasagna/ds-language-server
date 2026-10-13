@@ -6,13 +6,17 @@ The server, VS Code extension, and Zed extension are independently versioned. Ed
 
 ## [Unreleased]
 
+### Added
+
+- Warnings, never errors, for likely mistakes in native v0.4 token and utility manifests: unknown fields (with a "did you mean" suggestion when a known field is close), an unrecognised `removal` format, utility variant kinds missing from `variantPatterns`, and suspicious values (an empty `wcagContrast` map, an empty utility platform entry). Known fields come from the installed `@designlasagna/schemas`; `metadata`, platform keys and mode/collection/condition maps are never flagged. Utility manifests now report diagnostics too.
+
 ### Fixed
 
 - Hovers and completions show composite token values (border, typography, single shadow) and layered values (multi-layer shadows, gradient stops) as readable text instead of `[object Object]`.
 
 ### Changed
 
-- Requires `@designlasagna/schemas` 0.4.4, so v0.4 manifests with string-array `resolved` values validate.
+- Requires `@designlasagna/schemas` 0.4.5, so v0.4 manifests with string-array `resolved` values and custom utility variant kinds validate.
 
 ## [0.2.0]
 
