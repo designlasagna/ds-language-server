@@ -8,15 +8,15 @@ The server, VS Code extension, and Zed extension are independently versioned. Ed
 
 ### Added
 
-- The server log lists fields the language server doesn't use, one `[manifest]` line per v0.4 token or utility manifest when manifests load, including manifests in `node_modules`. For example: `[manifest] path/tokens.json: fields not used by the language server: tokens["color.bg"].foo`. This helps when something in a manifest seems to have no effect. Unknown fields are allowed by the schemas, so they are never reported as problems or changed. `metadata`, platform keys and mode, collection and condition maps are not listed.
+- The server log lists manifest fields the language server doesn't use.
 
 ### Fixed
 
-- Hovers and completions show composite token values (border, typography, single shadow) and layered values (multi-layer shadows, gradient stops) as readable text instead of `[object Object]`.
+- Composite and layered token values show as text instead of `[object Object]`.
 
 ### Changed
 
-- Requires `@designlasagna/schemas` 0.4.6. v0.4 manifests with layered `resolved` values, custom utility variant kinds and extra fields on platform mappings no longer get schema errors.
+- Requires `@designlasagna/schemas` 0.4.6.
 
 ## [0.2.0] — 2026-09-24
 

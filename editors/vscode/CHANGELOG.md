@@ -5,9 +5,9 @@ This changelog records VS Code-specific integration changes. Shared language-ser
 ## [0.2.1] — 2026-10-15 (pre-release)
 
 - Bundle language server 0.2.1.
-- Show composite and layered token values as readable text instead of `[object Object]`.
-- List fields the server doesn't use in v0.4 token and utility manifests in the extension's Output panel, one `[manifest]` line per manifest when manifests load. They are never reported as problems.
-- Requires `@designlasagna/schemas` 0.4.6, so layered values, custom utility variant kinds and extra fields on platform mappings no longer get schema errors.
+- Show composite and layered token values as text instead of `[object Object]`.
+- List manifest fields the server doesn't use in the Output panel.
+- Requires `@designlasagna/schemas` 0.4.6.
 
 ## [0.2.0] — 2026-10-02 (pre-release)
 
