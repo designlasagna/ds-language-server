@@ -26,6 +26,8 @@ node_modules/
 !node_modules/@designlasagna/schemas/v0.4/tokens.json
 !node_modules/@designlasagna/schemas/v0.4/lifecycle.json
 !node_modules/@designlasagna/schemas/v0.4/dtcg-extensions.json
+!node_modules/@designlasagna/schemas/v0.4/utilities.json
+!node_modules/@designlasagna/schemas/v0.4/icons.json
 !node_modules/@designlasagna/schemas/dtcg/2025.10/format.json
 
 # Editable client source, tooling, and docs that are never shipped.

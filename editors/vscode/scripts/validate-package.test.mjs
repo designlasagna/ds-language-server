@@ -196,3 +196,19 @@ test('derives the shipped closure for notices from the lockfile and renders it d
   assert(renderedDuplicate.includes('## dep 1.0.0 — MIT (node_modules/dep)'));
   assert(renderedDuplicate.includes('## dep 2.0.0 — MIT (node_modules/other/node_modules/dep)'));
 });
+
+test('every schema file the server source loads is shipped', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const { REQUIRED_SCHEMAS } = await import('./validate-package.mjs');
+  const srcRoot = new URL('../../../src/', import.meta.url).pathname;
+  const files = readdirSync(srcRoot, { recursive: true }).filter((f) => f.endsWith('.ts'));
+  const loaded = new Set();
+  for (const file of files) {
+    for (const [match] of readFileSync(join(srcRoot, file), 'utf8').matchAll(/@designlasagna\/schemas\/[\w./-]+\.json/g)) {
+      loaded.add(`node_modules/${match}`);
+    }
+  }
+  assert.ok(loaded.size > 0);
+  for (const schema of loaded) assert.ok(REQUIRED_SCHEMAS.includes(schema), `${schema} is loaded by the server but not shipped`);
+});

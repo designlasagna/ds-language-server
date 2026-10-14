@@ -6,7 +6,7 @@ Every production dependency of this extension ships inside the archive: either
 compiled into `client/extension.cjs` / `server/server.js` or installed as an external
 runtime package. The retained license notice for each one follows.
 
-## @designlasagna/schemas 0.4.0 — MIT
+## @designlasagna/schemas 0.4.6 — MIT
 
 ```
 MIT License

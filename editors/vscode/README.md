@@ -4,7 +4,7 @@ Design-system IntelliSense for VS Code. The extension reads your Custom Elements
 
 ## Release status
 
-Version 0.2.0 targets the pre-release (preview) channel. Select the pre-release version when installing from the Visual Studio Marketplace. Pushing a matching `vscode-v<version>` tag triggers the release workflow through the `vscode-marketplace` environment; verify the workflow and Marketplace listing before claiming publication. See [SETUP.md](https://github.com/designlasagna/ds-language-server/blob/main/editors/vscode/SETUP.md#publishing).
+Version 0.2.1 targets the pre-release (preview) channel. Select the pre-release version when installing from the Visual Studio Marketplace. Pushing a matching `vscode-v<version>` tag triggers the release workflow through the `vscode-marketplace` environment; verify the workflow and Marketplace listing before claiming publication. See [SETUP.md](https://github.com/designlasagna/ds-language-server/blob/main/editors/vscode/SETUP.md#publishing).
 
 ## Features
 
@@ -50,7 +50,7 @@ Rebuild the bundled server when testing source changes. Live VS Code reload veri
 
 ## Lifecycle profile
 
-The bundled 0.2.0 server keeps the legacy lifecycle adapter as the default. To opt CEM and DTCG sources into the v0.4 lifecycle contract, set it explicitly in `ds.config.*`:
+The bundled server keeps the legacy lifecycle adapter as the default. To opt CEM and DTCG sources into the v0.4 lifecycle contract, set it explicitly in `ds.config.*`:
 
 ```json
 { "lifecycle": { "profile": "0.4" } }

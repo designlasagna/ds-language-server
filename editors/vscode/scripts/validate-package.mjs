@@ -24,13 +24,15 @@ const LOCAL_SPEC = /^(?:file|link|workspace):|^(?:\.{1,2}[\\/]|~[\\/]|[\\/])|^[A
 /** Generated entry points. The client bundle is built from extension.js. */
 export const GENERATED_ENTRY_POINTS = ['client/extension.cjs', 'server/server.js'];
 
-/** The six schema documents the server loads directly, including the lifecycle schema the v0.4 documents $ref. */
+/** The schema documents the server loads directly, including the lifecycle schema the v0.4 documents $ref. */
 export const REQUIRED_SCHEMAS = [
   'node_modules/@designlasagna/schemas/v0.3/tokens.json',
   'node_modules/@designlasagna/schemas/v0.3/dtcg-extensions.json',
   'node_modules/@designlasagna/schemas/v0.4/lifecycle.json',
   'node_modules/@designlasagna/schemas/v0.4/tokens.json',
   'node_modules/@designlasagna/schemas/v0.4/dtcg-extensions.json',
+  'node_modules/@designlasagna/schemas/v0.4/utilities.json',
+  'node_modules/@designlasagna/schemas/v0.4/icons.json',
   'node_modules/@designlasagna/schemas/dtcg/2025.10/format.json',
 ];
 
