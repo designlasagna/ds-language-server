@@ -2,7 +2,7 @@
   "name": "design-system-language-server",
   "displayName": "Design Lasagna: Design System Language Server",
   "description": "Design-system IntelliSense, token schema diagnostics, and lifecycle-aware deprecation guidance.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "DesignLasagna",
   "license": "MIT",
   "icon": "icon.png",
@@ -140,7 +140,7 @@
     "package": "npm run bundle-client && npm run bundle-server && npm run generate:notices && npm run test:package && npm run validate:package && vsce package --pre-release --out design-system-language-server.vsix && npm run validate:package -- design-system-language-server.vsix"
   },
   "dependencies": {
-    "@designlasagna/schemas": "^0.4.5",
+    "@designlasagna/schemas": "^0.4.6",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "jsonc-parser": "^3.3.1",

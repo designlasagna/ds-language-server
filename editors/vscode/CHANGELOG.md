@@ -2,11 +2,12 @@
 
 This changelog records VS Code-specific integration changes. Shared language-server behavior is documented in the [server changelog](https://github.com/designlasagna/ds-language-server/blob/main/CHANGELOG.md).
 
-## [Unreleased]
+## [0.2.1] — 2026-10-15 (pre-release)
 
+- Bundle language server 0.2.1.
 - Show composite and layered token values as readable text instead of `[object Object]`.
-- Log fields the server does not use in v0.4 token and utility manifests (one `[manifest]` line per manifest, written when manifests load). Unknown fields are never reported as diagnostics.
-- Requires `@designlasagna/schemas` 0.4.5.
+- List fields the server doesn't use in v0.4 token and utility manifests in the extension's Output panel, one `[manifest]` line per manifest when manifests load. They are never reported as problems.
+- Requires `@designlasagna/schemas` 0.4.6, so layered values, custom utility variant kinds and extra fields on platform mappings no longer get schema errors.
 
 ## [0.2.0] — 2026-10-02 (pre-release)
 
