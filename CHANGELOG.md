@@ -8,7 +8,7 @@ The server, VS Code extension, and Zed extension are independently versioned. Ed
 
 ### Added
 
-- Warnings, never errors, for likely mistakes in native v0.4 token and utility manifests: unknown fields (with a "did you mean" suggestion when a known field is close), an unrecognised `removal` format, utility variant kinds missing from `variantPatterns`, and suspicious values (an empty `wcagContrast` map, an empty utility platform entry). Known fields come from the installed `@designlasagna/schemas`; `metadata`, platform keys and mode/collection/condition maps are never flagged. Utility manifests now report diagnostics too.
+- Unknown fields in native v0.4 token and utility manifests are noted in the server log, one `[manifest]` line per manifest when manifests load (including those in `node_modules`), e.g. `[manifest] path/tokens.json: fields not used by the language server: tokens["color.bg"].foo`. Schemas are open, so unknown fields are ignored, never altered and never reported as diagnostics. Known fields come from the installed `@designlasagna/schemas`; `metadata`, platform keys and mode/collection/condition maps are skipped.
 
 ### Fixed
 
