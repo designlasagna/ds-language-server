@@ -5,7 +5,8 @@ This changelog records VS Code-specific integration changes. Shared language-ser
 ## [Unreleased]
 
 - Show composite and layered token values as readable text instead of `[object Object]`.
-- Requires `@designlasagna/schemas` 0.4.4.
+- Log fields the server does not use in v0.4 token and utility manifests (one `[manifest]` line per manifest, written when manifests load). Unknown fields are never reported as diagnostics.
+- Requires `@designlasagna/schemas` 0.4.5.
 
 ## [0.2.0] — 2026-10-02 (pre-release)
 

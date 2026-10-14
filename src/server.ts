@@ -21,6 +21,7 @@ import { getCompletions } from './providers/completion.js';
 import { getHover } from './providers/hover.js';
 import { getDiagnostics } from './providers/diagnostics.js';
 import { getSchemaDiagnostics } from './providers/schema-diagnostics.js';
+import { unknownFieldsLogLine } from './providers/manifest-warnings.js';
 import { getCodeActions } from './providers/code-actions.js';
 import { URI } from 'vscode-uri';
 import type { DSConfig } from './types.js';
@@ -154,6 +155,13 @@ async function reloadConfiguration(): Promise<void> {
   const result = discover(workspaceRoot, config);
   tokenDocumentUris = new Set(result.sources.tokens.map((source) => URI.file(source.path).toString()));
   store.load(result.sources, config);
+  // Open schemas: unknown fields are logged for troubleshooting, never reported as diagnostics.
+  for (const [kind, sources] of [['tokens', result.sources.tokens], ['utilities', result.sources.utilities]] as const) {
+    for (const source of sources) {
+      const line = unknownFieldsLogLine(source.path, kind, workspaceRoot);
+      if (line) console.error(`[ds-ls] ${line}`);
+    }
+  }
   manifestsLoaded = true;
 
   const stats = store.stats();

@@ -6,13 +6,17 @@ The server, VS Code extension, and Zed extension are independently versioned. Ed
 
 ## [Unreleased]
 
+### Added
+
+- Unknown fields in native v0.4 token and utility manifests are noted in the server log, one `[manifest]` line per manifest when manifests load (including those in `node_modules`), e.g. `[manifest] path/tokens.json: fields not used by the language server: tokens["color.bg"].foo`. Schemas are open, so unknown fields are ignored, never altered and never reported as diagnostics. Known fields come from the installed `@designlasagna/schemas`; `metadata`, platform keys and mode/collection/condition maps are skipped.
+
 ### Fixed
 
 - Hovers and completions show composite token values (border, typography, single shadow) and layered values (multi-layer shadows, gradient stops) as readable text instead of `[object Object]`.
 
 ### Changed
 
-- Requires `@designlasagna/schemas` 0.4.4, so v0.4 manifests with string-array `resolved` values validate.
+- Requires `@designlasagna/schemas` 0.4.5, so v0.4 manifests with string-array `resolved` values and custom utility variant kinds validate.
 
 ## [0.2.0]
 

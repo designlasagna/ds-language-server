@@ -140,7 +140,7 @@
     "package": "npm run bundle-client && npm run bundle-server && npm run generate:notices && npm run test:package && npm run validate:package && vsce package --pre-release --out design-system-language-server.vsix && npm run validate:package -- design-system-language-server.vsix"
   },
   "dependencies": {
-    "@designlasagna/schemas": "^0.4.4",
+    "@designlasagna/schemas": "^0.4.5",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "jsonc-parser": "^3.3.1",
